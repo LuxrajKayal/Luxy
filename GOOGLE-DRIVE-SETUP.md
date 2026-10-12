@@ -1,6 +1,6 @@
 # Google Drive integration setup for Lux PDF Viewer
 
-This project uses Google Identity Services (GIS) for OAuth tokens, Google Picker for the in-app PDF picker, and the Google Drive REST API v3 for downloading and updating PDF bytes.
+This project uses Google Identity Services (GIS) for OAuth tokens, Google Picker for the in-app PDF picker, and the Google Drive REST API v3 for downloading and updating PDF bytes. The Google Drive connect/profile/sync controls live in the left sidebar; the topbar is kept for viewer-wide controls.
 
 ## 1. Create/configure the Google Cloud project
 
@@ -20,11 +20,12 @@ This project uses Google Identity Services (GIS) for OAuth tokens, Google Picker
 
 ## 2. Add your project values
 
-Open `site/drive-integration.js` and replace the three placeholders in `DRIVE_CONFIG`:
+Open `site/drive-integration.js` and replace these two values once in the `DRIVE_CONFIG` object:
 
 - `clientId`: the OAuth 2.0 Web application client ID.
 - `apiKey`: the restricted Google Picker API key.
-- `appId`: the Google Cloud **project number**, not the project name or OAuth client ID.
+
+The module derives the Picker App ID (Cloud project number) from the numeric prefix in a standard Google Web OAuth client ID, so it does not ask you to paste that value separately. Check that the prefix matches the project number shown in Google Cloud Console. If your client ID is nonstandard and does not begin with the project number followed by a hyphen, update `getGoogleCloudProjectNumber()` in the same module to return your project number.
 
 The current published app is hosted at `https://luxrajkayal.github.io/Luxy/`. If you deploy elsewhere, add that origin to the OAuth client and the API-key HTTP referrer restrictions.
 
