@@ -11,6 +11,9 @@
     "files.content.read",
     "files.content.write"
   ];
+  const SUPPORTED_FILE_EXTENSIONS = new Set([
+    ".pdf", ".md", ".jpg", ".jpeg", ".png", ".svg", ".webp", ".gif"
+  ]);
 
   const STORAGE = {
     accessToken: "lux-dropbox-access-token",
@@ -36,14 +39,20 @@
   const modalCloseButton = document.querySelector("#dropbox-modal-close");
   const modalStatus = document.querySelector("#dropbox-modal-status");
   const modalLoading = document.querySelector("#dropbox-modal-loading");
+  const modalLoadingText = document.querySelector("#dropbox-modal-loading-text");
   const modalFileList = document.querySelector("#dropbox-modal-file-list");
+  const modalSelectButton = document.querySelector("#dropbox-modal-select");
+  const modalCancelButton = document.querySelector("#dropbox-modal-cancel");
   const accessibleStatus = document.querySelector("#dropbox-accessible-status");
   const workspace = document.querySelector(".workspace");
 
   let dbx = null;
   let activeFilePathLower = null;
   let activeFileName = null;
+  let activeFileKind = null;
   let activeSourcePdfBlob = null;
+  let selectedDropboxFile = null;
+  let selectedDropboxButton = null;
   let editedPdfBlob = null;
   let previewObjectUrl = null;
   let isListingFiles = false;
@@ -88,7 +97,7 @@
           ? "The last Dropbox request failed. You can disconnect this session or try again."
           : "Dropbox could not connect. Try connecting again.";
       } else {
-        accountMenuDescription.textContent = "Connect your Dropbox account to browse and open PDFs.";
+        accountMenuDescription.textContent = "Connect your Dropbox account to browse and open supported files.";
       }
     }
 
@@ -126,12 +135,27 @@
     }
   }
 
+  function updateModalSelectButton() {
+    if (modalSelectButton) {
+      modalSelectButton.disabled = !dbx || !selectedDropboxFile || isListingFiles || isOpeningFile;
+    }
+    if (modalCancelButton) modalCancelButton.disabled = isOpeningFile;
+    if (modalCloseButton) modalCloseButton.disabled = isOpeningFile;
+  }
+
+  function clearDropboxSelection() {
+    if (selectedDropboxButton) {
+      selectedDropboxButton.classList.remove("selected");
+      selectedDropboxButton.setAttribute("aria-pressed", "false");
+    }
+    selectedDropboxFile = null;
+    selectedDropboxButton = null;
+    updateModalSelectButton();
+  }
+
   function setModalLoading(isLoading) {
     if (modalLoading) modalLoading.hidden = !isLoading;
-    if (modalFileList && isLoading) {
-      modalFileList.replaceChildren();
-      modalFileList.hidden = true;
-    }
+    updateModalSelectButton();
   }
 
   function setModalOpen(isOpen) {
@@ -149,6 +173,8 @@
 
     modal.hidden = true;
     document.body.classList.remove("dropbox-modal-open");
+    setModalLoading(false);
+    clearDropboxSelection();
     if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
       lastFocusedElement.focus();
     } else {
@@ -159,9 +185,10 @@
   function updateSyncButton() {
     if (!syncButton) return;
 
-    // Sync only exists visually once a Dropbox PDF has successfully opened.
-    syncButton.hidden = !dbx || !activeFilePathLower;
-    syncButton.disabled = !dbx || !activeFilePathLower || isSyncing;
+    // Dropbox overwrite sync remains available only for a successfully opened PDF.
+    const canSyncActivePdf = Boolean(dbx && activeFilePathLower && activeFileKind === "pdf");
+    syncButton.hidden = !canSyncActivePdf;
+    syncButton.disabled = !canSyncActivePdf || isSyncing || isOpeningFile;
     if (!isSyncing && syncButton.textContent === "Syncing...") {
       syncButton.textContent = "Sync";
     }
@@ -180,6 +207,7 @@
     dbx = null;
     activeFilePathLower = null;
     activeFileName = null;
+    activeFileKind = null;
     activeSourcePdfBlob = null;
     editedPdfBlob = null;
     setConnectionStatus(status);
@@ -387,7 +415,27 @@
     }
   }
 
-  async function fetchAllPdfFiles() {
+  function getDropboxFileExtension(fileName) {
+    const lowerName = String(fileName || "").toLowerCase();
+    const lastDot = lowerName.lastIndexOf(".");
+    return lastDot >= 0 ? lowerName.slice(lastDot) : "";
+  }
+
+  function getDropboxFileKind(fileName) {
+    const extension = getDropboxFileExtension(fileName);
+    if (extension === ".pdf") return "pdf";
+    if (extension === ".md") return "markdown";
+    return "image";
+  }
+
+  function getDropboxFileTypeLabel(fileName) {
+    const kind = getDropboxFileKind(fileName);
+    if (kind === "pdf") return "PDF document";
+    if (kind === "markdown") return "Markdown document";
+    return "Image";
+  }
+
+  async function fetchAllSupportedFiles() {
     const entries = [];
     let response = await dbx.filesListFolder({
       path: "",
@@ -406,7 +454,7 @@
       .filter(function (entry) {
         return entry[".tag"] === "file" &&
           typeof entry.name === "string" &&
-          entry.name.toLowerCase().endsWith(".pdf") &&
+          SUPPORTED_FILE_EXTENSIONS.has(getDropboxFileExtension(entry.name)) &&
           typeof entry.path_lower === "string";
       })
       .sort(function (a, b) {
@@ -414,21 +462,45 @@
       });
   }
 
-  function makePdfIcon() {
+  function makeDropboxFileIcon(file) {
+    const kind = getDropboxFileKind(file.name);
     const wrapper = document.createElement("span");
     wrapper.className = "dropbox-file-icon";
+    wrapper.dataset.kind = kind === "image" ? "image" : "document";
     wrapper.setAttribute("aria-hidden", "true");
-    wrapper.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 2.75h8l4 4V21H6z"/><path d="M14 2.75v4h4M8.5 13h7M8.5 16.5h7"/></svg>';
+
+    if (kind === "image") {
+      wrapper.innerHTML = '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m4 17 5-5 3.5 3.5 2.5-2.5 5 5"/></svg>';
+    } else {
+      wrapper.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 2.75h8l4 4V21H6z"/><path d="M14 2.75v4h4M8.5 13h7M8.5 16.5h7"/></svg>';
+    }
     return wrapper;
   }
 
-  function renderPdfFiles(files) {
+  function selectDropboxFile(file, button) {
+    if (!file || !button || isOpeningFile || isListingFiles) return;
+
+    if (selectedDropboxButton && selectedDropboxButton !== button) {
+      selectedDropboxButton.classList.remove("selected");
+      selectedDropboxButton.setAttribute("aria-pressed", "false");
+    }
+
+    selectedDropboxFile = file;
+    selectedDropboxButton = button;
+    button.classList.add("selected");
+    button.setAttribute("aria-pressed", "true");
+    updateModalSelectButton();
+    setStatus("Selected " + file.name + ". Choose Select File to open it.");
+  }
+
+  function renderSupportedFiles(files) {
     if (!modalFileList) return;
     modalFileList.replaceChildren();
     modalFileList.hidden = files.length === 0;
+    clearDropboxSelection();
 
     if (!files.length) {
-      setStatus("No PDF files were found in your Dropbox account.");
+      setStatus("No supported files were found. Supported types: PDF, Markdown, JPG, PNG, SVG, WEBP and GIF.");
       return;
     }
 
@@ -440,7 +512,9 @@
       button.type = "button";
       button.className = "dropbox-file-button";
       button.title = file.path_display || file.path_lower;
-      button.appendChild(makePdfIcon());
+      button.setAttribute("aria-pressed", "false");
+      button.setAttribute("aria-label", "Select " + file.name);
+      button.appendChild(makeDropboxFileIcon(file));
 
       const copy = document.createElement("span");
       copy.className = "dropbox-file-copy";
@@ -451,7 +525,7 @@
 
       const path = document.createElement("span");
       path.className = "dropbox-file-path";
-      path.textContent = file.path_display || file.path_lower;
+      path.textContent = (file.path_display || file.path_lower) + " · " + getDropboxFileTypeLabel(file.name);
 
       copy.append(name, path);
 
@@ -462,14 +536,15 @@
 
       button.append(copy, arrow);
       button.addEventListener("click", function () {
-        openDropboxFile(file);
+        selectDropboxFile(file, button);
       });
 
       item.appendChild(button);
       modalFileList.appendChild(item);
     });
 
-    setStatus(files.length + (files.length === 1 ? " PDF found." : " PDFs found.") + " Select a file to open it.");
+    setStatus(files.length + (files.length === 1 ? " supported file found." : " supported files found.") +
+      " Select one file, then choose Select File.");
   }
 
   async function openDropboxPicker() {
@@ -478,64 +553,79 @@
       return;
     }
     setModalOpen(true);
-    await listDropboxPdfs();
+    await listDropboxSupportedFiles();
   }
 
-  async function listDropboxPdfs() {
+  async function listDropboxSupportedFiles() {
     if (!dbx || isListingFiles || isOpeningFile) return;
 
     isListingFiles = true;
-    setStatus("Loading PDFs from Dropbox…");
+    clearDropboxSelection();
+    if (modalFileList) {
+      modalFileList.replaceChildren();
+      modalFileList.hidden = true;
+    }
+    if (modalLoadingText) modalLoadingText.textContent = "Loading supported files from Dropbox…";
+    setStatus("Loading supported files from Dropbox…");
     setModalLoading(true);
 
     try {
-      const files = await fetchAllPdfFiles();
-      setModalLoading(false);
-      renderPdfFiles(files);
+      const files = await fetchAllSupportedFiles();
+      renderSupportedFiles(files);
     } catch (error) {
-      setModalLoading(false);
       handleRequestError(error);
     } finally {
       isListingFiles = false;
+      setModalLoading(false);
+      updateModalSelectButton();
     }
   }
 
-  async function openDropboxFile(file) {
-    if (!dbx || isOpeningFile || !file || !file.path_lower) return;
+  async function openSelectedDropboxFile() {
+    const file = selectedDropboxFile;
+    if (!dbx || isOpeningFile || isListingFiles || !file || !file.path_lower) return;
 
-    // Clear any previous source before starting the new selection's download.
-    activeFilePathLower = null;
-    activeFileName = null;
-    activeSourcePdfBlob = null;
-    editedPdfBlob = null;
-    updateSyncButton();
-
-    // The requested behavior is to close the picker as soon as a row is chosen.
-    setModalOpen(false);
     isOpeningFile = true;
+    updateModalSelectButton();
+    updateSyncButton();
+    if (modalLoadingText) modalLoadingText.textContent = "Downloading selected file…";
+    setStatus("Opening " + file.name + "…");
+    setModalLoading(true);
 
     try {
-      setStatus("Opening " + file.name + "…");
       const response = await dbx.filesDownload({ path: file.path_lower });
       const downloadedBlob = response && response.result && response.result.fileBlob;
 
       if (!(downloadedBlob instanceof Blob)) {
-        throw new Error("Dropbox downloaded the file, but no PDF Blob was returned.");
+        throw new Error("Dropbox downloaded the file, but no file Blob was returned.");
       }
 
+      const fileKind = getDropboxFileKind(file.name);
       activeFilePathLower = file.path_lower;
       activeFileName = file.name;
-      activeSourcePdfBlob = downloadedBlob;
+      activeFileKind = fileKind;
+      activeSourcePdfBlob = fileKind === "pdf" ? downloadedBlob : null;
       editedPdfBlob = null;
       updateSyncButton();
 
-      window.dispatchEvent(new CustomEvent("lux:dropbox-pdf-loaded", {
-        detail: {
-          pdfBlob: downloadedBlob,
-          fileName: activeFileName,
-          pathLower: activeFilePathLower
-        }
-      }));
+      if (fileKind === "pdf") {
+        window.dispatchEvent(new CustomEvent("lux:dropbox-pdf-loaded", {
+          detail: {
+            pdfBlob: downloadedBlob,
+            fileName: activeFileName,
+            pathLower: activeFilePathLower
+          }
+        }));
+      } else {
+        window.dispatchEvent(new CustomEvent("lux:dropbox-file-loaded", {
+          detail: {
+            fileBlob: downloadedBlob,
+            fileName: activeFileName,
+            fileKind: activeFileKind,
+            pathLower: activeFilePathLower
+          }
+        }));
+      }
 
       if (typeof window.loadPdfIntoViewer === "function") {
         await window.loadPdfIntoViewer(downloadedBlob, file.name);
@@ -544,34 +634,56 @@
       }
 
       setStatus("Opened " + file.name + ".");
-      if (syncButton) {
+      if (syncButton && fileKind === "pdf") {
         syncButton.title = "Sync changes to " + file.name + " in Dropbox";
         syncButton.textContent = "Sync";
       }
+      setModalLoading(false);
+      setModalOpen(false);
     } catch (error) {
+      setModalLoading(false);
       handleRequestError(error);
-      setModalOpen(true);
     } finally {
       isOpeningFile = false;
+      updateModalSelectButton();
       updateSyncButton();
     }
   }
 
-  async function loadPdfIntoViewer(pdfBlob, fileName) {
-    if (window.LuxPdfViewer && typeof window.LuxPdfViewer.loadPdf === "function") {
-      await window.LuxPdfViewer.loadPdf(pdfBlob, fileName);
+  async function loadPdfIntoViewer(fileBlob, fileName) {
+    const fileKind = getDropboxFileKind(fileName);
+    if (fileKind === "pdf" && window.LuxPdfViewer && typeof window.LuxPdfViewer.loadPdf === "function") {
+      await window.LuxPdfViewer.loadPdf(fileBlob, fileName);
       return;
     }
 
     if (!workspace) return;
 
     if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
-    previewObjectUrl = URL.createObjectURL(pdfBlob);
+    previewObjectUrl = URL.createObjectURL(fileBlob);
     workspace.replaceChildren();
 
     const heading = document.createElement("div");
     heading.className = "pdf-preview-heading";
     heading.textContent = fileName;
+
+    if (fileKind === "image") {
+      const image = document.createElement("img");
+      image.className = "file-preview-image";
+      image.alt = fileName;
+      image.decoding = "async";
+      image.src = previewObjectUrl;
+      workspace.append(heading, image);
+      return;
+    }
+
+    if (fileKind === "markdown") {
+      const markdownPreview = document.createElement("pre");
+      markdownPreview.className = "file-preview-markdown";
+      markdownPreview.textContent = await fileBlob.text();
+      workspace.append(heading, markdownPreview);
+      return;
+    }
 
     const note = document.createElement("p");
     note.className = "pdf-preview-note";
@@ -606,7 +718,7 @@
   }
 
   async function syncToDropbox() {
-    if (!dbx || !activeFilePathLower || isSyncing) return;
+    if (!dbx || !activeFilePathLower || activeFileKind !== "pdf" || isSyncing) return;
 
     isSyncing = true;
     if (syncFeedbackTimer) window.clearTimeout(syncFeedbackTimer);
@@ -780,6 +892,10 @@
     }
   });
   modalCloseButton?.addEventListener("click", function () {
+    setModalOpen(false);
+  });
+  modalSelectButton?.addEventListener("click", openSelectedDropboxFile);
+  modalCancelButton?.addEventListener("click", function () {
     setModalOpen(false);
   });
   modal?.querySelectorAll("[data-dropbox-modal-close]").forEach(function (element) {
