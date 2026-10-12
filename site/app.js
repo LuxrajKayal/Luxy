@@ -157,3 +157,43 @@ document.addEventListener("keydown", (event) => {
     closeSearch();
   }
 });
+
+const themeButton = document.querySelector("#theme-toggle");
+const themeStorageKey = "lux-pdf-viewer-theme";
+
+function applyTheme(theme, savePreference = true) {
+  const isDark = theme === "dark";
+  document.documentElement.dataset.theme = isDark ? "dark" : "light";
+
+  if (themeButton) {
+    const nextMode = isDark ? "white" : "dark";
+    themeButton.setAttribute("aria-label", `Switch to ${nextMode} mode`);
+    themeButton.setAttribute("title", `Switch to ${nextMode} mode`);
+    themeButton.setAttribute("aria-pressed", String(isDark));
+  }
+
+  if (savePreference) {
+    try {
+      window.localStorage.setItem(themeStorageKey, isDark ? "dark" : "light");
+    } catch {
+      // The theme still works for this page when storage is unavailable.
+    }
+  }
+}
+
+let savedTheme = "light";
+try {
+  const storedTheme = window.localStorage.getItem(themeStorageKey);
+  if (storedTheme === "dark" || storedTheme === "light") {
+    savedTheme = storedTheme;
+  }
+} catch {
+  // Use the white theme when storage is unavailable.
+}
+
+applyTheme(savedTheme, false);
+
+themeButton?.addEventListener("click", () => {
+  const currentTheme = document.documentElement.dataset.theme;
+  applyTheme(currentTheme === "dark" ? "light" : "dark");
+});
