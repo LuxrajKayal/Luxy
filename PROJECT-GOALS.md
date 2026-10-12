@@ -39,7 +39,18 @@ Iframe embedding and Web Component integration are both part of the product's in
 - Keep the product architecture understandable and modular where useful, but do not overbuild for future features before the current scope requires it.
 - The website implementation approach and module boundaries must be discussed when relevant. Do not add a third-party UI framework or build dependency without explaining the trade-offs and obtaining approval.
 
-The first interface has not yet been designed or approved. This document does not prescribe a particular appearance or user experience.
+### Approved initial PDF/Markdown interaction
+
+These behavior decisions were explicitly approved by the owner:
+
+1. **PDF-first start:** The application starts in its PDF workspace. The Markdown editor is not open by default.
+2. **Dedicated open action:** Provide a new Markdown Editor button/action in the PDF workspace. The exact label and presentation remain subject to the owner's interface decisions.
+3. **Side-by-side after opening:** When the user activates the Markdown Editor action, show the PDF panel and Markdown editor panel side by side by default.
+4. **User-resizable panels:** The user can resize the two panels to suit their needs.
+5. **Separate panel controls:** The PDF panel has controls appropriate to PDF viewing and annotation; the Markdown panel has its own controls appropriate to Markdown editing and saving. Do not merge their toolbars or assume that one panel's controls apply to the other.
+6. Further behavior—such as panel collapsing, remembering sizes, mobile layout, Markdown formatting controls, and save/Save As behavior—remains undecided and must be discussed when relevant.
+
+The visual design details (exact header, placement, dimensions, colors, icons, toolbar layout, and panel styling) are not finalized by these behavior decisions. Do not invent them.
 
 ## 4. Independent development — strict separation from prior repositories
 
@@ -92,6 +103,8 @@ Do not claim that files, commits, tests, deployments, permissions or features ex
 - Product name: Lux PDF Viewer.
 - New repository: public `LuxrajKayal/Luxy`.
 - First development focus: the standalone web-based application interface.
+- The initial workspace starts in PDF mode, with the Markdown editor opened via a dedicated action.
+- Opening the Markdown editor displays PDF and Markdown panels side by side by default; users can resize them, and each panel has its own controls.
 - Both iframe embedding and Web Component integration are intended future features, not initial tasks.
 - Chrome extension adaptation is a later product goal, not the current focus.
 - PDF.js and pdf-lib are the two currently approved third-party PDF-library candidates, subject to correct licensing and notices.
@@ -100,7 +113,7 @@ Do not claim that files, commits, tests, deployments, permissions or features ex
 
 ### Not yet decided
 
-- Exact interface design and interaction details.
+- Remaining interface appearance and detailed interaction behavior.
 - Final source layout and public application/module boundaries.
 - Exact iframe API, Web Component API, and which one to implement first.
 - Authentication architecture and Google Drive permissions.
