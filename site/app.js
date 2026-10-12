@@ -1,4 +1,4 @@
-// Lux PDF Viewer core interface controls.
+// Lux Learning Tool core interface controls.
 // Dark Mode, Focus Mode, and the manually controlled sidebar only.
 
 const themeToggle = document.querySelector("#theme-toggle");
