@@ -1,6 +1,6 @@
 # Open Source Library Use Disclosure
 
-This folder records the third-party source projects selected for evaluation for Lux PDF Viewer. Their upstream source remains separate from first-party application code.
+This folder records the third-party source projects selected for evaluation for Lux Omni. Their upstream source remains separate from first-party application code.
 
 ## Components referenced
 
@@ -16,15 +16,15 @@ This folder records the third-party source projects selected for evaluation for 
 
 ## Current status
 
-The projects are referenced as Git submodules under this folder at the release commits listed above. The upstream files are not being modified by this commit. Submodule presence is not evidence that either library has been integrated into the application, built for the browser, or tested in Lux PDF Viewer.
+The projects are referenced as Git submodules under this folder at the release commits listed above. The upstream files are not being modified by this commit. Submodule presence is not evidence that either library has been integrated into the application, built for the browser, or tested in Lux Omni.
 
 The source repositories retain their own license and notice files. To obtain the complete source checkouts when cloning this repository, initialize the submodules (for example, with `git clone --recurse-submodules`).
 
 ## License and ownership boundaries
 
 - The upstream authors and contributors retain the rights and notices applicable to their respective projects.
-- The Apache-2.0 and MIT licenses apply to the relevant third-party components. They do not automatically license first-party Lux PDF Viewer code under those licenses.
-- A separate license for first-party Lux PDF Viewer code cannot remove permissions granted by the applicable third-party licenses for those components.
+- The Apache-2.0 and MIT licenses apply to the relevant third-party components. They do not automatically license first-party Lux Omni code under those licenses.
+- A separate license for first-party Lux Omni code cannot remove permissions granted by the applicable third-party licenses for those components.
 - When distributing a product build or source package containing either library or substantial portions of its code, include the applicable license copies and notices with that distribution. These notices can be supplied as a bundled third-party notices/license folder rather than as credits in the application interface, where the license terms permit that placement.
 - If a PDF.js file is modified in the future and the modified file is distributed, the Apache-2.0 license requires a prominent notice that the file was changed. Original notices must be preserved. We will keep upstream files unchanged and implement product-specific behavior in separate first-party modules wherever practical.
 - Before producing a release, audit the exact bundled files, embedded assets, package manifests, and any transitive dependencies. This list identifies the two selected upstream projects; it is not a claim that their eventual browser bundles have no other licensing obligations.
