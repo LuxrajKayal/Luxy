@@ -1,3 +1,5 @@
+import { initDriveIntegration } from "./drive-integration.js";
+
 const findButton = document.querySelector("#find-text-button");
 const findPanel = document.querySelector("#find-panel");
 const searchInput = document.querySelector("#find-input");
@@ -352,3 +354,6 @@ sidebarToggle?.addEventListener("click", () => {
   const isOpen = document.documentElement.getAttribute("data-sidebar-open") === "true";
   setSidebarOpen(!isOpen);
 });
+
+// Initialize Google Drive UI and handlers.
+initDriveIntegration();
