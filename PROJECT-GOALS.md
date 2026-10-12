@@ -1,4 +1,4 @@
-# Lux PDF Viewer — Living Project Goals
+# Lux Omni — Living Project Goals
 
 Last updated: 2026-10-12
 
@@ -6,11 +6,11 @@ This is the working source of truth for the product direction agreed by the proj
 
 ## 1. Product identity and ownership
 
-- **Product name:** Lux PDF Viewer
+- **Product name:** Lux Omni
 - **GitHub repository:** `LuxrajKayal/Luxy`
 - **Project owner / intended author of first-party work:** Luxraj Kayal, also known as Subrata Kayal.
 - The product is being developed as a real product intended for users and eventual commercial distribution, not merely as a coding exercise.
-- Attribute original first-party product work to the project owner. Do not claim that third-party library authors authored the Lux PDF Viewer application, and do not claim ownership of third-party code.
+- Attribute original first-party product work to the project owner. Do not claim that third-party library authors authored the Lux Omni application, and do not claim ownership of third-party code.
 
 The owner has expressed an intent to control use and reproduction of first-party product work and to provide a free version for students. The exact license, eligibility rules, and legally enforceable terms have not yet been finalized. Do not draft or publish a final license or assert legal conclusions without discussing the terms with the owner. Any first-party restrictions must not be represented as overriding rights granted by third-party library licenses.
 
@@ -21,8 +21,8 @@ The intended product path is:
 1. Build and refine the **standalone web-based application** first.
 2. After the website-based product has a solid foundation, discuss and plan external website integration features with the owner.
 3. Implement both intended embedding approaches as future features:
-   - **Iframe embedding:** allow a website to display the hosted Lux PDF Viewer application in an iframe.
-   - **Web Component integration:** allow a website to incorporate a Lux PDF Viewer custom element, with a documented integration API.
+   - **Iframe embedding:** allow a website to display the hosted Lux Omni application in an iframe.
+   - **Web Component integration:** allow a website to incorporate a Lux Omni custom element, with a documented integration API.
 4. Later, revisit adapting the product into a Chrome extension and commercial distribution.
 
 Iframe embedding and Web Component integration are both part of the product's intended feature set, but **neither is part of the initial development scope**. The order, API, permissions, security model, packaging and implementation details remain undecided until discussed with the owner.
@@ -100,7 +100,7 @@ Do not claim that files, commits, tests, deployments, permissions or features ex
 
 ### Agreed
 
-- Product name: Lux PDF Viewer.
+- Product name: Lux Omni.
 - New repository: public `LuxrajKayal/Luxy`.
 - First development focus: the standalone web-based application interface.
 - The initial workspace starts in PDF mode, with the Markdown editor opened via a dedicated action.
