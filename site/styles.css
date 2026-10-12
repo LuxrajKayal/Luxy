@@ -31,7 +31,8 @@ body {
 }
 
 button,
-a {
+a,
+input {
   font: inherit;
 }
 
@@ -127,6 +128,9 @@ a {
 }
 
 .find-button:focus-visible,
+.find-input:focus-visible,
+.find-action:focus-visible,
+.find-close:focus-visible,
 .brand:focus-visible {
   outline: 3px solid #a5b4fc;
   outline-offset: 3px;
@@ -135,6 +139,7 @@ a {
 .find-button svg {
   width: 18px;
   height: 18px;
+  flex: 0 0 18px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -147,48 +152,117 @@ a {
   white-space: nowrap;
 }
 
-.find-button kbd {
-  margin-left: 4px;
-  padding: 3px 5px;
-  border: 1px solid #e2e7ef;
-  border-radius: 5px;
-  color: #6b7587;
-  background: #f8f9fb;
-  font-family: inherit;
-  font-size: 10px;
-  white-space: nowrap;
-}
-
-.find-help {
+.find-panel {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
-  width: min(330px, calc(100vw - 32px));
-  padding: 13px 14px;
+  z-index: 5;
+  width: min(520px, calc(100vw - 32px));
+  padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 11px;
   background: #ffffff;
-  box-shadow: 0 12px 30px rgb(22 34 56 / 12%);
-  color: #485469;
-  font-size: 12px;
-  line-height: 1.6;
+  box-shadow: 0 12px 30px rgb(22 34 56 / 14%);
 }
 
-.find-help kbd {
-  display: inline-block;
-  padding: 1px 5px;
-  border: 1px solid #dfe4ec;
-  border-radius: 4px;
-  background: #f7f8fb;
-  color: #29364a;
-  font-family: inherit;
+.find-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto 34px;
+  align-items: center;
+  gap: 6px;
+}
+
+.find-input {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #dce2ec;
+  border-radius: 7px;
+  color: var(--ink);
+  background: #ffffff;
+  font-size: 13px;
+}
+
+.find-input:focus {
+  border-color: #9aabff;
+}
+
+.find-action {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 1px solid #dce2ec;
+  border-radius: 7px;
+  color: #273449;
+  background: #f8f9fc;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.find-action:hover {
+  border-color: #bac7ff;
+  background: #f0f3ff;
+}
+
+.find-close {
+  display: grid;
+  width: 34px;
+  height: 36px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: #596579;
+  background: transparent;
+  cursor: pointer;
+  font-size: 23px;
+  line-height: 1;
+}
+
+.find-close:hover {
+  border-color: #f0c5c5;
+  color: #a12d2d;
+  background: #fff4f4;
+}
+
+.find-status {
+  min-height: 17px;
+  padding: 8px 2px 0;
+  color: var(--muted);
   font-size: 11px;
+  line-height: 1.4;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
+  clip-path: inset(50%);
 }
 
 .workspace {
   min-height: calc(100vh - 76px);
   background: var(--workspace);
+}
+
+mark.lux-find-match {
+  border-radius: 2px;
+  padding: 0 1px;
+  color: inherit;
+  background: #fff09b;
+}
+
+mark.lux-find-match.lux-find-active {
+  position: relative;
+  z-index: 1;
+  color: #1d2636;
+  background: #ffad42;
+  outline: 2px solid #e58a18;
+  outline-offset: 1px;
 }
 
 [hidden] {
@@ -234,9 +308,21 @@ a {
     gap: 0;
   }
 
-  .find-button span,
-  .find-button kbd {
+  .find-button span {
     display: none;
+  }
+
+  .find-panel {
+    width: min(520px, calc(100vw - 24px));
+  }
+
+  .find-controls {
+    gap: 4px;
+  }
+
+  .find-action {
+    padding: 0 7px;
+    font-size: 11px;
   }
 
   .workspace {
