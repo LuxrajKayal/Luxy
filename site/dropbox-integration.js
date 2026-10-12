@@ -6,7 +6,7 @@
   "use strict";
 
   // Dropbox App Key (also called the client ID). This is public, not a secret.
-  const DROPBOX_APP_KEY = "YOUR_DROPBOX_APP_KEY";
+  const DROPBOX_APP_KEY = "8vfyy6u50amp4py";
   const REQUIRED_SCOPES = [
     "files.metadata.read",
     "files.content.read",
