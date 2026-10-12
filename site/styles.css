@@ -522,6 +522,11 @@ body[data-focus-mode="true"] .workspace-shell {
   background: var(--workspace);
 }
 
+.viewport {
+  width: 100%;
+  min-height: inherit;
+}
+
 .sidebar-cloud-actions {
   display: flex;
   width: 100%;
