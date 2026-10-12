@@ -223,11 +223,18 @@ input {
   width: 18px;
   height: 18px;
   flex: 0 0 18px;
-  fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+.drive-sync-button svg {
+  fill: none;
+}
+
+.drive-connect-button svg {
+  stroke: none;
 }
 
 .drive-connect-button span,
@@ -448,7 +455,73 @@ body[data-focus-mode="true"] .workspace-shell {
 .sidebar-inner {
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
+  min-height: calc(100vh - 120px);
   height: 100%;
+}
+
+.sidebar-drive-tools {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: var(--sidebar-width);
+  padding: 12px 0;
+}
+
+.sidebar .drive-connect-button,
+.sidebar .drive-sync-button {
+  width: 44px;
+  min-width: 44px;
+  height: 40px;
+  min-height: 40px;
+  justify-content: center;
+  padding: 0;
+  gap: 0;
+}
+
+.sidebar .drive-connect-button span,
+.sidebar .drive-sync-button span {
+  display: none;
+}
+
+.sidebar .drive-connected-controls {
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar .drive-connected-label {
+  gap: 0;
+  font-size: 0;
+}
+
+.sidebar .drive-connected-label .drive-status-dot {
+  width: 8px;
+  height: 8px;
+}
+
+.sidebar .drive-avatar-button {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+}
+
+.sidebar .drive-feedback {
+  position: fixed;
+  left: calc(var(--sidebar-width) + 12px);
+  bottom: 16px;
+  z-index: 20;
+  width: min(300px, calc(100vw - var(--sidebar-width) - 24px));
+  max-width: none;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--panel);
+  box-shadow: var(--panel-shadow);
+}
+
+:root[data-sidebar-open="false"] .sidebar .drive-feedback {
+  left: 12px;
 }
 
 body[data-focus-mode="true"] .workspace-layout {
