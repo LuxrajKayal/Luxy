@@ -479,19 +479,30 @@ body[data-focus-mode="true"] .workspace-shell {
   pointer-events: auto;
 }
 
-.viewport-topbar {
+.viewport-composition {
   position: absolute;
   top: 0;
   right: 0;
+  bottom: 0;
   left: var(--sidebar-width);
-  z-index: 3;
-  height: 44px;
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
+  z-index: 2;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  grid-template-columns: minmax(0, var(--split-left-share, 1fr)) 5px minmax(0, var(--split-right-share, 1fr));
+  grid-template-rows: 44px minmax(0, 1fr);
 }
 
-:root[data-sidebar-open="false"] .viewport-topbar {
+:root[data-sidebar-open="false"] .viewport-composition {
   left: 0;
+}
+
+.viewport-topbar {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  min-width: 0;
+  background: #d1d5db;
+  border-bottom: 1px solid var(--line);
 }
 
 .sidebar-toggle {
@@ -552,18 +563,35 @@ body[data-focus-mode="true"] .workspace-shell {
 
 .viewport-stage {
   width: 100%;
-  min-height: inherit;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.viewport-stage--full {
+  grid-column: 1 / -1;
+  grid-row: 2;
 }
 
 .viewport-stage--split {
-  display: grid;
-  grid-template-columns: minmax(0, var(--split-left-share, 1fr)) 5px minmax(0, var(--split-right-share, 1fr));
-  gap: 0;
+  display: contents;
+}
+
+.viewport-stage--split > .viewport:first-child {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.viewport-stage--split > .viewport:last-child {
+  grid-column: 3;
+  grid-row: 2;
 }
 
 .viewport-split-divider {
   position: relative;
-  z-index: 1;
+  z-index: 5;
+  grid-column: 2;
+  grid-row: 1 / 3;
   width: 5px;
   cursor: col-resize;
   touch-action: none;
@@ -589,27 +617,13 @@ body[data-focus-mode="true"] .workspace-shell {
 
 .viewport {
   width: 100%;
-  height: calc(100vh - 120px);
+  height: 100%;
   min-width: 0;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: scroll;
   border: 1px solid var(--line);
   background: #ffffff;
-}
-
-body[data-focus-mode="true"] .viewport {
-  height: calc(100vh - 44px);
-}
-
-@media (max-width: 560px) {
-  .viewport {
-    height: calc(100vh - 112px);
-  }
-
-  body[data-focus-mode="true"] .viewport {
-    height: calc(100vh - 44px);
-  }
 }
 
 .sidebar-cloud-actions {
