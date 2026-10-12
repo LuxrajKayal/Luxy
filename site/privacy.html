@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Privacy policy for Lux PDF Viewer and its optional Dropbox integration.">
+  <title>Privacy Policy — Lux PDF Viewer</title>
+  <style>
+    :root{color-scheme:light dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1d2636;background:#f6f8fb}
+    @media(prefers-color-scheme:dark){:root{color:#e8edf5;background:#10151e}a{color:#9db2ff}}
+    body{max-width:820px;margin:0 auto;padding:36px 22px 64px;line-height:1.7}
+    a{color:#4263eb}h1,h2{line-height:1.25}h1{letter-spacing:-.04em}header p,footer{color:#758196;font-size:.93rem}
+    section{margin-top:28px}li{margin:.45em 0}.brand{font-weight:750;text-decoration:none}
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="./">Lux PDF Viewer</a>
+    <h1>Privacy Policy</h1>
+    <p>Last updated: 12 October 2026</p>
+  </header>
+  <p>Lux PDF Viewer (“Luxy”) is a browser-based PDF viewer published by LuxRaj Kayal. This policy explains how the website handles information when you use it, including its optional Dropbox connection.</p>
+
+  <section>
+    <h2>Information used by the Dropbox integration</h2>
+    <p>If you choose to connect Dropbox, Luxy requests permission to read file metadata, download file contents, and upload file contents. It uses these permissions to list PDF files, download a PDF you select, and—when an edited PDF export is available and you explicitly press Sync—upload that exported PDF to the selected file’s original Dropbox path.</p>
+    <p>Luxy may process the selected file’s name and Dropbox path, plus the PDF contents you choose to open. Dropbox provides authentication and the storage APIs; your Dropbox account and files remain subject to Dropbox’s own terms and privacy policy.</p>
+  </section>
+
+  <section>
+    <h2>Where information is processed and stored</h2>
+    <ul>
+      <li>Luxy is a static website hosted through GitHub Pages. The current application does not send PDF contents to a Luxy-operated application server or store them in a Luxy-operated database.</li>
+      <li>The Dropbox access token is held in this browser tab’s <code>sessionStorage</code> for the active session, rather than <code>localStorage</code>. Browser session restoration can vary; do not use the app on a device you do not trust.</li>
+      <li>Selected PDFs are downloaded to the browser for viewing. The selected Dropbox path is kept in memory for the active page session.</li>
+      <li>If you use Sync with an editor-exported PDF, the exported PDF is sent to Dropbox using overwrite mode and may replace the original file. Keep a backup when the original must be preserved.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Third-party services</h2>
+    <p>Luxy uses Dropbox for OAuth authorization and file API requests, cdnjs to load the Dropbox JavaScript SDK, and GitHub Pages to host the website. Those services may process standard connection or operational data under their own policies. Luxy does not currently include its own analytics service or user-account system.</p>
+  </section>
+
+  <section>
+    <h2>Your choices and security</h2>
+    <p>Connecting Dropbox is optional. You can decline authorization. To revoke ongoing access, review and disconnect Luxy from your Dropbox account’s connected-app settings. Closing the browser tab usually ends the tab’s session storage, but revoking access in Dropbox is the clearest way to remove the app’s authorization. Never share your access token or use Sync unless you intend to replace the selected Dropbox file.</p>
+  </section>
+
+  <section>
+    <h2>Changes to this policy</h2>
+    <p>This policy may be updated if Luxy’s features or data handling change. The “Last updated” date above will be changed when a revision is published.</p>
+  </section>
+
+  <footer>
+    <p>Questions or privacy concerns: <a href="https://github.com/LuxrajKayal/Luxy/issues">open an issue in the Luxy repository</a>. Please do not post access tokens, private documents, or other sensitive information in public issues.</p>
+    <p><a href="./">Return to Lux PDF Viewer</a></p>
+  </footer>
+</body>
+</html>
