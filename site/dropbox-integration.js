@@ -5,7 +5,6 @@
 (function () {
   "use strict";
 
-  // Dropbox App Key (also called the client ID). This is public, not a secret.
   const DROPBOX_APP_KEY = "8vfyy6u50amp4py";
   const REQUIRED_SCOPES = [
     "files.metadata.read",
@@ -21,14 +20,14 @@
   };
 
   const redirectUri = window.location.origin + window.location.pathname;
-  const connectButton = document.querySelector("#dropbox-connect");
-  const connectedControls = document.querySelector("#dropbox-connected-controls");
-  const connectionStatus = document.querySelector("#dropbox-connection-status");
-  const openFileButton = document.querySelector("#dropbox-open-file");
+  const dropboxButton = document.querySelector("#dropbox-connect");
   const syncButton = document.querySelector("#dropbox-sync");
-  const activeFileLabel = document.querySelector("#dropbox-active-file");
-  const fileList = document.querySelector("#dropbox-file-list");
-  const message = document.querySelector("#dropbox-message");
+  const modal = document.querySelector("#dropbox-modal");
+  const modalCloseButton = document.querySelector("#dropbox-modal-close");
+  const modalStatus = document.querySelector("#dropbox-modal-status");
+  const modalLoading = document.querySelector("#dropbox-modal-loading");
+  const modalFileList = document.querySelector("#dropbox-modal-file-list");
+  const accessibleStatus = document.querySelector("#dropbox-accessible-status");
   const workspace = document.querySelector(".workspace");
 
   let dbx = null;
@@ -40,29 +39,56 @@
   let isListingFiles = false;
   let isOpeningFile = false;
   let isSyncing = false;
+  let lastFocusedElement = null;
+  let syncFeedbackTimer = null;
 
-  function setMessage(text, kind) {
-    if (!message) return;
-    message.textContent = text;
-    if (kind) message.dataset.kind = kind;
-    else delete message.dataset.kind;
+  function setStatus(text, kind) {
+    if (modalStatus) {
+      modalStatus.textContent = text;
+      if (kind) modalStatus.dataset.kind = kind;
+      else delete modalStatus.dataset.kind;
+    }
+    if (accessibleStatus) accessibleStatus.textContent = text;
   }
 
-  function setConnectedUi(connected) {
-    if (connectionStatus) {
-      connectionStatus.textContent = connected ? "Dropbox Connected" : "Not connected";
-      connectionStatus.dataset.connected = String(connected);
+  function setModalLoading(isLoading) {
+    if (modalLoading) modalLoading.hidden = !isLoading;
+    if (modalFileList && isLoading) {
+      modalFileList.replaceChildren();
+      modalFileList.hidden = true;
     }
-    if (connectButton) connectButton.hidden = connected;
-    if (connectedControls) connectedControls.hidden = !connected;
-    updateSyncButton();
+  }
+
+  function setModalOpen(isOpen) {
+    if (!modal) return;
+
+    if (isOpen) {
+      lastFocusedElement = document.activeElement;
+      modal.hidden = false;
+      document.body.classList.add("dropbox-modal-open");
+      window.requestAnimationFrame(function () {
+        modalCloseButton?.focus();
+      });
+      return;
+    }
+
+    modal.hidden = true;
+    document.body.classList.remove("dropbox-modal-open");
+    if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
+      lastFocusedElement.focus();
+    } else {
+      dropboxButton?.focus();
+    }
   }
 
   function updateSyncButton() {
     if (!syncButton) return;
+
+    // Sync only exists visually once a Dropbox PDF has successfully opened.
+    syncButton.hidden = !dbx || !activeFilePathLower;
     syncButton.disabled = !dbx || !activeFilePathLower || isSyncing;
     if (!isSyncing && syncButton.textContent === "Syncing...") {
-      syncButton.textContent = "Sync to Dropbox";
+      syncButton.textContent = "Sync";
     }
   }
 
@@ -75,8 +101,13 @@
     } catch (_) {
       // Ignore storage cleanup failures; the in-memory client is still cleared.
     }
+
     dbx = null;
-    setConnectedUi(false);
+    activeFilePathLower = null;
+    activeFileName = null;
+    activeSourcePdfBlob = null;
+    editedPdfBlob = null;
+    updateSyncButton();
   }
 
   function createState() {
@@ -92,16 +123,21 @@
   }
 
   async function connectDropbox() {
-    if (DROPBOX_APP_KEY === "YOUR_DROPBOX_APP_KEY" || !DROPBOX_APP_KEY.trim()) {
-      setMessage("Setup required: add your Dropbox App Key in dropbox-integration.js.", "error");
+    if (!DROPBOX_APP_KEY || DROPBOX_APP_KEY === "YOUR_DROPBOX_APP_KEY") {
+      setModalOpen(true);
+      setStatus("Setup needed: add your Dropbox App Key in dropbox-integration.js.", "error");
       return;
     }
+
     if (!sdkAvailable()) {
-      setMessage("The Dropbox SDK could not be loaded. Refresh the page and try again.", "error");
+      setModalOpen(true);
+      setStatus("The Dropbox SDK could not be loaded. Refresh the page and try again.", "error");
       return;
     }
+
     if (!window.crypto || !window.crypto.subtle || !window.crypto.getRandomValues) {
-      setMessage("This browser does not provide the Web Crypto API required by Dropbox PKCE.", "error");
+      setModalOpen(true);
+      setStatus("This browser does not provide the Web Crypto API required by Dropbox PKCE.", "error");
       return;
     }
 
@@ -118,13 +154,13 @@
         true
       );
 
-      // Keep only the PKCE verifier and OAuth state across the redirect.
       sessionStorage.setItem(STORAGE.codeVerifier, auth.getCodeVerifier());
       sessionStorage.setItem(STORAGE.oauthState, state);
-      setMessage("Redirecting to Dropbox for authorization...");
+      setStatus("Redirecting to Dropbox to connect your account…");
       window.location.assign(authUrl);
     } catch (error) {
-      setMessage("Could not start Dropbox authorization: " + errorMessage(error), "error");
+      setModalOpen(true);
+      setStatus("Could not start Dropbox authorization: " + errorMessage(error), "error");
     }
   }
 
@@ -150,7 +186,8 @@
     if (oauthError) {
       sessionStorage.removeItem(STORAGE.codeVerifier);
       sessionStorage.removeItem(STORAGE.oauthState);
-      setMessage("Dropbox authorization was not completed: " + oauthError, "error");
+      setModalOpen(true);
+      setStatus("Dropbox authorization was not completed: " + oauthError, "error");
       return true;
     }
 
@@ -160,19 +197,22 @@
       expectedState = sessionStorage.getItem(STORAGE.oauthState);
       verifier = sessionStorage.getItem(STORAGE.codeVerifier);
     } catch (_) {
-      setMessage("This browser could not read the temporary OAuth session. Please connect again.", "error");
+      setModalOpen(true);
+      setStatus("This browser could not read the temporary OAuth session. Please connect again.", "error");
       return true;
     }
 
     if (!returnedState || !expectedState || returnedState !== expectedState || !verifier) {
       sessionStorage.removeItem(STORAGE.codeVerifier);
       sessionStorage.removeItem(STORAGE.oauthState);
-      setMessage("Dropbox sign-in could not be verified. Please connect again.", "error");
+      setModalOpen(true);
+      setStatus("Dropbox sign-in could not be verified. Please connect again.", "error");
       return true;
     }
 
     if (!sdkAvailable()) {
-      setMessage("The Dropbox SDK could not be loaded while completing sign-in.", "error");
+      setModalOpen(true);
+      setStatus("The Dropbox SDK could not be loaded while completing sign-in.", "error");
       return true;
     }
 
@@ -181,6 +221,7 @@
       auth.setCodeVerifier(verifier);
       const tokenResponse = await auth.getAccessTokenFromCode(redirectUri, code);
       const result = tokenResponse && tokenResponse.result;
+
       if (!result || !result.access_token) {
         throw new Error("Dropbox did not return an access token.");
       }
@@ -195,45 +236,48 @@
       sessionStorage.removeItem(STORAGE.oauthState);
 
       initializeClient(result.access_token);
-      setMessage("Connected to Dropbox. Choose Open File to browse your PDFs.", "success");
+      setModalOpen(true);
+      setStatus("Connected. Loading your Dropbox PDFs…");
+      await listDropboxPdfs();
       return true;
     } catch (error) {
       sessionStorage.removeItem(STORAGE.codeVerifier);
       sessionStorage.removeItem(STORAGE.oauthState);
-      setMessage("Could not complete Dropbox sign-in: " + errorMessage(error), "error");
+      setModalOpen(true);
+      setStatus("Could not complete Dropbox sign-in: " + errorMessage(error), "error");
       return true;
     }
   }
 
   function initializeClient(accessToken) {
     dbx = new window.Dropbox.Dropbox({ accessToken: accessToken });
-    setConnectedUi(true);
+    updateSyncButton();
   }
 
   function restoreSession() {
     let token;
     let expiresAt;
+
     try {
       token = sessionStorage.getItem(STORAGE.accessToken);
       expiresAt = Number(sessionStorage.getItem(STORAGE.expiresAt));
     } catch (_) {
-      setMessage("Session storage is unavailable. Enable it to keep Dropbox connected in this tab.", "error");
+      setStatus("Session storage is unavailable. Enable it to connect Dropbox in this tab.", "error");
       return;
     }
 
     if (!token || !expiresAt || expiresAt <= Date.now() + 15000) {
       if (token) clearSessionCredentials();
-      setConnectedUi(false);
+      updateSyncButton();
       return;
     }
 
     if (!sdkAvailable()) {
-      setMessage("The Dropbox SDK could not be loaded. Refresh the page and try again.", "error");
+      setStatus("The Dropbox SDK could not be loaded. Refresh the page and try again.", "error");
       return;
     }
 
     initializeClient(token);
-    setMessage("Dropbox Connected. Choose Open File to browse your PDFs.");
   }
 
   function errorMessage(error) {
@@ -245,9 +289,9 @@
   function handleRequestError(error) {
     if (error && (error.status === 401 || error.status === 400)) {
       clearSessionCredentials();
-      setMessage("Your Dropbox session may have expired. Connect Dropbox again.", "error");
+      setStatus("Your Dropbox session may have expired. Click Dropbox to connect again.", "error");
     } else {
-      setMessage("Dropbox request failed: " + errorMessage(error), "error");
+      setStatus("Dropbox request failed: " + errorMessage(error), "error");
     }
   }
 
@@ -278,73 +322,111 @@
       });
   }
 
+  function makePdfIcon() {
+    const wrapper = document.createElement("span");
+    wrapper.className = "dropbox-file-icon";
+    wrapper.setAttribute("aria-hidden", "true");
+    wrapper.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 2.75h8l4 4V21H6z"/><path d="M14 2.75v4h4M8.5 13h7M8.5 16.5h7"/></svg>';
+    return wrapper;
+  }
+
   function renderPdfFiles(files) {
-    fileList.replaceChildren();
-    fileList.hidden = false;
+    if (!modalFileList) return;
+    modalFileList.replaceChildren();
+    modalFileList.hidden = files.length === 0;
 
     if (!files.length) {
-      setMessage("No PDF files were found in this Dropbox account.");
+      setStatus("No PDF files were found in your Dropbox account.");
       return;
     }
 
     files.forEach(function (file) {
       const item = document.createElement("li");
-      item.className = "dropbox-file-item";
+      item.className = "dropbox-modal-file-item";
 
       const button = document.createElement("button");
       button.type = "button";
       button.className = "dropbox-file-button";
       button.title = file.path_display || file.path_lower;
-      button.appendChild(document.createTextNode(file.name));
+      button.appendChild(makePdfIcon());
 
-      const pathLabel = document.createElement("span");
-      pathLabel.className = "dropbox-file-path";
-      pathLabel.textContent = file.path_display || file.path_lower;
-      button.appendChild(pathLabel);
+      const copy = document.createElement("span");
+      copy.className = "dropbox-file-copy";
 
+      const name = document.createElement("span");
+      name.className = "dropbox-file-name";
+      name.textContent = file.name;
+
+      const path = document.createElement("span");
+      path.className = "dropbox-file-path";
+      path.textContent = file.path_display || file.path_lower;
+
+      copy.append(name, path);
+
+      const arrow = document.createElement("span");
+      arrow.className = "dropbox-file-arrow";
+      arrow.setAttribute("aria-hidden", "true");
+      arrow.textContent = "›";
+
+      button.append(copy, arrow);
       button.addEventListener("click", function () {
         openDropboxFile(file);
       });
 
       item.appendChild(button);
-      fileList.appendChild(item);
+      modalFileList.appendChild(item);
     });
 
-    setMessage("Choose a PDF to open it in the workspace.");
+    setStatus(files.length + (files.length === 1 ? " PDF found." : " PDFs found.") + " Select a file to open it.");
+  }
+
+  async function openDropboxPicker() {
+    if (!dbx) {
+      await connectDropbox();
+      return;
+    }
+    setModalOpen(true);
+    await listDropboxPdfs();
   }
 
   async function listDropboxPdfs() {
     if (!dbx || isListingFiles || isOpeningFile) return;
 
     isListingFiles = true;
-    openFileButton.disabled = true;
-    openFileButton.textContent = "Loading PDFs...";
-    fileList.hidden = false;
-    fileList.replaceChildren();
-    setMessage("Loading PDFs from Dropbox...");
+    setStatus("Loading PDFs from Dropbox…");
+    setModalLoading(true);
 
     try {
       const files = await fetchAllPdfFiles();
+      setModalLoading(false);
       renderPdfFiles(files);
     } catch (error) {
+      setModalLoading(false);
       handleRequestError(error);
     } finally {
       isListingFiles = false;
-      openFileButton.disabled = false;
-      openFileButton.textContent = "Open File";
     }
   }
 
   async function openDropboxFile(file) {
     if (!dbx || isOpeningFile || !file || !file.path_lower) return;
 
+    // Clear any previous source before starting the new selection's download.
+    activeFilePathLower = null;
+    activeFileName = null;
+    activeSourcePdfBlob = null;
+    editedPdfBlob = null;
+    updateSyncButton();
+
+    // The requested behavior is to close the picker as soon as a row is chosen.
+    setModalOpen(false);
     isOpeningFile = true;
-    openFileButton.disabled = true;
-    setMessage("Opening " + file.name + " from Dropbox...");
 
     try {
+      setStatus("Opening " + file.name + "…");
       const response = await dbx.filesDownload({ path: file.path_lower });
       const downloadedBlob = response && response.result && response.result.fileBlob;
+
       if (!(downloadedBlob instanceof Blob)) {
         throw new Error("Dropbox downloaded the file, but no PDF Blob was returned.");
       }
@@ -353,10 +435,8 @@
       activeFileName = file.name;
       activeSourcePdfBlob = downloadedBlob;
       editedPdfBlob = null;
-      if (activeFileLabel) activeFileLabel.textContent = "Selected: " + activeFileName;
       updateSyncButton();
 
-      // This in-memory path is intentionally the exact Dropbox path for overwrite.
       window.dispatchEvent(new CustomEvent("lux:dropbox-pdf-loaded", {
         detail: {
           pdfBlob: downloadedBlob,
@@ -371,15 +451,16 @@
         await loadPdfIntoViewer(downloadedBlob, file.name);
       }
 
-      setMessage(
-        "Opened " + file.name + ". Sync will overwrite this Dropbox path only after the editor supplies an edited PDF Blob.",
-        "success"
-      );
+      setStatus("Opened " + file.name + ".");
+      if (syncButton) {
+        syncButton.title = "Sync changes to " + file.name + " in Dropbox";
+        syncButton.textContent = "Sync";
+      }
     } catch (error) {
       handleRequestError(error);
+      setModalOpen(true);
     } finally {
       isOpeningFile = false;
-      openFileButton.disabled = false;
       updateSyncButton();
     }
   }
@@ -391,6 +472,7 @@
     }
 
     if (!workspace) return;
+
     if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
     previewObjectUrl = URL.createObjectURL(pdfBlob);
     workspace.replaceChildren();
@@ -417,7 +499,6 @@
   }
 
   async function getEditedPdfBlob() {
-    // The future editor may expose exportPdf(); otherwise it can call setEditedPdfBlob().
     if (window.LuxPdfViewer && typeof window.LuxPdfViewer.exportPdf === "function") {
       const exported = await window.LuxPdfViewer.exportPdf();
       if (exported instanceof Blob) return exported;
@@ -436,9 +517,11 @@
     if (!dbx || !activeFilePathLower || isSyncing) return;
 
     isSyncing = true;
+    if (syncFeedbackTimer) window.clearTimeout(syncFeedbackTimer);
     syncButton.textContent = "Syncing...";
+    syncButton.title = "Syncing PDF to Dropbox";
     syncButton.disabled = true;
-    setMessage("Syncing changes to Dropbox...");
+    setStatus("Syncing changes to Dropbox…");
 
     try {
       const blobToUpload = await getEditedPdfBlob();
@@ -454,34 +537,43 @@
 
       editedPdfBlob = blobToUpload;
       syncButton.textContent = "Saved!";
-      setMessage("Saved! Replaced " + activeFileName + " at its original Dropbox path.", "success");
-      window.setTimeout(function () {
+      syncButton.title = "Saved to Dropbox";
+      setStatus("Saved! Replaced " + activeFileName + " at its original Dropbox path.", "success");
+      syncFeedbackTimer = window.setTimeout(function () {
         if (!isSyncing && syncButton.textContent === "Saved!") {
-          syncButton.textContent = "Sync to Dropbox";
+          syncButton.textContent = "Sync";
+          syncButton.title = "Sync changes to " + activeFileName + " in Dropbox";
         }
       }, 2200);
     } catch (error) {
+      const detail = errorMessage(error);
       handleRequestError(error);
-      syncButton.textContent = "Sync to Dropbox";
+      syncButton.textContent = "Sync failed";
+      syncButton.title = detail;
+      syncFeedbackTimer = window.setTimeout(function () {
+        if (!isSyncing && syncButton.textContent === "Sync failed") {
+          syncButton.textContent = "Sync";
+          syncButton.title = activeFileName ? "Sync changes to " + activeFileName + " in Dropbox" : "Sync";
+        }
+      }, 3500);
     } finally {
       isSyncing = false;
       updateSyncButton();
     }
   }
 
-  // Public bridge for the PDF editor: call this with its newly exported/annotated PDF Blob.
   window.LuxDropboxIntegration = {
     setEditedPdfBlob: function (blob) {
       if (!(blob instanceof Blob)) {
         throw new TypeError("setEditedPdfBlob expects a Blob returned by the PDF editor.");
       }
       editedPdfBlob = blob;
-      setMessage("Edited PDF ready to sync to Dropbox.");
+      setStatus("Edited PDF is ready to sync.");
       updateSyncButton();
     },
     clearEditedPdfBlob: function () {
       editedPdfBlob = null;
-      setMessage("Editor changes cleared; no updated PDF is ready to sync.");
+      setStatus("Editor changes cleared; no updated PDF is ready to sync.");
     },
     getActiveFile: function () {
       if (!activeFilePathLower) return null;
@@ -490,20 +582,37 @@
         pathLower: activeFilePathLower,
         sourceBlob: activeSourcePdfBlob
       };
-    }
+    },
+    openPicker: openDropboxPicker
   };
 
-  if (connectButton) connectButton.addEventListener("click", connectDropbox);
-  if (openFileButton) openFileButton.addEventListener("click", listDropboxPdfs);
-  if (syncButton) syncButton.addEventListener("click", syncToDropbox);
+  dropboxButton?.addEventListener("click", openDropboxPicker);
+  syncButton?.addEventListener("click", syncToDropbox);
+  modalCloseButton?.addEventListener("click", function () {
+    setModalOpen(false);
+  });
+  modal?.querySelectorAll("[data-dropbox-modal-close]").forEach(function (element) {
+    element.addEventListener("click", function () {
+      setModalOpen(false);
+    });
+  });
+  modal?.addEventListener("click", function (event) {
+    if (event.target === modal) setModalOpen(false);
+  });
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && modal && !modal.hidden) {
+      setModalOpen(false);
+    }
+  });
 
   async function initialize() {
-    setConnectedUi(false);
+    updateSyncButton();
     try {
       const callbackHandled = await handleOAuthCallback();
       if (!callbackHandled) restoreSession();
     } catch (error) {
-      setMessage("Dropbox setup error: " + errorMessage(error), "error");
+      setModalOpen(true);
+      setStatus("Dropbox setup error: " + errorMessage(error), "error");
     }
   }
 
