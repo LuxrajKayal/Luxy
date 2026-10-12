@@ -95,22 +95,16 @@
     <div class="workspace-layout">
       <aside id="sidebar" class="sidebar" aria-label="Sidebar">
         <div class="sidebar-inner">
-          <section class="cloud-panel" aria-labelledby="dropbox-heading">
-            <p class="sidebar-eyebrow">Cloud storage</p>
-            <h2 id="dropbox-heading" class="sidebar-heading">Dropbox</h2>
-            <p id="dropbox-connection-status" class="dropbox-connection-status" role="status" aria-live="polite">Not connected</p>
-
-            <button id="dropbox-connect" class="dropbox-button dropbox-button-primary" type="button">Connect Dropbox</button>
-
-            <div id="dropbox-connected-controls" class="dropbox-connected-controls" hidden>
-              <button id="dropbox-open-file" class="dropbox-button" type="button">Open File</button>
-              <button id="dropbox-sync" class="dropbox-button dropbox-button-primary" type="button" disabled>Sync to Dropbox</button>
-              <p id="dropbox-active-file" class="dropbox-active-file">No PDF selected</p>
-              <ul id="dropbox-file-list" class="dropbox-file-list" aria-label="PDF files in Dropbox" hidden></ul>
-            </div>
-
-            <p id="dropbox-message" class="dropbox-message" role="status" aria-live="polite">Connect Dropbox to browse your PDFs.</p>
-          </section>
+          <div class="sidebar-cloud-actions">
+            <button id="dropbox-connect" class="dropbox-button dropbox-button-primary" type="button">
+              <svg class="dropbox-logo" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7.2 2.8 2.4 5.9l4.8 3 4.8-3-4.8-3Zm9.6 0L12 5.9l4.8 3 4.8-3-4.8-3ZM7.2 9l-4.8 3 4.8 3 4.8-3-4.8-3Zm9.6 0L12 12l4.8 3 4.8-3-4.8-3-4.8 3 4.8 3 4.8-3-4.8-3ZM7.2 15.2l4.8 3 4.8-3-4.8-3-4.8 3Z"/>
+              </svg>
+              <span>Dropbox</span>
+            </button>
+            <button id="dropbox-sync" class="dropbox-button dropbox-sync-button" type="button" hidden disabled>Sync</button>
+          </div>
+          <p id="dropbox-accessible-status" class="visually-hidden" role="status" aria-live="polite"></p>
         </div>
       </aside>
       <main class="workspace" aria-label="PDF workspace">
@@ -123,6 +117,28 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dropbox.js/10.33.0/Dropbox-sdk.min.js"></script>
+<div id="dropbox-modal" class="dropbox-modal" role="dialog" aria-modal="true" aria-labelledby="dropbox-modal-title" aria-describedby="dropbox-modal-status" hidden>
+    <div class="dropbox-modal-backdrop" data-dropbox-modal-close></div>
+    <section class="dropbox-modal-panel" role="document">
+      <header class="dropbox-modal-header">
+        <div>
+          <p class="dropbox-modal-eyebrow">Cloud library</p>
+          <h2 id="dropbox-modal-title">Open from Dropbox</h2>
+        </div>
+        <button id="dropbox-modal-close" class="dropbox-modal-close" type="button" aria-label="Close Dropbox file picker" title="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+      </header>
+      <p id="dropbox-modal-status" class="dropbox-modal-status" role="status" aria-live="polite">Loading your PDF files…</p>
+      <div id="dropbox-modal-loading" class="dropbox-modal-loading" hidden>
+        <span class="dropbox-spinner" aria-hidden="true"></span>
+        <span>Loading PDFs from Dropbox…</span>
+      </div>
+      <ul id="dropbox-modal-file-list" class="dropbox-modal-file-list" aria-label="PDF files in Dropbox" hidden></ul>
+    </section>
+  </div>
+
+
   <script src="./dropbox-integration.js"></script>
   <footer class="site-footer"><a href="./privacy.html">Privacy Policy</a></footer>
 </body>
