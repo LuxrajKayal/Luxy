@@ -132,7 +132,7 @@ topbar?.addEventListener("mouseenter", showTopbar);
 topbar?.addEventListener("mouseleave", hideTopbar);
 topbar?.addEventListener("focusin", showTopbar);
 
-// Sidebar: manually toggled, with no hover- or scroll-driven behavior.
+// Sidebar: only the user's button controls its state; scrolling and hover do nothing.
 function setSidebarOpen(isOpen, savePreference = true) {
   document.documentElement.setAttribute("data-sidebar-open", String(isOpen));
   sidebarToggle?.setAttribute("aria-expanded", String(isOpen));
