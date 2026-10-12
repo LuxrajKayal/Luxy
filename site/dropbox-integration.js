@@ -22,6 +22,15 @@
   const redirectUri = window.location.origin + window.location.pathname;
   const dropboxButton = document.querySelector("#dropbox-connect");
   const syncButton = document.querySelector("#dropbox-sync");
+  const accountToggle = document.querySelector("#dropbox-account-toggle");
+  const accountMenu = document.querySelector("#dropbox-account-menu");
+  const accountMenuDescription = document.querySelector("#dropbox-account-menu-description");
+  const menuConnectButton = document.querySelector("#dropbox-menu-connect");
+  const menuDisconnectButton = document.querySelector("#dropbox-menu-disconnect");
+  const disconnectConfirmation = document.querySelector("#dropbox-disconnect-confirmation");
+  const disconnectCancelButton = document.querySelector("#dropbox-disconnect-cancel");
+  const disconnectConfirmButton = document.querySelector("#dropbox-disconnect-confirm");
+  const accountFeedback = document.querySelector("#dropbox-account-feedback");
   const statusText = document.querySelector("#dropbox-status-text");
   const modal = document.querySelector("#dropbox-modal");
   const modalCloseButton = document.querySelector("#dropbox-modal-close");
@@ -42,6 +51,7 @@
   let isSyncing = false;
   let lastFocusedElement = null;
   let syncFeedbackTimer = null;
+  let isDisconnecting = false;
 
   function setStatus(text, kind) {
     if (modalStatus) {
@@ -60,9 +70,60 @@
       "uploading": "Uploading",
       "saved": "Saved"
     };
-    if (!statusText) return;
-    statusText.dataset.state = labels[state] ? state : "not-connected";
-    statusText.textContent = labels[state] || labels["not-connected"];
+    const normalizedState = labels[state] ? state : "not-connected";
+    if (statusText) {
+      statusText.dataset.state = normalizedState;
+      statusText.textContent = labels[normalizedState];
+    }
+    if (accountToggle) {
+      accountToggle.setAttribute("aria-label", "Dropbox account: " + labels[normalizedState]);
+      accountToggle.title = "Dropbox account: " + labels[normalizedState];
+    }
+
+    if (accountMenuDescription) {
+      if (dbx && (normalizedState === "connected" || normalizedState === "saved" || normalizedState === "uploading")) {
+        accountMenuDescription.textContent = "Your Dropbox account is connected to Lux PDF Viewer.";
+      } else if (normalizedState === "connection-failed") {
+        accountMenuDescription.textContent = dbx
+          ? "The last Dropbox request failed. You can disconnect this session or try again."
+          : "Dropbox could not connect. Try connecting again.";
+      } else {
+        accountMenuDescription.textContent = "Connect your Dropbox account to browse and open PDFs.";
+      }
+    }
+
+    if (menuConnectButton) menuConnectButton.hidden = Boolean(dbx);
+    if (menuDisconnectButton) menuDisconnectButton.hidden = !dbx;
+  }
+
+  function setAccountFeedback(text, kind) {
+    if (!accountFeedback) return;
+    accountFeedback.textContent = text || "";
+    accountFeedback.hidden = !text;
+    if (kind) accountFeedback.dataset.kind = kind;
+    else delete accountFeedback.dataset.kind;
+  }
+
+  function setAccountMenuOpen(isOpen) {
+    if (!accountMenu || !accountToggle) return;
+    accountMenu.hidden = !isOpen;
+    accountToggle.setAttribute("aria-expanded", String(isOpen));
+    if (!isOpen) {
+      if (disconnectConfirmation) disconnectConfirmation.hidden = true;
+      if (menuDisconnectButton) menuDisconnectButton.hidden = !dbx;
+      if (disconnectConfirmButton) {
+        disconnectConfirmButton.disabled = false;
+        disconnectConfirmButton.textContent = "Disconnect";
+      }
+      if (disconnectCancelButton) disconnectCancelButton.disabled = false;
+    } else {
+      setAccountFeedback("", "");
+      if (disconnectConfirmation) disconnectConfirmation.hidden = true;
+      if (menuDisconnectButton) menuDisconnectButton.hidden = !dbx;
+      window.requestAnimationFrame(function () {
+        (dbx ? menuDisconnectButton : menuConnectButton)?.focus();
+      });
+    }
   }
 
   function setModalLoading(isLoading) {
@@ -138,6 +199,7 @@
   }
 
   async function connectDropbox() {
+    setConnectionStatus("not-connected");
     if (!DROPBOX_APP_KEY || DROPBOX_APP_KEY === "YOUR_DROPBOX_APP_KEY") {
       setModalOpen(true);
       setConnectionStatus("connection-failed");
@@ -630,6 +692,93 @@
 
   dropboxButton?.addEventListener("click", openDropboxPicker);
   syncButton?.addEventListener("click", syncToDropbox);
+
+  accountToggle?.addEventListener("click", function (event) {
+    event.stopPropagation();
+    setAccountMenuOpen(Boolean(accountMenu && accountMenu.hidden));
+  });
+
+  accountMenu?.addEventListener("click", function (event) {
+    event.stopPropagation();
+  });
+
+  menuConnectButton?.addEventListener("click", async function () {
+    setAccountMenuOpen(false);
+    await openDropboxPicker();
+  });
+
+  menuDisconnectButton?.addEventListener("click", function () {
+    if (!dbx || isDisconnecting) return;
+    setAccountFeedback("", "");
+    if (disconnectConfirmation) disconnectConfirmation.hidden = false;
+    menuDisconnectButton.hidden = true;
+    disconnectConfirmButton?.focus();
+  });
+
+  disconnectCancelButton?.addEventListener("click", function () {
+    if (disconnectConfirmation) disconnectConfirmation.hidden = true;
+    if (menuDisconnectButton) menuDisconnectButton.hidden = !dbx;
+    setAccountFeedback("", "");
+    menuDisconnectButton?.focus();
+  });
+
+  disconnectConfirmButton?.addEventListener("click", async function () {
+    if (isDisconnecting) return;
+    isDisconnecting = true;
+    disconnectConfirmButton.disabled = true;
+    disconnectConfirmButton.textContent = "Disconnecting…";
+    if (disconnectCancelButton) disconnectCancelButton.disabled = true;
+    if (menuDisconnectButton) menuDisconnectButton.disabled = true;
+    setAccountFeedback("Disconnecting Dropbox…", "");
+
+    let tokenRevoked = false;
+    try {
+      if (dbx && typeof dbx.authTokenRevoke === "function") {
+        await dbx.authTokenRevoke();
+        tokenRevoked = true;
+      }
+    } catch (_) {
+      // Always clear the browser session below, even if the revoke request fails.
+    } finally {
+      clearSessionCredentials("not-connected");
+      isDisconnecting = false;
+      if (disconnectConfirmation) disconnectConfirmation.hidden = true;
+      if (menuDisconnectButton) {
+        menuDisconnectButton.disabled = false;
+        menuDisconnectButton.hidden = true;
+      }
+      if (disconnectCancelButton) disconnectCancelButton.disabled = false;
+      if (disconnectConfirmButton) {
+        disconnectConfirmButton.disabled = false;
+        disconnectConfirmButton.textContent = "Disconnect";
+      }
+
+      if (tokenRevoked) {
+        setAccountFeedback("Dropbox disconnected. Your session has been cleared and the access token was revoked.", "success");
+      } else {
+        setAccountFeedback("You are signed out of Luxy on this tab, but Dropbox could not confirm token revocation. To revoke access completely, remove Lux PDF Viewer from your Dropbox connected apps.", "error");
+      }
+    }
+  });
+
+  document.addEventListener("click", function (event) {
+    if (
+      accountMenu &&
+      !accountMenu.hidden &&
+      !accountMenu.contains(event.target) &&
+      accountToggle &&
+      !accountToggle.contains(event.target)
+    ) {
+      setAccountMenuOpen(false);
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && accountMenu && !accountMenu.hidden) {
+      setAccountMenuOpen(false);
+      accountToggle?.focus();
+    }
+  });
   modalCloseButton?.addEventListener("click", function () {
     setModalOpen(false);
   });
