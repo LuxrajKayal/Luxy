@@ -933,9 +933,18 @@ body[data-focus-mode="true"] .workspace-shell {
   border-radius: 9px;
 }
 
-.dropbox-icon-button .dropbox-logo {
+.dropbox-icon-button .dropbox-logo,
+.dropbox-icon-button .clipboard-icon {
   width: 22px;
   height: 22px;
+}
+
+.clipboard-icon {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .viewport-mode-button .viewport-mode-icon {
