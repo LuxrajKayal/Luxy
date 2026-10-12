@@ -48,7 +48,7 @@ Dropbox authentication requires the redirect URI used by the local address to be
 
 Original first-party Lux Omni software and project materials are attributed to **Luxraj Kayal (Subrata Kayal)** and are subject to the terms in [LICENSE](LICENSE). Third-party components are not claimed as first-party work and remain subject to their respective owners' licences and notices; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-Because this repository is public on GitHub, access to it and platform features such as viewing or forking are subject to GitHub's terms. This repository's rights notice does not grant a general licence to reuse first-party material outside applicable permissions.
+Access to this repository and use of GitHub features are subject to GitHub's terms. Those platform permissions do not grant a general licence to reuse first-party material outside applicable permissions.
 
 ## Contact and project issues
 
