@@ -113,13 +113,23 @@
       </button>
     </div>
     <div id="viewport-composition" class="viewport-composition" hidden>
-      <div id="viewport-topbar" class="viewport-topbar" aria-label="Viewport toolbar"></div>
+      <div id="viewport-topbar" class="viewport-topbar" aria-label="Viewport toolbar">
+        <div id="viewport-toolbar-full" class="viewport-toolbar-section viewport-toolbar-section--full" hidden>
+          <button id="viewport-close-full" class="viewport-close-button" type="button" data-viewport-close="full" aria-label="Close full-screen viewport" title="Close viewport">×</button>
+        </div>
+        <div id="viewport-toolbar-left" class="viewport-toolbar-section viewport-toolbar-section--left" hidden>
+          <button id="viewport-close-left" class="viewport-close-button" type="button" data-viewport-close="left" aria-label="Close left viewport" title="Close left viewport">×</button>
+        </div>
+        <div id="viewport-toolbar-right" class="viewport-toolbar-section viewport-toolbar-section--right" hidden>
+          <button id="viewport-close-right" class="viewport-close-button" type="button" data-viewport-close="right" aria-label="Close right viewport" title="Close right viewport">×</button>
+        </div>
+      </div>
       <div id="viewport-fullscreen-layout" class="viewport-stage viewport-stage--full" hidden>
-        <div class="viewport"></div>
+        <div class="viewport" data-viewport-side="full"></div>
       </div>
       <div id="viewport-split-layout" class="viewport-stage viewport-stage--split" hidden>
-        <div class="viewport viewport--split"></div>
-        <div class="viewport viewport--split"></div>
+        <div class="viewport viewport--split" data-viewport-side="left"></div>
+        <div class="viewport viewport--split" data-viewport-side="right"></div>
       </div>
       <div id="viewport-split-divider" class="viewport-split-divider" role="separator" aria-label="Resize viewports" aria-orientation="vertical" aria-valuemin="20" aria-valuemax="80" aria-valuenow="50" tabindex="0" hidden></div>
     </div>
