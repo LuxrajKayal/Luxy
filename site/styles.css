@@ -21,7 +21,7 @@
   --control-hover-bg: #f7f8ff;
   --control-hover-border: #bac7ff;
   --focus-outline: #a5b4fc;
-  --sidebar-width: 68px;
+  --sidebar-width: 292px;
 }
 
 :root[data-theme="dark"] {
@@ -320,6 +320,215 @@ body[data-focus-mode="true"] .workspace-shell {
   background: var(--workspace);
 }
 
+.sidebar-inner {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  min-height: calc(100vh - 120px);
+  height: 100%;
+  padding: 22px 16px;
+  overflow-x: hidden;
+}
+
+.cloud-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.sidebar-eyebrow {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.sidebar-heading {
+  margin: -7px 0 0;
+  color: var(--brand-name);
+  font-size: 21px;
+  letter-spacing: -0.035em;
+}
+
+.dropbox-connection-status {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.dropbox-connection-status[data-connected="true"] {
+  color: #21865b;
+}
+
+.dropbox-button {
+  width: 100%;
+  min-height: 40px;
+  padding: 9px 11px;
+  border: 1px solid var(--control-border);
+  border-radius: 9px;
+  color: var(--control-text);
+  background: var(--control-bg);
+  cursor: pointer;
+  text-align: center;
+  overflow-wrap: anywhere;
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, opacity 180ms ease;
+}
+
+.dropbox-button:hover:not(:disabled) {
+  border-color: var(--control-hover-border);
+  background: var(--control-hover-bg);
+}
+
+.dropbox-button:focus-visible,
+.dropbox-file-button:focus-visible {
+  outline: 3px solid var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.dropbox-button-primary {
+  border-color: var(--accent);
+  color: var(--panel);
+  background: var(--accent);
+  font-weight: 700;
+}
+
+.dropbox-button-primary:hover:not(:disabled) {
+  border-color: var(--accent);
+  opacity: 0.88;
+}
+
+.dropbox-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.dropbox-connected-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dropbox-active-file {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.dropbox-message {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.dropbox-message[data-kind="error"] {
+  color: #c44545;
+}
+
+.dropbox-message[data-kind="success"] {
+  color: #21865b;
+}
+
+.dropbox-file-list {
+  display: flex;
+  max-height: 38vh;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0 2px 0 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.dropbox-file-item {
+  min-width: 0;
+}
+
+.dropbox-file-button {
+  display: block;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--control-text);
+  background: var(--control-bg);
+  cursor: pointer;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.dropbox-file-button:hover {
+  border-color: var(--control-hover-border);
+  background: var(--control-hover-bg);
+}
+
+.dropbox-file-path {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.workspace-empty-state {
+  display: flex;
+  min-height: 50vh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.workspace-empty-state h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: clamp(21px, 3vw, 30px);
+  letter-spacing: -0.04em;
+}
+
+.workspace-empty-state p {
+  max-width: 620px;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.pdf-preview-frame {
+  display: block;
+  width: 100%;
+  height: calc(100vh - 150px);
+  min-height: 500px;
+  border: 0;
+  background: var(--panel);
+}
+
+.pdf-preview-heading {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.pdf-preview-note {
+  margin: 0;
+  padding: 11px 18px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
 body[data-focus-mode="true"] .workspace-layout,
 body[data-focus-mode="true"] .sidebar-inner,
 body[data-focus-mode="true"] .workspace {
@@ -331,6 +540,10 @@ body[data-focus-mode="true"] .workspace {
 }
 
 @media (max-width: 560px) {
+  :root {
+    --sidebar-width: min(82vw, 292px);
+  }
+
   .topbar {
     min-height: 68px;
     gap: 10px;
