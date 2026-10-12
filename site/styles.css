@@ -451,6 +451,7 @@ body[data-focus-mode="true"] .topbar.is-visible {
 }
 
 .workspace-shell {
+  position: relative;
   margin-top: 76px;
 }
 
@@ -459,11 +460,33 @@ body[data-focus-mode="true"] .workspace-shell {
 }
 
 .sidebar-toggle-row {
+  position: relative;
+  z-index: 4;
   display: flex;
   height: 44px;
   align-items: center;
   padding: 0 12px;
   background: var(--workspace);
+  pointer-events: none;
+}
+
+.sidebar-toggle {
+  pointer-events: auto;
+}
+
+.viewport-topbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: var(--sidebar-width);
+  z-index: 3;
+  height: 44px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+:root[data-sidebar-open="false"] .viewport-topbar {
+  left: 0;
 }
 
 .sidebar-toggle {
