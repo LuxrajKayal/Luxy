@@ -522,8 +522,6 @@ body[data-focus-mode="true"] .workspace-shell {
   background: var(--workspace);
 }
 
-
-
 .sidebar-cloud-actions {
   display: flex;
   width: 100%;
