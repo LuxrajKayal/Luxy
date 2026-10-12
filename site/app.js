@@ -16,7 +16,16 @@ const viewportTopbar = document.querySelector("#viewport-topbar");
 const viewportToolbarFull = document.querySelector("#viewport-toolbar-full");
 const viewportToolbarLeft = document.querySelector("#viewport-toolbar-left");
 const viewportToolbarRight = document.querySelector("#viewport-toolbar-right");
+const viewportNumberFull = document.querySelector("#viewport-number-full");
+const viewportNumberLeft = document.querySelector("#viewport-number-left");
+const viewportNumberRight = document.querySelector("#viewport-number-right");
+const viewportMinimizedDock = document.querySelector("#viewport-minimized-dock");
+const viewportMinimizedItems = document.querySelector("#viewport-minimized-items");
 const splitViewportDivider = document.querySelector("#viewport-split-divider");
+
+const viewportMinimizeFullButton = document.querySelector("#viewport-minimize-full");
+const viewportMinimizeLeftButton = document.querySelector("#viewport-minimize-left");
+const viewportMinimizeRightButton = document.querySelector("#viewport-minimize-right");
 
 const THEME_STORAGE_KEY = "lux-pdf-viewer-theme";
 const FOCUS_MODE_STORAGE_KEY = "lux-pdf-viewer-focus-mode";
@@ -182,7 +191,21 @@ sidebarToggle?.addEventListener("click", () => {
   setSidebarOpen(!isOpen);
 });
 
-// Viewport layouts and close controls.
+// Viewport layouts, minimize/restore, and close controls.
+let activeViewportMode = null;
+let soloSplitSide = null;
+let rememberedSplitRatio = 0.5;
+const minimizedViewportStates = new Map();
+
+function getViewportElement(side) {
+  if (side === "full") {
+    return fullScreenViewportLayout?.querySelector(':scope > .viewport[data-viewport-side="full"]') ||
+      fullScreenViewportLayout?.querySelector(":scope > .viewport") ||
+      null;
+  }
+  return splitScreenViewportLayout?.querySelector(`:scope > .viewport[data-viewport-side="${side}"]`) || null;
+}
+
 function createSplitViewport(side) {
   const viewport = document.createElement("div");
   viewport.className = "viewport viewport--split";
@@ -191,39 +214,18 @@ function createSplitViewport(side) {
 }
 
 function ensureSplitViewports() {
-  if (!splitScreenViewportLayout || !fullScreenViewportLayout) return;
+  if (!splitScreenViewportLayout) return;
 
-  let leftViewport = splitScreenViewportLayout.querySelector(':scope > .viewport[data-viewport-side="left"]');
-  let rightViewport = splitScreenViewportLayout.querySelector(':scope > .viewport[data-viewport-side="right"]');
-  const fullViewport = fullScreenViewportLayout.querySelector(":scope > .viewport");
-
-  if (fullViewport?.dataset.viewportSide === "left" && !leftViewport) {
-    splitScreenViewportLayout.prepend(fullViewport);
-    leftViewport = fullViewport;
-  } else if (fullViewport?.dataset.viewportSide === "right" && !rightViewport) {
-    splitScreenViewportLayout.append(fullViewport);
-    rightViewport = fullViewport;
+  if (!getViewportElement("left")) {
+    splitScreenViewportLayout.prepend(createSplitViewport("left"));
   }
-
-  if (!leftViewport) {
-    leftViewport = createSplitViewport("left");
-    splitScreenViewportLayout.prepend(leftViewport);
-  }
-  if (!rightViewport) {
-    rightViewport = createSplitViewport("right");
-    splitScreenViewportLayout.append(rightViewport);
+  if (!getViewportElement("right")) {
+    splitScreenViewportLayout.append(createSplitViewport("right"));
   }
 }
 
 function ensureFullViewport() {
-  if (!fullScreenViewportLayout || !splitScreenViewportLayout) return;
-  if (fullScreenViewportLayout.querySelector(":scope > .viewport")) return;
-
-  const existingSplitViewport = splitScreenViewportLayout.querySelector(":scope > .viewport");
-  if (existingSplitViewport) {
-    fullScreenViewportLayout.append(existingSplitViewport);
-    return;
-  }
+  if (!fullScreenViewportLayout || getViewportElement("full")) return;
 
   const viewport = document.createElement("div");
   viewport.className = "viewport";
@@ -231,80 +233,241 @@ function ensureFullViewport() {
   fullScreenViewportLayout.append(viewport);
 }
 
+function getViewportNumber(side) {
+  if (side === "left") return "1/2";
+  if (side === "right") return "2/2";
+  return "0";
+}
+
+function getViewportFileName(side) {
+  const viewport = getViewportElement(side);
+  const explicitName = viewport?.dataset.fileName?.trim();
+  const headingName = viewport?.querySelector(".pdf-preview-heading")?.textContent?.trim();
+  const ariaName = viewport?.getAttribute("aria-label")?.trim();
+  return explicitName || headingName || ariaName || "Untitled";
+}
+
+function renderMinimizedViewportDock() {
+  if (!viewportMinimizedDock || !viewportMinimizedItems) return;
+
+  viewportMinimizedItems.replaceChildren();
+  const order = ["full", "left", "right"];
+  for (const side of order) {
+    const savedState = minimizedViewportStates.get(side);
+    if (!savedState) continue;
+
+    const fileName = getViewportFileName(side);
+    const number = getViewportNumber(side);
+    const button = document.createElement("button");
+    button.className = "viewport-minimized-bar";
+    button.type = "button";
+    button.setAttribute("aria-label", `Restore viewport ${number}, ${fileName}`);
+    button.title = `Restore viewport ${number}`;
+
+    const numberLabel = document.createElement("span");
+    numberLabel.className = "viewport-minimized-number";
+    numberLabel.textContent = number;
+
+    const fileLabel = document.createElement("span");
+    fileLabel.className = "viewport-minimized-file";
+    fileLabel.textContent = fileName;
+
+    const restoreMark = document.createElement("span");
+    restoreMark.className = "viewport-minimized-restore";
+    restoreMark.setAttribute("aria-hidden", "true");
+    restoreMark.textContent = "↗";
+
+    button.append(numberLabel, fileLabel, restoreMark);
+    button.addEventListener("click", () => restoreMinimizedViewport(side));
+    viewportMinimizedItems.append(button);
+  }
+
+  viewportMinimizedDock.hidden = minimizedViewportStates.size === 0;
+}
+
+function renderViewportComposition() {
+  if (!viewportComposition || !fullScreenViewportLayout || !splitScreenViewportLayout) return;
+
+  const isFull = activeViewportMode === "full";
+  const isSplit = activeViewportMode === "split";
+  const isSolo = activeViewportMode === "solo";
+  const hasActiveViewport = activeViewportMode !== null;
+  const hasMinimizedViewports = minimizedViewportStates.size > 0;
+
+  viewportComposition.dataset.mode = isSolo ? `solo-${soloSplitSide}` : (activeViewportMode || "minimized");
+  viewportComposition.hidden = !hasActiveViewport && !hasMinimizedViewports;
+  viewportComposition.classList.toggle("is-minimized-only", !hasActiveViewport && hasMinimizedViewports);
+
+  fullScreenViewportLayout.hidden = !isFull;
+  splitScreenViewportLayout.hidden = !(isSplit || isSolo);
+  if (viewportTopbar) viewportTopbar.hidden = !hasActiveViewport;
+  if (viewportToolbarFull) viewportToolbarFull.hidden = !(isFull || isSolo);
+  if (viewportToolbarLeft) viewportToolbarLeft.hidden = !isSplit;
+  if (viewportToolbarRight) viewportToolbarRight.hidden = !isSplit;
+  if (splitViewportDivider) splitViewportDivider.hidden = !isSplit;
+
+  if (viewportNumberFull) viewportNumberFull.hidden = !isFull;
+  if (viewportNumberLeft) viewportNumberLeft.hidden = !(isSplit || (isSolo && soloSplitSide === "left"));
+  if (viewportNumberRight) viewportNumberRight.hidden = !(isSplit || (isSolo && soloSplitSide === "right"));
+
+  fullScreenViewportButton?.setAttribute("aria-pressed", String(isFull || isSolo));
+  splitScreenViewportButton?.setAttribute("aria-pressed", String(isSplit));
+
+  const soloLabel = soloSplitSide === "left" ? "left" : "right";
+  viewportMinimizeFullButton?.setAttribute("aria-label", isSolo ? `Minimize ${soloLabel} viewport` : "Minimize full-screen viewport");
+  viewportMinimizeFullButton?.setAttribute("title", isSolo ? `Minimize ${soloLabel} viewport` : "Minimize viewport");
+  document.querySelector("#viewport-close-full")?.setAttribute("aria-label", isSolo ? `Close ${soloLabel} viewport` : "Close full-screen viewport");
+  document.querySelector("#viewport-close-full")?.setAttribute("title", isSolo ? `Close ${soloLabel} viewport` : "Close viewport");
+
+  renderMinimizedViewportDock();
+}
+
+function showNormalWorkspaceAfterViewportClose(clearWorkspace = false) {
+  if (!workspaceEmptyState || !workspace) return;
+  if (clearWorkspace) {
+    workspace.replaceChildren(workspaceEmptyState);
+  }
+  if (workspace.contains(workspaceEmptyState)) workspaceEmptyState.hidden = false;
+}
+
 function setViewportMode(mode) {
   if (!workspace || !viewportComposition || !fullScreenViewportLayout || !splitScreenViewportLayout) return;
 
-  const isFullScreen = mode === "full";
-  if (isFullScreen) {
+  if (mode === "full") {
     ensureFullViewport();
+    minimizedViewportStates.delete("full");
+    activeViewportMode = "full";
+    soloSplitSide = null;
   } else {
     ensureSplitViewports();
+    // Explicitly opening Split Screen restores both original split panes.
+    minimizedViewportStates.delete("left");
+    minimizedViewportStates.delete("right");
+    activeViewportMode = "split";
+    soloSplitSide = null;
+    setSplitViewportRatio(rememberedSplitRatio);
   }
 
   if (workspaceEmptyState) workspaceEmptyState.hidden = true;
-  viewportComposition.hidden = false;
-  fullScreenViewportLayout.hidden = !isFullScreen;
-  splitScreenViewportLayout.hidden = isFullScreen;
-  if (viewportTopbar) viewportTopbar.hidden = false;
-  if (viewportToolbarFull) viewportToolbarFull.hidden = !isFullScreen;
-  if (viewportToolbarLeft) viewportToolbarLeft.hidden = isFullScreen;
-  if (viewportToolbarRight) viewportToolbarRight.hidden = isFullScreen;
-  if (splitViewportDivider) splitViewportDivider.hidden = isFullScreen;
+  renderViewportComposition();
+}
 
-  fullScreenViewportButton?.setAttribute("aria-pressed", String(isFullScreen));
-  splitScreenViewportButton?.setAttribute("aria-pressed", String(!isFullScreen));
+function rememberMinimizedViewport(side, originalMode) {
+  const viewport = getViewportElement(side);
+  if (!viewport) return;
+
+  minimizedViewportStates.set(side, {
+    side,
+    originalMode,
+    splitRatio: rememberedSplitRatio
+  });
+}
+
+function minimizeFullScreenViewport() {
+  if (activeViewportMode === "solo" && soloSplitSide) {
+    minimizeSplitViewport(soloSplitSide);
+    return;
+  }
+  if (activeViewportMode !== "full") return;
+
+  rememberMinimizedViewport("full", "full");
+  activeViewportMode = null;
+  soloSplitSide = null;
+  renderViewportComposition();
+  showNormalWorkspaceAfterViewportClose(false);
+}
+
+function minimizeSplitViewport(side) {
+  if (activeViewportMode === "split") {
+    const currentRatio = Number(splitViewportDivider?.getAttribute("aria-valuenow") || "50") / 100;
+    rememberedSplitRatio = currentRatio;
+    rememberMinimizedViewport(side, "split");
+    activeViewportMode = "solo";
+    soloSplitSide = side === "left" ? "right" : "left";
+  } else if (activeViewportMode === "solo" && soloSplitSide === side) {
+    rememberMinimizedViewport(side, "split");
+    activeViewportMode = null;
+    soloSplitSide = null;
+  } else {
+    return;
+  }
+
+  renderViewportComposition();
+  if (!activeViewportMode) showNormalWorkspaceAfterViewportClose(false);
+}
+
+function restoreMinimizedViewport(side) {
+  const savedState = minimizedViewportStates.get(side);
+  if (!savedState) return;
+
+  if (savedState.originalMode === "full" || side === "full") {
+    minimizedViewportStates.delete("full");
+    activeViewportMode = "full";
+    soloSplitSide = null;
+  } else {
+    // A split viewport restores its original two-pane composition.
+    minimizedViewportStates.delete("left");
+    minimizedViewportStates.delete("right");
+    ensureSplitViewports();
+    rememberedSplitRatio = savedState.splitRatio || rememberedSplitRatio;
+    setSplitViewportRatio(rememberedSplitRatio);
+    activeViewportMode = "split";
+    soloSplitSide = null;
+  }
+
+  if (workspaceEmptyState) workspaceEmptyState.hidden = true;
+  renderViewportComposition();
+}
+
+function clearActiveDropboxDocument() {
+  const integration = window.LuxDropboxIntegration;
+  if (integration && typeof integration.discardActiveFile === "function") {
+    return integration.discardActiveFile() !== false;
+  }
+  return true;
 }
 
 function closeFullScreenViewport() {
-  if (!window.confirm("Discard documents?")) return;
-
-  const integration = window.LuxDropboxIntegration;
-  if (integration && typeof integration.discardActiveFile === "function") {
-    if (integration.discardActiveFile() === false) return;
+  if (activeViewportMode === "solo" && soloSplitSide) {
+    closeSplitViewport(soloSplitSide);
+    return;
   }
+  if (activeViewportMode !== "full" || !window.confirm("Discard documents?")) return;
+  if (!clearActiveDropboxDocument()) return;
 
-  fullScreenViewportLayout?.querySelectorAll(".viewport").forEach((viewport) => viewport.replaceChildren());
-  splitScreenViewportLayout?.querySelectorAll(".viewport").forEach((viewport) => viewport.replaceChildren());
-
-  if (workspaceEmptyState) {
-    workspaceEmptyState.hidden = false;
-    workspace?.replaceChildren(workspaceEmptyState);
-  } else {
-    workspace?.replaceChildren();
-  }
-
-  viewportComposition.hidden = true;
-  fullScreenViewportLayout.hidden = true;
-  splitScreenViewportLayout.hidden = true;
-  if (viewportToolbarFull) viewportToolbarFull.hidden = true;
-  if (viewportToolbarLeft) viewportToolbarLeft.hidden = true;
-  if (viewportToolbarRight) viewportToolbarRight.hidden = true;
-  if (splitViewportDivider) splitViewportDivider.hidden = true;
-  fullScreenViewportButton?.setAttribute("aria-pressed", "false");
-  splitScreenViewportButton?.setAttribute("aria-pressed", "false");
+  getViewportElement("full")?.replaceChildren();
+  activeViewportMode = null;
+  soloSplitSide = null;
+  renderViewportComposition();
+  showNormalWorkspaceAfterViewportClose(minimizedViewportStates.size === 0);
 }
 
 function closeSplitViewport(side) {
-  if (!window.confirm("Discard documents?")) return;
+  const isSplit = activeViewportMode === "split";
+  const isCurrentSoloSide = activeViewportMode === "solo" && soloSplitSide === side;
+  if ((!isSplit && !isCurrentSoloSide) || !window.confirm("Discard documents?")) return;
+  if (!clearActiveDropboxDocument()) return;
 
-  const viewports = Array.from(splitScreenViewportLayout?.querySelectorAll(":scope > .viewport") || []);
-  const closingViewport = viewports.find((viewport) => viewport.dataset.viewportSide === side);
-  const remainingViewport = viewports.find((viewport) => viewport !== closingViewport);
-  if (!closingViewport || !remainingViewport) return;
+  getViewportElement(side)?.replaceChildren();
+  minimizedViewportStates.delete(side);
 
-  closingViewport.replaceChildren();
-  closingViewport.remove();
+  if (isSplit) {
+    activeViewportMode = "solo";
+    soloSplitSide = side === "left" ? "right" : "left";
+  } else {
+    activeViewportMode = null;
+    soloSplitSide = null;
+  }
 
-  // Preserve the remaining viewport element as it expands to Full Screen.
-  fullScreenViewportLayout?.querySelectorAll(".viewport").forEach((viewport) => {
-    if (viewport !== remainingViewport) viewport.replaceChildren();
-  });
-  fullScreenViewportLayout?.replaceChildren(remainingViewport);
-  setViewportMode("full");
+  renderViewportComposition();
+  if (!activeViewportMode) showNormalWorkspaceAfterViewportClose(minimizedViewportStates.size === 0);
 }
 
 fullScreenViewportButton?.addEventListener("click", () => setViewportMode("full"));
 splitScreenViewportButton?.addEventListener("click", () => setViewportMode("split"));
+viewportMinimizeFullButton?.addEventListener("click", minimizeFullScreenViewport);
+viewportMinimizeLeftButton?.addEventListener("click", () => minimizeSplitViewport("left"));
+viewportMinimizeRightButton?.addEventListener("click", () => minimizeSplitViewport("right"));
 document.querySelector("#viewport-close-full")?.addEventListener("click", closeFullScreenViewport);
 document.querySelector("#viewport-close-left")?.addEventListener("click", () => closeSplitViewport("left"));
 document.querySelector("#viewport-close-right")?.addEventListener("click", () => closeSplitViewport("right"));
