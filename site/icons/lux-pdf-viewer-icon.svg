@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">Lux PDF Viewer — Learning Icon</title>
+  <desc id="desc">An open book represents reading and learning, a mortarboard represents education, and the letter L identifies Lux.</desc>
+  <defs>
+    <linearGradient id="bg" x1="18" y1="8" x2="238" y2="248" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#18284b"/><stop offset=".58" stop-color="#101a32"/><stop offset="1" stop-color="#0a1224"/></linearGradient>
+    <linearGradient id="pageLeft" x1="41" y1="137" x2="128" y2="216" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#dce9ff"/></linearGradient>
+    <linearGradient id="pageRight" x1="128" y1="137" x2="218" y2="211" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#d9f7ff"/><stop offset="1" stop-color="#86dff1"/></linearGradient>
+    <linearGradient id="cap" x1="47" y1="42" x2="214" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#83f0f3"/><stop offset=".48" stop-color="#42c8e8"/><stop offset="1" stop-color="#5f82ff"/></linearGradient>
+    <linearGradient id="L" x1="73" y1="146" x2="134" y2="202" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#223a67"/><stop offset="1" stop-color="#162747"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%"><feGaussianBlur in="SourceAlpha" stdDeviation="4"/><feOffset dy="3"/><feComponentTransfer><feFuncA type="linear" slope=".24"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <clipPath id="iconClip"><rect x="5" y="5" width="246" height="246" rx="53"/></clipPath>
+  </defs>
+  <g clip-path="url(#iconClip)">
+    <rect x="5" y="5" width="246" height="246" rx="53" fill="url(#bg)"/>
+    <circle cx="128" cy="91" r="70" fill="#2dbfdf" opacity=".055"/><circle cx="128" cy="91" r="54" fill="#667cff" opacity=".055"/>
+    <rect x="6" y="6" width="244" height="244" rx="52" fill="none" stroke="#91b9e8" stroke-opacity=".24" stroke-width="2"/>
+    <g filter="url(#shadow)">
+      <path d="M31 143 C58 130 92 132 128 151 L128 220 C95 199 61 195 31 205 Z" fill="url(#pageLeft)"/>
+      <path d="M128 151 C164 132 198 130 225 143 L225 205 C195 195 161 199 128 220 Z" fill="url(#pageRight)"/>
+      <path d="M31 143 C61 129 95 133 128 151 C161 133 195 129 225 143" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="3" stroke-linecap="round"/>
+      <path d="M128 153 L128 219" fill="none" stroke="#5274aa" stroke-opacity=".46" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M43 158 C66 150 89 153 108 163 M43 171 C65 164 85 167 107 177" fill="none" stroke="#8da5c9" stroke-opacity=".55" stroke-width="3" stroke-linecap="round"/>
+      <path d="M148 163 C168 153 191 150 213 158 M149 177 C170 167 191 164 213 171" fill="none" stroke="#3d9db6" stroke-opacity=".5" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    <path d="M76 151 L89 151 L89 185 L111 185 L111 198 L76 198 Z" fill="url(#L)"/>
+    <path d="M76 151 L89 151 L89 185 L111 185" fill="none" stroke="#82ddeb" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <g filter="url(#shadow)">
+      <path d="M128 31 L219 66 L128 101 L37 66 Z" fill="url(#cap)" stroke="#b3f5ff" stroke-opacity=".88" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M75 81 L75 99 C102 118 154 118 181 99 L181 81 L128 102 Z" fill="#2e73bd"/>
+      <path d="M75 81 L75 99 C102 118 154 118 181 99 L181 81" fill="none" stroke="#8be9f3" stroke-opacity=".82" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M198 74 L198 105" fill="none" stroke="#f6ce77" stroke-width="4" stroke-linecap="round"/>
+      <path d="M190 105 Q198 112 206 105 L203 117 L193 117 Z" fill="#ffd27f"/>
+      <circle cx="198" cy="74" r="4.5" fill="#ffe4a8" stroke="#fff3d5" stroke-width="1.5"/>
+    </g>
+    <path d="M51 91 L55 101 L65 105 L55 109 L51 119 L47 109 L37 105 L47 101 Z" fill="#b7f8ff" opacity=".95"/>
+  </g>
+</svg>
