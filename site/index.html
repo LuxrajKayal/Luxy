@@ -18,6 +18,14 @@
   <script type="module" src="./app.js"></script>
 </head>
 <body data-focus-mode="false">
+  <script>
+    try {
+      document.body.dataset.focusMode =
+        localStorage.getItem("lux-pdf-viewer-focus-mode") === "true" ? "true" : "false";
+    } catch {
+      document.body.dataset.focusMode = "false";
+    }
+  </script>
   <header class="topbar">
     <a class="brand" href="./" aria-label="Lux PDF Viewer home">
       <span class="brand-mark" aria-hidden="true">
