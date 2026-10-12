@@ -10,6 +10,7 @@ const splitScreenViewportButton = document.querySelector("#viewport-split-screen
 const workspace = document.querySelector(".workspace");
 const fullScreenViewportLayout = document.querySelector("#viewport-fullscreen-layout");
 const splitScreenViewportLayout = document.querySelector("#viewport-split-layout");
+const splitViewportDivider = document.querySelector("#viewport-split-divider");
 
 const THEME_STORAGE_KEY = "lux-pdf-viewer-theme";
 const FOCUS_MODE_STORAGE_KEY = "lux-pdf-viewer-focus-mode";
@@ -192,3 +193,68 @@ function setViewportMode(mode) {
 
 fullScreenViewportButton?.addEventListener("click", () => setViewportMode("full"));
 splitScreenViewportButton?.addEventListener("click", () => setViewportMode("split"));
+
+// Resize the two split viewports by dragging the narrow vertical divider.
+function setSplitViewportRatio(ratio) {
+  if (!splitScreenViewportLayout || !splitViewportDivider) return;
+
+  const boundedRatio = Math.max(0.2, Math.min(0.8, ratio));
+  splitScreenViewportLayout.style.setProperty("--split-left-share", boundedRatio + "fr");
+  splitScreenViewportLayout.style.setProperty("--split-right-share", (1 - boundedRatio) + "fr");
+  splitViewportDivider.setAttribute("aria-valuenow", String(Math.round(boundedRatio * 100)));
+}
+
+if (splitViewportDivider && splitScreenViewportLayout) {
+  let activePointerId = null;
+
+  function updateSplitRatioFromPointer(event) {
+    if (event.pointerId !== activePointerId) return;
+
+    const layoutBounds = splitScreenViewportLayout.getBoundingClientRect();
+    const dividerWidth = splitViewportDivider.getBoundingClientRect().width;
+    const usableWidth = layoutBounds.width - dividerWidth;
+    if (usableWidth <= 0) return;
+
+    const leftWidth = event.clientX - layoutBounds.left - dividerWidth / 2;
+    setSplitViewportRatio(leftWidth / usableWidth);
+  }
+
+  function stopSplitResize() {
+    if (activePointerId === null) return;
+    splitViewportDivider.removeEventListener("pointermove", updateSplitRatioFromPointer);
+    splitViewportDivider.removeEventListener("pointerup", stopSplitResize);
+    splitViewportDivider.removeEventListener("pointercancel", stopSplitResize);
+    if (splitViewportDivider.hasPointerCapture(activePointerId)) {
+      splitViewportDivider.releasePointerCapture(activePointerId);
+    }
+    activePointerId = null;
+  }
+
+  splitViewportDivider.addEventListener("pointerdown", (event) => {
+    if (!event.isPrimary || (event.pointerType === "mouse" && event.button !== 0)) return;
+    event.preventDefault();
+
+    activePointerId = event.pointerId;
+    splitViewportDivider.setPointerCapture(activePointerId);
+    splitViewportDivider.addEventListener("pointermove", updateSplitRatioFromPointer);
+    splitViewportDivider.addEventListener("pointerup", stopSplitResize);
+    splitViewportDivider.addEventListener("pointercancel", stopSplitResize);
+  });
+
+  splitViewportDivider.addEventListener("keydown", (event) => {
+    const currentRatio = Number(splitViewportDivider.getAttribute("aria-valuenow") || "50") / 100;
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      setSplitViewportRatio(currentRatio - 0.02);
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      setSplitViewportRatio(currentRatio + 0.02);
+    } else if (event.key === "Home") {
+      event.preventDefault();
+      setSplitViewportRatio(0.2);
+    } else if (event.key === "End") {
+      event.preventDefault();
+      setSplitViewportRatio(0.8);
+    }
+  });
+}
