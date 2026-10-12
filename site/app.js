@@ -13,6 +13,9 @@ const viewportComposition = document.querySelector("#viewport-composition");
 const fullScreenViewportLayout = document.querySelector("#viewport-fullscreen-layout");
 const splitScreenViewportLayout = document.querySelector("#viewport-split-layout");
 const viewportTopbar = document.querySelector("#viewport-topbar");
+const viewportToolbarFull = document.querySelector("#viewport-toolbar-full");
+const viewportToolbarLeft = document.querySelector("#viewport-toolbar-left");
+const viewportToolbarRight = document.querySelector("#viewport-toolbar-right");
 const splitViewportDivider = document.querySelector("#viewport-split-divider");
 
 const THEME_STORAGE_KEY = "lux-pdf-viewer-theme";
@@ -179,24 +182,132 @@ sidebarToggle?.addEventListener("click", () => {
   setSidebarOpen(!isOpen);
 });
 
-// Viewport layouts: one empty viewport or two separate empty viewports.
+// Viewport layouts and close controls.
+function createSplitViewport(side) {
+  const viewport = document.createElement("div");
+  viewport.className = "viewport viewport--split";
+  viewport.dataset.viewportSide = side;
+  return viewport;
+}
+
+function ensureSplitViewports() {
+  if (!splitScreenViewportLayout || !fullScreenViewportLayout) return;
+
+  let leftViewport = splitScreenViewportLayout.querySelector(':scope > .viewport[data-viewport-side="left"]');
+  let rightViewport = splitScreenViewportLayout.querySelector(':scope > .viewport[data-viewport-side="right"]');
+  const fullViewport = fullScreenViewportLayout.querySelector(":scope > .viewport");
+
+  if (fullViewport?.dataset.viewportSide === "left" && !leftViewport) {
+    splitScreenViewportLayout.prepend(fullViewport);
+    leftViewport = fullViewport;
+  } else if (fullViewport?.dataset.viewportSide === "right" && !rightViewport) {
+    splitScreenViewportLayout.append(fullViewport);
+    rightViewport = fullViewport;
+  }
+
+  if (!leftViewport) {
+    leftViewport = createSplitViewport("left");
+    splitScreenViewportLayout.prepend(leftViewport);
+  }
+  if (!rightViewport) {
+    rightViewport = createSplitViewport("right");
+    splitScreenViewportLayout.append(rightViewport);
+  }
+}
+
+function ensureFullViewport() {
+  if (!fullScreenViewportLayout || !splitScreenViewportLayout) return;
+  if (fullScreenViewportLayout.querySelector(":scope > .viewport")) return;
+
+  const existingSplitViewport = splitScreenViewportLayout.querySelector(":scope > .viewport");
+  if (existingSplitViewport) {
+    fullScreenViewportLayout.append(existingSplitViewport);
+    return;
+  }
+
+  const viewport = document.createElement("div");
+  viewport.className = "viewport";
+  viewport.dataset.viewportSide = "full";
+  fullScreenViewportLayout.append(viewport);
+}
+
 function setViewportMode(mode) {
   if (!workspace || !viewportComposition || !fullScreenViewportLayout || !splitScreenViewportLayout) return;
 
   const isFullScreen = mode === "full";
+  if (isFullScreen) {
+    ensureFullViewport();
+  } else {
+    ensureSplitViewports();
+  }
+
   if (workspaceEmptyState) workspaceEmptyState.hidden = true;
   viewportComposition.hidden = false;
   fullScreenViewportLayout.hidden = !isFullScreen;
   splitScreenViewportLayout.hidden = isFullScreen;
   if (viewportTopbar) viewportTopbar.hidden = false;
+  if (viewportToolbarFull) viewportToolbarFull.hidden = !isFullScreen;
+  if (viewportToolbarLeft) viewportToolbarLeft.hidden = isFullScreen;
+  if (viewportToolbarRight) viewportToolbarRight.hidden = isFullScreen;
   if (splitViewportDivider) splitViewportDivider.hidden = isFullScreen;
 
   fullScreenViewportButton?.setAttribute("aria-pressed", String(isFullScreen));
   splitScreenViewportButton?.setAttribute("aria-pressed", String(!isFullScreen));
 }
 
+function closeFullScreenViewport() {
+  if (!window.confirm("Discard documents?")) return;
+
+  const integration = window.LuxDropboxIntegration;
+  if (integration && typeof integration.discardActiveFile === "function") {
+    if (integration.discardActiveFile() === false) return;
+  }
+
+  fullScreenViewportLayout?.querySelectorAll(".viewport").forEach((viewport) => viewport.replaceChildren());
+  splitScreenViewportLayout?.querySelectorAll(".viewport").forEach((viewport) => viewport.replaceChildren());
+
+  if (workspaceEmptyState) {
+    workspaceEmptyState.hidden = false;
+    workspace?.replaceChildren(workspaceEmptyState);
+  } else {
+    workspace?.replaceChildren();
+  }
+
+  viewportComposition.hidden = true;
+  fullScreenViewportLayout.hidden = true;
+  splitScreenViewportLayout.hidden = true;
+  if (viewportToolbarFull) viewportToolbarFull.hidden = true;
+  if (viewportToolbarLeft) viewportToolbarLeft.hidden = true;
+  if (viewportToolbarRight) viewportToolbarRight.hidden = true;
+  if (splitViewportDivider) splitViewportDivider.hidden = true;
+  fullScreenViewportButton?.setAttribute("aria-pressed", "false");
+  splitScreenViewportButton?.setAttribute("aria-pressed", "false");
+}
+
+function closeSplitViewport(side) {
+  if (!window.confirm("Discard documents?")) return;
+
+  const viewports = Array.from(splitScreenViewportLayout?.querySelectorAll(":scope > .viewport") || []);
+  const closingViewport = viewports.find((viewport) => viewport.dataset.viewportSide === side);
+  const remainingViewport = viewports.find((viewport) => viewport !== closingViewport);
+  if (!closingViewport || !remainingViewport) return;
+
+  closingViewport.replaceChildren();
+  closingViewport.remove();
+
+  // Preserve the remaining viewport element as it expands to Full Screen.
+  fullScreenViewportLayout?.querySelectorAll(".viewport").forEach((viewport) => {
+    if (viewport !== remainingViewport) viewport.replaceChildren();
+  });
+  fullScreenViewportLayout?.replaceChildren(remainingViewport);
+  setViewportMode("full");
+}
+
 fullScreenViewportButton?.addEventListener("click", () => setViewportMode("full"));
 splitScreenViewportButton?.addEventListener("click", () => setViewportMode("split"));
+document.querySelector("#viewport-close-full")?.addEventListener("click", closeFullScreenViewport);
+document.querySelector("#viewport-close-left")?.addEventListener("click", () => closeSplitViewport("left"));
+document.querySelector("#viewport-close-right")?.addEventListener("click", () => closeSplitViewport("right"));
 
 // Resize the two split viewports by dragging the narrow vertical divider.
 function setSplitViewportRatio(ratio) {
