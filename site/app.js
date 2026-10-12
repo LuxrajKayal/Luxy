@@ -5,7 +5,6 @@ const themeToggle = document.querySelector("#theme-toggle");
 const focusModeToggle = document.querySelector("#focus-mode-toggle");
 const sidebarToggle = document.querySelector("#sidebar-toggle");
 const topbar = document.querySelector(".topbar");
-const workspaceShell = document.querySelector(".workspace-shell");
 const fullScreenViewportButton = document.querySelector("#viewport-fullscreen");
 const splitScreenViewportButton = document.querySelector("#viewport-split-screen");
 const workspace = document.querySelector(".workspace");
@@ -15,7 +14,6 @@ const splitScreenViewportLayout = document.querySelector("#viewport-split-layout
 const THEME_STORAGE_KEY = "lux-pdf-viewer-theme";
 const FOCUS_MODE_STORAGE_KEY = "lux-pdf-viewer-focus-mode";
 const SIDEBAR_STORAGE_KEY = "lux-pdf-viewer-sidebar-open";
-const SIDEBAR_LAYOUT_MIGRATION_KEY = "lux-pdf-viewer-sidebar-toggle-location-migrated";
 
 // Dark Mode
 function setDarkMode(enabled, savePreference = true) {
@@ -63,23 +61,16 @@ function isFocusModeEnabled() {
 }
 
 function showTopbar() {
-  if (isFocusModeEnabled()) {
-    topbar?.classList.add("is-visible");
-    workspaceShell?.classList.add("topbar-visible");
-  }
+  if (isFocusModeEnabled()) topbar?.classList.add("is-visible");
 }
 
 function hideTopbar() {
-  if (isFocusModeEnabled()) {
-    topbar?.classList.remove("is-visible");
-    workspaceShell?.classList.remove("topbar-visible");
-  }
+  if (isFocusModeEnabled()) topbar?.classList.remove("is-visible");
 }
 
 function setFocusMode(enabled, savePreference = true) {
   document.body.dataset.focusMode = String(enabled);
   topbar?.classList.remove("is-visible");
-  workspaceShell?.classList.remove("topbar-visible");
 
   focusModeToggle?.setAttribute("aria-pressed", String(enabled));
   focusModeToggle?.setAttribute(
@@ -171,14 +162,7 @@ function setSidebarOpen(isOpen, savePreference = true) {
 let savedSidebarOpen = document.documentElement.getAttribute("data-sidebar-open") !== "false";
 try {
   const storedSidebarState = localStorage.getItem(SIDEBAR_STORAGE_KEY);
-  const sidebarLayoutMigrated = localStorage.getItem(SIDEBAR_LAYOUT_MIGRATION_KEY) === "true";
-
-  if (!sidebarLayoutMigrated) {
-    // Restore the sidebar once because its toggle has moved outside the collapsible column.
-    savedSidebarOpen = true;
-    localStorage.setItem(SIDEBAR_STORAGE_KEY, "true");
-    localStorage.setItem(SIDEBAR_LAYOUT_MIGRATION_KEY, "true");
-  } else if (storedSidebarState === "true" || storedSidebarState === "false") {
+  if (storedSidebarState === "true" || storedSidebarState === "false") {
     savedSidebarOpen = storedSidebarState === "true";
   }
 } catch {
