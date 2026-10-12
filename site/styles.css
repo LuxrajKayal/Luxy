@@ -106,14 +106,15 @@ a {
   place-items: center;
   border-radius: 12px;
   color: var(--accent);
-  background: var(--brand-mark-bg);
-  transition: background-color 180ms ease, color 180ms ease;
+  background: transparent;
+  transition: color 180ms ease;
 }
 
-.brand-mark svg {
+.brand-mark img {
   display: block;
-  width: 32px;
-  height: 32px;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .brand-copy {
