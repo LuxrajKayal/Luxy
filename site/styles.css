@@ -104,6 +104,41 @@ input {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
+  gap: 8px;
+}
+
+.theme-toggle {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #dce2ec;
+  border-radius: 9px;
+  color: #273449;
+  background: #ffffff;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.theme-toggle:hover {
+  border-color: #bac7ff;
+  background: #f7f8ff;
+}
+
+.theme-toggle svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.theme-icon-sun {
+  display: none;
 }
 
 .find-button {
@@ -128,6 +163,7 @@ input {
 }
 
 .find-button:focus-visible,
+.theme-toggle:focus-visible,
 .find-input:focus-visible,
 .find-action:focus-visible,
 .find-close:focus-visible,
@@ -338,4 +374,83 @@ mark.lux-find-match.lux-find-active {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+
+/* Dark theme overrides for the existing interface. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e8edf5;
+  --muted: #a0aabd;
+  --line: #303949;
+  --panel: #181e29;
+  --workspace: #10151e;
+  --accent: #a5b4fc;
+}
+
+:root[data-theme="dark"] .brand-mark {
+  background: #252d44;
+}
+
+:root[data-theme="dark"] .brand-name {
+  color: #f3f5fa;
+}
+
+:root[data-theme="dark"] .theme-toggle,
+:root[data-theme="dark"] .find-button {
+  border-color: #3a4557;
+  color: #e7ecf5;
+  background: #1d2533;
+}
+
+:root[data-theme="dark"] .theme-toggle:hover,
+:root[data-theme="dark"] .find-button:hover,
+:root[data-theme="dark"] .find-button[aria-expanded="true"] {
+  border-color: #6577b8;
+  background: #29344a;
+}
+
+:root[data-theme="dark"] .find-panel {
+  border-color: var(--line);
+  background: #1b222e;
+  box-shadow: 0 12px 30px rgb(0 0 0 / 38%);
+}
+
+:root[data-theme="dark"] .find-input {
+  border-color: #3a4557;
+  color: var(--ink);
+  background: #111720;
+}
+
+:root[data-theme="dark"] .find-input::placeholder {
+  color: #8e9aae;
+}
+
+:root[data-theme="dark"] .find-action {
+  border-color: #3a4557;
+  color: #e7ecf5;
+  background: #252d3a;
+}
+
+:root[data-theme="dark"] .find-action:hover {
+  border-color: #6577b8;
+  background: #303b50;
+}
+
+:root[data-theme="dark"] .find-close {
+  color: #b8c1d0;
+}
+
+:root[data-theme="dark"] .find-close:hover {
+  border-color: #784c55;
+  color: #ffc6cb;
+  background: #38252c;
+}
+
+:root[data-theme="dark"] .theme-icon-moon {
+  display: none;
+}
+
+:root[data-theme="dark"] .theme-icon-sun {
+  display: block;
 }
