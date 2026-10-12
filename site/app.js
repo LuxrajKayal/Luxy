@@ -26,6 +26,9 @@ const splitViewportDivider = document.querySelector("#viewport-split-divider");
 const viewportMinimizeFullButton = document.querySelector("#viewport-minimize-full");
 const viewportMinimizeLeftButton = document.querySelector("#viewport-minimize-left");
 const viewportMinimizeRightButton = document.querySelector("#viewport-minimize-right");
+const viewportYoutubeFullButton = document.querySelector("#viewport-youtube-full");
+const viewportYoutubeLeftButton = document.querySelector("#viewport-youtube-left");
+const viewportYoutubeRightButton = document.querySelector("#viewport-youtube-right");
 
 const THEME_STORAGE_KEY = "lux-pdf-viewer-theme";
 const FOCUS_MODE_STORAGE_KEY = "lux-pdf-viewer-focus-mode";
@@ -505,6 +508,54 @@ viewportMinimizeRightButton?.addEventListener("click", () => minimizeSplitViewpo
 document.querySelector("#viewport-close-full")?.addEventListener("click", closeFullScreenViewport);
 document.querySelector("#viewport-close-left")?.addEventListener("click", () => closeSplitViewport("left"));
 document.querySelector("#viewport-close-right")?.addEventListener("click", () => closeSplitViewport("right"));
+
+const YOUTUBE_URL_REGEX = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i;
+
+function loadYoutubeVideoIntoViewport(requestedSide) {
+  // The shared Full Screen toolbar also represents whichever split pane is
+  // currently expanded alone.
+  const side = activeViewportMode === "solo" && soloSplitSide
+    ? soloSplitSide
+    : requestedSide;
+  const viewport = getViewportElement(side);
+  if (!viewport) return;
+
+  const userInput = window.prompt("Paste a YouTube video link:", "");
+  if (userInput === null) return;
+
+  const match = userInput.match(YOUTUBE_URL_REGEX);
+  viewport.replaceChildren();
+
+  if (!match || !match[1]) {
+    delete viewport.dataset.fileName;
+    const errorMessage = document.createElement("p");
+    errorMessage.className = "viewport-youtube-error";
+    errorMessage.textContent = "Invalid link! Please paste a valid YouTube video link.";
+    viewport.append(errorMessage);
+    return;
+  }
+
+  const videoId = match[1];
+  const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+  const content = document.createElement("div");
+  content.className = "viewport-youtube-content";
+
+  const frame = document.createElement("iframe");
+  frame.className = "viewport-youtube-frame";
+  frame.src = embedUrl;
+  frame.title = "YouTube video player";
+  frame.setAttribute("frameborder", "0");
+  frame.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share");
+  frame.setAttribute("allowfullscreen", "");
+  content.append(frame);
+  viewport.dataset.fileName = `YouTube video ${videoId}`;
+  viewport.append(content);
+  viewport.scrollTop = 0;
+}
+
+viewportYoutubeFullButton?.addEventListener("click", () => loadYoutubeVideoIntoViewport("full"));
+viewportYoutubeLeftButton?.addEventListener("click", () => loadYoutubeVideoIntoViewport("left"));
+viewportYoutubeRightButton?.addEventListener("click", () => loadYoutubeVideoIntoViewport("right"));
 
 // Resize the two split viewports by dragging the narrow vertical divider.
 function setSplitViewportRatio(ratio) {
