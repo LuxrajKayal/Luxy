@@ -483,6 +483,7 @@ function setSplitViewportRatio(ratio) {
   if (!splitScreenViewportLayout || !splitViewportDivider) return;
 
   const boundedRatio = Math.max(0.2, Math.min(0.8, ratio));
+  rememberedSplitRatio = boundedRatio;
   viewportComposition?.style.setProperty("--split-left-share", boundedRatio + "fr");
   viewportComposition?.style.setProperty("--split-right-share", (1 - boundedRatio) + "fr");
   splitViewportDivider.setAttribute("aria-valuenow", String(Math.round(boundedRatio * 100)));
