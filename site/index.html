@@ -53,6 +53,12 @@
     </a>
 
     <div class="topbar-actions">
+      <div class="dropbox-topbar-status" title="Dropbox connection status">
+        <svg class="dropbox-status-logo" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7.2 2.8 2.4 5.9l4.8 3 4.8-3-4.8-3Zm9.6 0L12 5.9l4.8 3 4.8-3-4.8-3ZM7.2 9l-4.8 3 4.8 3 4.8-3-4.8-3Zm9.6 0L12 12l4.8 3 4.8-3-4.8-3-4.8 3 4.8 3 4.8-3-4.8-3ZM7.2 15.2l4.8 3 4.8-3-4.8-3-4.8 3Z"/>
+        </svg>
+        <span id="dropbox-status-text" class="dropbox-status-text" data-state="not-connected" role="status" aria-live="polite">Not connected</span>
+      </div>
       <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode" aria-pressed="false">
         <svg class="theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M20.2 15.4A8.4 8.4 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"></path>
@@ -62,6 +68,7 @@
           <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path>
         </svg>
       </button>
+      <button id="dropbox-sync" class="dropbox-button dropbox-sync-button" type="button" hidden disabled>Sync</button>
       <button id="focus-mode-toggle" class="focus-toggle" type="button" aria-pressed="false" aria-label="Turn on Focus Mode" title="Turn on Focus Mode">
         <svg class="focus-icon-enter" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"></path>
@@ -101,7 +108,6 @@
                 <path d="M7.2 2.8 2.4 5.9l4.8 3 4.8-3-4.8-3Zm9.6 0L12 5.9l4.8 3 4.8-3-4.8-3ZM7.2 9l-4.8 3 4.8 3 4.8-3-4.8-3Zm9.6 0L12 12l4.8 3 4.8-3-4.8-3-4.8 3 4.8 3 4.8-3-4.8-3ZM7.2 15.2l4.8 3 4.8-3-4.8-3-4.8 3Z"/>
               </svg>
             </button>
-            <button id="dropbox-sync" class="dropbox-button dropbox-sync-button" type="button" hidden disabled>Sync</button>
           </div>
           <p id="dropbox-accessible-status" class="visually-hidden" role="status" aria-live="polite"></p>
         </div>
