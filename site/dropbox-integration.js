@@ -22,6 +22,7 @@
   const redirectUri = window.location.origin + window.location.pathname;
   const dropboxButton = document.querySelector("#dropbox-connect");
   const syncButton = document.querySelector("#dropbox-sync");
+  const statusText = document.querySelector("#dropbox-status-text");
   const modal = document.querySelector("#dropbox-modal");
   const modalCloseButton = document.querySelector("#dropbox-modal-close");
   const modalStatus = document.querySelector("#dropbox-modal-status");
@@ -49,6 +50,19 @@
       else delete modalStatus.dataset.kind;
     }
     if (accessibleStatus) accessibleStatus.textContent = text;
+  }
+
+  function setConnectionStatus(state) {
+    const labels = {
+      "not-connected": "Not connected",
+      "connected": "Connected",
+      "connection-failed": "Connection failed",
+      "uploading": "Uploading",
+      "saved": "Saved"
+    };
+    if (!statusText) return;
+    statusText.dataset.state = labels[state] ? state : "not-connected";
+    statusText.textContent = labels[state] || labels["not-connected"];
   }
 
   function setModalLoading(isLoading) {
@@ -92,7 +106,7 @@
     }
   }
 
-  function clearSessionCredentials() {
+  function clearSessionCredentials(status = "not-connected") {
     try {
       sessionStorage.removeItem(STORAGE.accessToken);
       sessionStorage.removeItem(STORAGE.expiresAt);
@@ -107,6 +121,7 @@
     activeFileName = null;
     activeSourcePdfBlob = null;
     editedPdfBlob = null;
+    setConnectionStatus(status);
     updateSyncButton();
   }
 
@@ -125,18 +140,22 @@
   async function connectDropbox() {
     if (!DROPBOX_APP_KEY || DROPBOX_APP_KEY === "YOUR_DROPBOX_APP_KEY") {
       setModalOpen(true);
+      setConnectionStatus("connection-failed");
       setStatus("Setup needed: add your Dropbox App Key in dropbox-integration.js.", "error");
       return;
     }
 
     if (!sdkAvailable()) {
       setModalOpen(true);
+      setConnectionStatus("connection-failed");
+      setConnectionStatus("connection-failed");
       setStatus("The Dropbox SDK could not be loaded. Refresh the page and try again.", "error");
       return;
     }
 
     if (!window.crypto || !window.crypto.subtle || !window.crypto.getRandomValues) {
       setModalOpen(true);
+      setConnectionStatus("connection-failed");
       setStatus("This browser does not provide the Web Crypto API required by Dropbox PKCE.", "error");
       return;
     }
@@ -160,6 +179,7 @@
       window.location.assign(authUrl);
     } catch (error) {
       setModalOpen(true);
+      setConnectionStatus("connection-failed");
       setStatus("Could not start Dropbox authorization: " + errorMessage(error), "error");
     }
   }
@@ -187,6 +207,7 @@
       sessionStorage.removeItem(STORAGE.codeVerifier);
       sessionStorage.removeItem(STORAGE.oauthState);
       setModalOpen(true);
+      setConnectionStatus("connection-failed");
       setStatus("Dropbox authorization was not completed: " + oauthError, "error");
       return true;
     }
@@ -198,6 +219,7 @@
       verifier = sessionStorage.getItem(STORAGE.codeVerifier);
     } catch (_) {
       setModalOpen(true);
+      setConnectionStatus("connection-failed");
       setStatus("This browser could not read the temporary OAuth session. Please connect again.", "error");
       return true;
     }
@@ -206,12 +228,14 @@
       sessionStorage.removeItem(STORAGE.codeVerifier);
       sessionStorage.removeItem(STORAGE.oauthState);
       setModalOpen(true);
+      setConnectionStatus("connection-failed");
       setStatus("Dropbox sign-in could not be verified. Please connect again.", "error");
       return true;
     }
 
     if (!sdkAvailable()) {
       setModalOpen(true);
+      setConnectionStatus("connection-failed");
       setStatus("The Dropbox SDK could not be loaded while completing sign-in.", "error");
       return true;
     }
@@ -244,6 +268,7 @@
       sessionStorage.removeItem(STORAGE.codeVerifier);
       sessionStorage.removeItem(STORAGE.oauthState);
       setModalOpen(true);
+      setConnectionStatus("connection-failed");
       setStatus("Could not complete Dropbox sign-in: " + errorMessage(error), "error");
       return true;
     }
@@ -251,6 +276,7 @@
 
   function initializeClient(accessToken) {
     dbx = new window.Dropbox.Dropbox({ accessToken: accessToken });
+    setConnectionStatus("connected");
     updateSyncButton();
   }
 
@@ -262,6 +288,7 @@
       token = sessionStorage.getItem(STORAGE.accessToken);
       expiresAt = Number(sessionStorage.getItem(STORAGE.expiresAt));
     } catch (_) {
+      setConnectionStatus("connection-failed");
       setStatus("Session storage is unavailable. Enable it to connect Dropbox in this tab.", "error");
       return;
     }
@@ -273,6 +300,8 @@
     }
 
     if (!sdkAvailable()) {
+      setConnectionStatus("connection-failed");
+      setConnectionStatus("connection-failed");
       setStatus("The Dropbox SDK could not be loaded. Refresh the page and try again.", "error");
       return;
     }
@@ -287,8 +316,9 @@
   }
 
   function handleRequestError(error) {
+    setConnectionStatus("connection-failed");
     if (error && (error.status === 401 || error.status === 400)) {
-      clearSessionCredentials();
+      clearSessionCredentials("connection-failed");
       setStatus("Your Dropbox session may have expired. Click Dropbox to connect again.", "error");
     } else {
       setStatus("Dropbox request failed: " + errorMessage(error), "error");
@@ -521,7 +551,7 @@
     syncButton.textContent = "Syncing...";
     syncButton.title = "Syncing PDF to Dropbox";
     syncButton.disabled = true;
-    setStatus("Syncing changes to Dropbox…");
+    setStatus("Preparing PDF to sync…");
 
     try {
       const blobToUpload = await getEditedPdfBlob();
@@ -529,6 +559,8 @@
         throw new Error("The PDF editor did not provide a Blob. No Dropbox file was changed.");
       }
 
+      setConnectionStatus("uploading");
+      setStatus("Uploading changes to Dropbox…");
       await dbx.filesUpload({
         path: activeFilePathLower,
         contents: blobToUpload,
@@ -536,6 +568,7 @@
       });
 
       editedPdfBlob = blobToUpload;
+      setConnectionStatus("saved");
       syncButton.textContent = "Saved!";
       syncButton.title = "Saved to Dropbox";
       setStatus("Saved! Replaced " + activeFileName + " at its original Dropbox path.", "success");
@@ -543,15 +576,24 @@
         if (!isSyncing && syncButton.textContent === "Saved!") {
           syncButton.textContent = "Sync";
           syncButton.title = "Sync changes to " + activeFileName + " in Dropbox";
+          setConnectionStatus(dbx ? "connected" : "not-connected");
         }
       }, 2200);
     } catch (error) {
       const detail = errorMessage(error);
-      handleRequestError(error);
-      syncButton.textContent = "Sync failed";
+      const isDropboxRequestFailure = Boolean(error && (typeof error.status === "number" || error.error));
+      if (isDropboxRequestFailure) {
+        handleRequestError(error);
+      } else {
+        // A missing editor export is not a Dropbox connection failure.
+        setConnectionStatus(dbx ? "connected" : "not-connected");
+        setStatus("Sync unavailable: " + detail, "error");
+      }
+
+      syncButton.textContent = isDropboxRequestFailure ? "Retry Sync" : "No edits";
       syncButton.title = detail;
       syncFeedbackTimer = window.setTimeout(function () {
-        if (!isSyncing && syncButton.textContent === "Sync failed") {
+        if (!isSyncing && (syncButton.textContent === "Retry Sync" || syncButton.textContent === "No edits")) {
           syncButton.textContent = "Sync";
           syncButton.title = activeFileName ? "Sync changes to " + activeFileName + " in Dropbox" : "Sync";
         }
@@ -606,11 +648,13 @@
   });
 
   async function initialize() {
+    setConnectionStatus("not-connected");
     updateSyncButton();
     try {
       const callbackHandled = await handleOAuthCallback();
       if (!callbackHandled) restoreSession();
     } catch (error) {
+      setConnectionStatus("connection-failed");
       setModalOpen(true);
       setStatus("Dropbox setup error: " + errorMessage(error), "error");
     }
