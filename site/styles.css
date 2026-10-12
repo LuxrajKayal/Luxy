@@ -498,11 +498,61 @@ body[data-focus-mode="true"] .workspace-shell {
 }
 
 .viewport-topbar {
+  display: grid;
   grid-column: 1 / -1;
   grid-row: 1;
   min-width: 0;
+  grid-template-columns: minmax(0, var(--split-left-share, 1fr)) 5px minmax(0, var(--split-right-share, 1fr));
   background: #d1d5db;
   border-bottom: 1px solid var(--line);
+}
+
+.viewport-toolbar-section {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 8px;
+}
+
+.viewport-toolbar-section--full {
+  grid-column: 1 / -1;
+}
+
+.viewport-toolbar-section--left {
+  grid-column: 1;
+}
+
+.viewport-toolbar-section--right {
+  grid-column: 3;
+}
+
+.viewport-close-button {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  color: #ffffff;
+  background: #dc2626;
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.viewport-close-button:hover {
+  background: #b91c1c;
+}
+
+.viewport-close-button:focus-visible {
+  outline: 2px solid #991b1b;
+  outline-offset: 2px;
 }
 
 .sidebar-toggle {
