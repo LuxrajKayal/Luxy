@@ -24,7 +24,6 @@
     }
   </script>
   <link rel="stylesheet" href="./styles.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js"></script>
   <script type="module" src="./app.js"></script>
 </head>
 <body data-focus-mode="false">
@@ -69,24 +68,7 @@
         </svg>
         <span>Focus Mode</span>
       </button>
-      <button id="find-text-button" class="find-button" type="button" aria-expanded="false" aria-controls="find-panel" aria-label="Find on page" title="Find on page">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="10.8" cy="10.8" r="6.8"></circle>
-          <path d="m16 16 4.2 4.2"></path>
-        </svg>
-        <span>Find on page</span>
-      </button>
 
-      <div id="find-panel" class="find-panel" role="search" aria-label="Find on page" hidden>
-        <div class="find-controls">
-          <label class="visually-hidden" for="find-input">Text to find</label>
-          <input id="find-input" class="find-input" type="search" placeholder="Find on page…" autocomplete="off" spellcheck="false" aria-describedby="find-status">
-          <button id="find-next" class="find-action" type="button">Next</button>
-          <button id="find-previous" class="find-action" type="button">Previous</button>
-          <button id="find-close" class="find-close" type="button" aria-label="Clear highlights and close search" title="Clear and close search">×</button>
-        </div>
-        <div id="find-status" class="find-status" role="status" aria-live="polite">Type to search this page.</div>
-      </div>
     </div>
   </header>
 
@@ -109,37 +91,7 @@
 
     <div class="workspace-layout">
       <aside id="sidebar" class="sidebar" aria-label="Sidebar">
-        <div class="sidebar-inner">
-        <div class="sidebar-drive-tools" aria-label="Google Drive tools">
-          <button id="drive-connect-button" class="drive-connect-button" type="button" aria-label="Connect Google Drive" title="Connect Google Drive">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M8.2 3.5h7.6l6.3 11h-7.6z" fill="#34a853" stroke="none"></path>
-              <path d="M8.2 3.5 2 14.5l3.8 6h7.7l-3.8-6-1.5-2.5" fill="#4285f4" stroke="none"></path>
-              <path d="M5.8 20.5 2 14.5h12.5l-3.5 6z" fill="#fbbc04" stroke="none"></path>
-            </svg>
-            <span>Google Drive</span>
-          </button>
-
-          <div id="drive-connected-controls" class="drive-connected-controls" hidden>
-            <span class="drive-connected-label" title="Drive Connected"><span class="drive-status-dot" aria-hidden="true"></span>Drive Connected</span>
-            <button id="drive-avatar-button" class="drive-avatar-button" type="button" aria-label="Open Google Drive picker" title="Open Google Drive">
-              <img id="drive-avatar" class="drive-avatar" alt="" hidden>
-              <span id="drive-avatar-fallback" class="drive-avatar-fallback" aria-hidden="true">G</span>
-            </button>
-          </div>
-
-          <button id="drive-sync-button" class="drive-sync-button" type="button" aria-label="Sync PDF to Google Drive" title="Sync PDF to Google Drive" hidden disabled>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M20 7v5h-5M4 17v-5h5"></path>
-              <path d="M6.1 9A6.5 6.5 0 0 1 17 6.5L20 12M4 12l3 5.5A6.5 6.5 0 0 0 18 15"></path>
-            </svg>
-            <span id="drive-sync-label">Sync to Drive</span>
-          </button>
-
-          <span id="drive-feedback" class="drive-feedback" role="status" aria-live="polite" hidden></span>
-
-        </div>
-        </div>
+        <div class="sidebar-inner"></div>
       </aside>
       <main class="workspace" aria-label="PDF workspace"></main>
     </div>
