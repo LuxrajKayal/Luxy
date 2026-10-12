@@ -5,12 +5,79 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Light theme palette */
   --ink: #1d2636;
   --muted: #758196;
   --line: #e5e9f0;
   --panel: #ffffff;
   --workspace: #f6f8fb;
   --accent: #4263eb;
+  --brand-mark-bg: #eef2ff;
+  --brand-name: #172033;
+
+  --control-text: #273449;
+  --control-bg: #ffffff;
+  --control-border: #dce2ec;
+  --control-hover-bg: #f7f8ff;
+  --control-hover-border: #bac7ff;
+
+  --input-bg: #ffffff;
+  --input-border: #dce2ec;
+  --input-focus-border: #9aabff;
+  --subtle-bg: #f8f9fc;
+  --subtle-hover-bg: #f0f3ff;
+
+  --close-text: #596579;
+  --close-hover-border: #f0c5c5;
+  --close-hover-text: #a12d2d;
+  --close-hover-bg: #fff4f4;
+
+  --focus-outline: #a5b4fc;
+  --panel-shadow: 0 12px 30px rgb(22 34 56 / 14%);
+
+  --find-match-bg: #fff09b;
+  --find-active-bg: #ffad42;
+  --find-active-text: #1d2636;
+  --find-active-outline: #e58a18;
+}
+
+/* Dark theme: override the same palette variables used by the light theme. */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e8edf5;
+  --muted: #a0aabd;
+  --line: #303949;
+  --panel: #181e29;
+  --workspace: #10151e;
+  --accent: #a5b4fc;
+  --brand-mark-bg: #252d44;
+  --brand-name: #f3f5fa;
+
+  --control-text: #e7ecf5;
+  --control-bg: #1d2533;
+  --control-border: #3a4557;
+  --control-hover-bg: #29344a;
+  --control-hover-border: #6577b8;
+
+  --input-bg: #111720;
+  --input-border: #3a4557;
+  --input-focus-border: #8195dc;
+  --subtle-bg: #252d3a;
+  --subtle-hover-bg: #303b50;
+
+  --close-text: #b8c1d0;
+  --close-hover-border: #784c55;
+  --close-hover-text: #ffc6cb;
+  --close-hover-bg: #38252c;
+
+  --focus-outline: #8195dc;
+  --panel-shadow: 0 12px 30px rgb(0 0 0 / 38%);
+
+  --find-match-bg: #66551e;
+  --find-active-bg: #ffad42;
+  --find-active-text: #1d2636;
+  --find-active-outline: #e58a18;
 }
 
 * {
@@ -28,6 +95,19 @@ body {
   min-height: 100vh;
   color: var(--ink);
   background: var(--workspace);
+}
+
+body,
+.topbar,
+.brand-mark,
+.brand-name,
+.theme-toggle,
+.find-button,
+.find-panel,
+.find-input,
+.find-action,
+.find-close {
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
 }
 
 button,
@@ -66,7 +146,7 @@ input {
   place-items: center;
   border-radius: 12px;
   color: var(--accent);
-  background: #eef2ff;
+  background: var(--brand-mark-bg);
 }
 
 .brand-mark svg {
@@ -84,7 +164,7 @@ input {
 
 .brand-name {
   overflow: hidden;
-  color: #172033;
+  color: var(--brand-name);
   font-size: 19px;
   font-weight: 720;
   letter-spacing: -0.035em;
@@ -104,6 +184,48 @@ input {
   display: flex;
   flex: 0 0 auto;
   align-items: center;
+  gap: 8px;
+}
+
+.theme-toggle {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--control-border);
+  border-radius: 9px;
+  color: var(--control-text);
+  background: var(--control-bg);
+  cursor: pointer;
+}
+
+.theme-toggle:hover {
+  border-color: var(--control-hover-border);
+  background: var(--control-hover-bg);
+}
+
+.theme-toggle svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.theme-icon-sun {
+  display: none;
+}
+
+[data-theme="dark"] .theme-icon-moon {
+  display: none;
+}
+
+[data-theme="dark"] .theme-icon-sun {
+  display: block;
 }
 
 .find-button {
@@ -113,26 +235,26 @@ input {
   justify-content: center;
   gap: 9px;
   padding: 0 12px;
-  border: 1px solid #dce2ec;
+  border: 1px solid var(--control-border);
   border-radius: 9px;
-  color: #273449;
-  background: #ffffff;
+  color: var(--control-text);
+  background: var(--control-bg);
   cursor: pointer;
-  transition: background-color 120ms ease, border-color 120ms ease;
 }
 
 .find-button:hover,
 .find-button[aria-expanded="true"] {
-  border-color: #bac7ff;
-  background: #f7f8ff;
+  border-color: var(--control-hover-border);
+  background: var(--control-hover-bg);
 }
 
 .find-button:focus-visible,
+.theme-toggle:focus-visible,
 .find-input:focus-visible,
 .find-action:focus-visible,
 .find-close:focus-visible,
 .brand:focus-visible {
-  outline: 3px solid #a5b4fc;
+  outline: 3px solid var(--focus-outline);
   outline-offset: 3px;
 }
 
@@ -161,8 +283,8 @@ input {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 11px;
-  background: #ffffff;
-  box-shadow: 0 12px 30px rgb(22 34 56 / 14%);
+  background: var(--panel);
+  box-shadow: var(--panel-shadow);
 }
 
 .find-controls {
@@ -177,32 +299,36 @@ input {
   min-width: 0;
   height: 36px;
   padding: 0 10px;
-  border: 1px solid #dce2ec;
+  border: 1px solid var(--input-border);
   border-radius: 7px;
   color: var(--ink);
-  background: #ffffff;
+  background: var(--input-bg);
   font-size: 13px;
 }
 
+.find-input::placeholder {
+  color: var(--muted);
+}
+
 .find-input:focus {
-  border-color: #9aabff;
+  border-color: var(--input-focus-border);
 }
 
 .find-action {
   min-height: 36px;
   padding: 0 10px;
-  border: 1px solid #dce2ec;
+  border: 1px solid var(--control-border);
   border-radius: 7px;
-  color: #273449;
-  background: #f8f9fc;
+  color: var(--control-text);
+  background: var(--subtle-bg);
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
 }
 
 .find-action:hover {
-  border-color: #bac7ff;
-  background: #f0f3ff;
+  border-color: var(--control-hover-border);
+  background: var(--subtle-hover-bg);
 }
 
 .find-close {
@@ -213,7 +339,7 @@ input {
   padding: 0;
   border: 1px solid transparent;
   border-radius: 7px;
-  color: #596579;
+  color: var(--close-text);
   background: transparent;
   cursor: pointer;
   font-size: 23px;
@@ -221,9 +347,9 @@ input {
 }
 
 .find-close:hover {
-  border-color: #f0c5c5;
-  color: #a12d2d;
-  background: #fff4f4;
+  border-color: var(--close-hover-border);
+  color: var(--close-hover-text);
+  background: var(--close-hover-bg);
 }
 
 .find-status {
@@ -253,15 +379,15 @@ mark.lux-find-match {
   border-radius: 2px;
   padding: 0 1px;
   color: inherit;
-  background: #fff09b;
+  background: var(--find-match-bg);
 }
 
 mark.lux-find-match.lux-find-active {
   position: relative;
   z-index: 1;
-  color: #1d2636;
-  background: #ffad42;
-  outline: 2px solid #e58a18;
+  color: var(--find-active-text);
+  background: var(--find-active-bg);
+  outline: 2px solid var(--find-active-outline);
   outline-offset: 1px;
 }
 
