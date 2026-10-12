@@ -572,7 +572,8 @@ body[data-focus-mode="true"] .workspace-shell {
 
 .dropbox-button:focus-visible,
 .dropbox-file-button:focus-visible,
-.dropbox-modal-close:focus-visible {
+.dropbox-modal-close:focus-visible,
+.dropbox-modal-action:focus-visible {
   outline: 3px solid var(--focus-outline);
   outline-offset: 2px;
 }
@@ -656,7 +657,7 @@ body[data-focus-mode="true"] .workspace-shell {
   z-index: 1;
   display: flex;
   width: min(100%, 680px);
-  max-height: min(80vh, 760px);
+  max-height: min(82vh, 760px);
   min-height: 280px;
   flex-direction: column;
   overflow: hidden;
@@ -770,15 +771,23 @@ body[data-focus-mode="true"] .workspace-shell {
   to { transform: rotate(360deg); }
 }
 
+.dropbox-modal-loading[hidden],
+.dropbox-modal-file-list[hidden] {
+  display: none !important;
+}
+
 .dropbox-modal-file-list {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  align-content: start;
   min-height: 0;
   flex: 1 1 auto;
-  flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   margin: 0;
-  padding: 0 18px 20px;
-  overflow: auto;
+  padding: 0 18px 18px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   list-style: none;
 }
 
@@ -789,16 +798,17 @@ body[data-focus-mode="true"] .workspace-shell {
 .dropbox-file-button {
   display: flex;
   width: 100%;
+  min-height: 78px;
   align-items: center;
   gap: 12px;
-  padding: 12px 13px;
+  padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 11px;
+  border-radius: 12px;
   color: var(--control-text);
   background: var(--control-bg);
   cursor: pointer;
   text-align: left;
-  transition: border-color 160ms ease, background-color 160ms ease;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }
 
 .dropbox-file-button:hover {
@@ -806,20 +816,42 @@ body[data-focus-mode="true"] .workspace-shell {
   background: var(--control-hover-bg);
 }
 
+.dropbox-file-button.selected,
+.dropbox-file-button[aria-pressed="true"] {
+  border-color: #2469dc;
+  background: rgb(36 105 220 / 11%);
+  box-shadow: inset 0 0 0 1px rgb(36 105 220 / 40%);
+}
+
+.dropbox-file-button.selected .dropbox-file-name,
+.dropbox-file-button[aria-pressed="true"] .dropbox-file-name {
+  color: var(--ink);
+}
+
 .dropbox-file-icon {
   display: grid;
-  width: 36px;
-  height: 40px;
-  flex: 0 0 36px;
+  width: 40px;
+  height: 42px;
+  flex: 0 0 40px;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 9px;
   color: #dc3c44;
   background: rgb(220 60 68 / 10%);
 }
 
+.dropbox-file-icon[data-kind="image"] {
+  color: #16845d;
+  background: rgb(22 132 93 / 12%);
+}
+
+.dropbox-file-icon[data-kind="document"] {
+  color: #3268c9;
+  background: rgb(50 104 201 / 11%);
+}
+
 .dropbox-file-icon svg {
-  width: 21px;
-  height: 21px;
+  width: 22px;
+  height: 22px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.7;
@@ -832,27 +864,62 @@ body[data-focus-mode="true"] .workspace-shell {
   min-width: 0;
   flex: 1 1 auto;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .dropbox-file-name {
-  overflow-wrap: anywhere;
+  display: -webkit-box;
+  overflow: hidden;
   color: var(--ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 650;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .dropbox-file-path {
-  overflow-wrap: anywhere;
+  overflow: hidden;
   color: var(--muted);
   font-size: 11px;
   line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dropbox-file-arrow {
   flex: 0 0 auto;
   color: var(--muted);
   font-size: 19px;
+}
+
+.dropbox-modal-footer {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.dropbox-modal-footer .dropbox-button {
+  width: auto;
+  min-width: 112px;
+  justify-content: center;
+  text-align: center;
+}
+
+.dropbox-modal-footer .dropbox-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.dropbox-modal-close:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 body.dropbox-modal-open {
@@ -909,6 +976,26 @@ body.dropbox-modal-open {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.5;
+}
+
+.file-preview-image {
+  display: block;
+  max-width: min(100%, 1200px);
+  max-height: calc(100vh - 180px);
+  margin: 0 auto;
+  object-fit: contain;
+}
+
+.file-preview-markdown {
+  max-width: 100%;
+  margin: 0;
+  padding: 20px;
+  overflow: auto;
+  color: var(--ink);
+  background: var(--panel);
+  font: 13px/1.65 ui-monospace, SFMono-Regular, Consolas, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 body[data-focus-mode="true"] .workspace-layout,
