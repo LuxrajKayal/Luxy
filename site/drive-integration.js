@@ -58,7 +58,7 @@ function validateDriveConfig() {
 function getGoogleCloudProjectNumber() {
   // Google Web OAuth client IDs use the Cloud project number as their prefix.
   // If your project uses a nonstandard ID format, set it explicitly here.
-  const match = DRIVE_CONFIG.clientId.match(/^(\\d+)-.+\\.apps\\.googleusercontent\\.com$/);
+  const match = DRIVE_CONFIG.clientId.match(/^(\d+)-.+\.apps\.googleusercontent\.com$/);
   if (!match) {
     throw new Error("Could not determine the Google Cloud project number from the OAuth client ID.");
   }
