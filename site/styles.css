@@ -451,6 +451,7 @@ body[data-focus-mode="true"] .topbar.is-visible {
 }
 
 .workspace-shell {
+  position: relative;
   height: calc(100vh - 76px);
   margin-top: 76px;
   transition: height 280ms cubic-bezier(0.22, 1, 0.36, 1), margin-top 280ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -467,7 +468,12 @@ body[data-focus-mode="true"] .workspace-shell.topbar-visible {
 }
 
 .sidebar-toggle-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
   display: flex;
+  width: var(--sidebar-width);
   height: 44px;
   align-items: center;
   padding: 0 12px;
@@ -521,7 +527,7 @@ body[data-focus-mode="true"] .workspace-shell.topbar-visible {
   min-width: var(--sidebar-width);
   min-height: calc(100vh - 120px);
   height: 100%;
-  padding: 12px 8px;
+  padding: 56px 8px 12px;
   overflow-x: hidden;
 }
 
