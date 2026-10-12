@@ -147,14 +147,166 @@ a {
   gap: 8px;
 }
 
-.dropbox-topbar-status {
+.dropbox-account {
+  position: relative;
   display: inline-flex;
   min-width: 0;
   align-items: center;
+}
+
+.dropbox-topbar-status {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 40px;
+  align-items: center;
   justify-content: center;
   gap: 7px;
-  padding: 0 3px;
+  padding: 0 7px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--control-text);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
   white-space: nowrap;
+  transition: background-color 180ms ease, border-color 180ms ease;
+}
+
+.dropbox-topbar-status:hover,
+.dropbox-topbar-status[aria-expanded="true"] {
+  border-color: var(--control-border);
+  background: var(--control-hover-bg);
+}
+
+.dropbox-topbar-status:focus-visible,
+.dropbox-menu-button:focus-visible {
+  outline: 3px solid var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.dropbox-account-chevron {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 160ms ease;
+}
+
+.dropbox-topbar-status[aria-expanded="true"] .dropbox-account-chevron {
+  transform: rotate(180deg);
+}
+
+.dropbox-account-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 50;
+  width: min(310px, calc(100vw - 24px));
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--ink);
+  background: var(--panel);
+  box-shadow: 0 18px 56px rgb(0 0 0 / 24%);
+}
+
+.dropbox-account-menu[hidden],
+.dropbox-disconnect-confirmation[hidden] {
+  display: none !important;
+}
+
+.dropbox-account-menu-heading {
+  margin: 0 0 6px;
+  color: var(--brand-name);
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: -.02em;
+}
+
+.dropbox-account-menu-description,
+.dropbox-disconnect-confirmation p,
+.dropbox-account-feedback {
+  margin: 0 0 13px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.dropbox-menu-button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  color: var(--control-text);
+  background: var(--control-bg);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dropbox-menu-button:hover:not(:disabled) {
+  background: var(--control-hover-bg);
+  border-color: var(--control-hover-border);
+}
+
+.dropbox-menu-button:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.dropbox-menu-button-primary {
+  width: 100%;
+  border-color: #2469dc;
+  color: #fff;
+  background: #2469dc;
+}
+
+.dropbox-menu-button-primary:hover:not(:disabled) {
+  border-color: #1e5ec9;
+  background: #1e5ec9;
+}
+
+.dropbox-menu-button-danger {
+  border-color: #c8414a;
+  color: #fff;
+  background: #c8414a;
+}
+
+.dropbox-menu-button-danger:hover:not(:disabled) {
+  border-color: #ad3039;
+  background: #ad3039;
+}
+
+.dropbox-disconnect-confirmation {
+  margin-top: 12px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+}
+
+.dropbox-confirmation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.dropbox-account-feedback {
+  margin: 12px 0 0;
+}
+
+.dropbox-account-feedback[data-kind="success"] {
+  color: #21865b;
+}
+
+.dropbox-account-feedback[data-kind="error"] {
+  color: #d13f49;
 }
 
 .dropbox-status-logo {
@@ -796,6 +948,11 @@ body[data-focus-mode="true"] .workspace {
 
   .topbar-actions {
     gap: 5px;
+  }
+
+  .dropbox-account-menu {
+    right: -4px;
+    padding: 15px;
   }
 
   .dropbox-topbar-status {
