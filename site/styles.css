@@ -668,6 +668,34 @@ mark.lux-find-match.lux-find-active {
   display: none !important;
 }
 
+@media (max-width: 900px) {
+  .topbar {
+    flex-wrap: wrap;
+    gap: 10px 16px;
+  }
+
+  .brand {
+    flex: 1 1 auto;
+  }
+
+  .topbar-actions {
+    flex: 1 0 100%;
+    justify-content: flex-end;
+  }
+
+  .workspace-shell {
+    margin-top: 124px;
+  }
+
+  .workspace-layout {
+    min-height: calc(100vh - 168px);
+  }
+
+  .workspace {
+    min-height: calc(100vh - 168px);
+  }
+}
+
 @media (max-width: 560px) {
   .topbar {
     min-height: 68px;
@@ -771,15 +799,15 @@ mark.lux-find-match.lux-find-active {
   }
 
   .workspace-shell {
-    margin-top: 68px;
+    margin-top: 124px;
   }
 
   .workspace-layout {
-    min-height: calc(100vh - 112px);
+    min-height: calc(100vh - 168px);
   }
 
   .workspace {
-    min-height: calc(100vh - 112px);
+    min-height: calc(100vh - 168px);
   }
 }
 
