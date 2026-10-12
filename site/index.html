@@ -115,12 +115,15 @@
     <div id="viewport-composition" class="viewport-composition" hidden>
       <div id="viewport-topbar" class="viewport-topbar" aria-label="Viewport toolbar">
         <div id="viewport-toolbar-full" class="viewport-toolbar-section viewport-toolbar-section--full" hidden>
+          <button id="viewport-minimize-full" class="viewport-minimize-button" type="button" aria-label="Minimize full-screen viewport" title="Minimize viewport">−</button>
           <button id="viewport-close-full" class="viewport-close-button" type="button" data-viewport-close="full" aria-label="Close full-screen viewport" title="Close viewport">×</button>
         </div>
         <div id="viewport-toolbar-left" class="viewport-toolbar-section viewport-toolbar-section--left" hidden>
+          <button id="viewport-minimize-left" class="viewport-minimize-button" type="button" aria-label="Minimize left viewport" title="Minimize left viewport">−</button>
           <button id="viewport-close-left" class="viewport-close-button" type="button" data-viewport-close="left" aria-label="Close left viewport" title="Close left viewport">×</button>
         </div>
         <div id="viewport-toolbar-right" class="viewport-toolbar-section viewport-toolbar-section--right" hidden>
+          <button id="viewport-minimize-right" class="viewport-minimize-button" type="button" aria-label="Minimize right viewport" title="Minimize right viewport">−</button>
           <button id="viewport-close-right" class="viewport-close-button" type="button" data-viewport-close="right" aria-label="Close right viewport" title="Close right viewport">×</button>
         </div>
       </div>
@@ -131,7 +134,13 @@
         <div class="viewport viewport--split" data-viewport-side="left"></div>
         <div class="viewport viewport--split" data-viewport-side="right"></div>
       </div>
+      <span id="viewport-number-full" class="viewport-number viewport-number--full" aria-hidden="true" hidden>0</span>
+      <span id="viewport-number-left" class="viewport-number viewport-number--left" aria-hidden="true" hidden>1/2</span>
+      <span id="viewport-number-right" class="viewport-number viewport-number--right" aria-hidden="true" hidden>2/2</span>
       <div id="viewport-split-divider" class="viewport-split-divider" role="separator" aria-label="Resize viewports" aria-orientation="vertical" aria-valuemin="20" aria-valuemax="80" aria-valuenow="50" tabindex="0" hidden></div>
+      <div id="viewport-minimized-dock" class="viewport-minimized-dock" aria-label="Minimized viewports" hidden>
+        <div id="viewport-minimized-items" class="viewport-minimized-items"></div>
+      </div>
     </div>
 
     <div class="workspace-layout">
