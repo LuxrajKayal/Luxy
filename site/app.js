@@ -201,25 +201,35 @@ themeToggle?.addEventListener("click", () => {
 });
 
 
-// Focus Mode: keep the topbar pinned by default; hide/reveal it only in Focus Mode.
+// Focus Mode: persistent state, scroll-up reveal, and hover-to-hide.
 const focusModeToggle = document.querySelector("#focus-mode-toggle");
 const topbar = document.querySelector(".topbar");
+const focusModeStorageKey = "lux-pdf-viewer-focus-mode";
 let lastScrollY = window.scrollY;
 
+function isFocusModeEnabled() {
+  return document.body.dataset.focusMode === "true";
+}
+
 function showTopbar() {
-  if (document.body.dataset.focusMode === "true") {
-    topbar?.classList.remove("is-hidden");
+  if (isFocusModeEnabled()) {
+    topbar?.classList.add("is-visible");
   }
 }
 
 function hideTopbar() {
-  if (document.body.dataset.focusMode === "true") {
-    topbar?.classList.add("is-hidden");
+  if (isFocusModeEnabled()) {
+    topbar?.classList.remove("is-visible");
   }
 }
 
-function setFocusMode(enabled) {
-  document.body.dataset.focusMode = String(enabled);
+function setFocusMode(enabled, savePreference = true) {
+  document.body.dataset.focusMode = enabled ? "true" : "false";
+
+  // Reset reveal state on every toggle so ON always starts hidden, while OFF
+  // always restores the fixed, permanently visible topbar.
+  topbar?.classList.remove("is-visible");
+
   focusModeToggle?.setAttribute("aria-pressed", String(enabled));
   focusModeToggle?.setAttribute(
     "aria-label",
@@ -230,31 +240,48 @@ function setFocusMode(enabled) {
     enabled ? "Turn off Focus Mode" : "Turn on Focus Mode"
   );
 
-  if (enabled) {
-    topbar?.classList.add("is-hidden");
-  } else {
-    topbar?.classList.remove("is-hidden");
+  if (savePreference) {
+    try {
+      localStorage.setItem(focusModeStorageKey, String(enabled));
+    } catch {
+      // Focus Mode still works for this session if storage is unavailable.
+    }
   }
 
   lastScrollY = window.scrollY;
 }
 
+let savedFocusMode = document.body.dataset.focusMode === "true";
+try {
+  const storedFocusMode = localStorage.getItem(focusModeStorageKey);
+  if (storedFocusMode === "true" || storedFocusMode === "false") {
+    savedFocusMode = storedFocusMode === "true";
+  }
+} catch {
+  // Use the state initialized in the HTML when storage is unavailable.
+}
+
+setFocusMode(savedFocusMode, false);
+
 focusModeToggle?.addEventListener("click", () => {
-  const isActive = document.body.dataset.focusMode === "true";
-  setFocusMode(!isActive);
+  setFocusMode(!isFocusModeEnabled());
 });
 
+// In Focus Mode, scrolling upward reveals the bar and scrolling downward hides it.
 window.addEventListener(
   "scroll",
   () => {
     const currentScrollY = window.scrollY;
 
-    if (document.body.dataset.focusMode === "true") {
+    if (isFocusModeEnabled()) {
       if (currentScrollY < lastScrollY || currentScrollY <= 10) {
         showTopbar();
       } else if (currentScrollY > lastScrollY) {
         hideTopbar();
       }
+    } else {
+      // OFF means the bar is always visible regardless of scroll direction.
+      topbar?.classList.remove("is-visible");
     }
 
     lastScrollY = currentScrollY;
@@ -262,8 +289,22 @@ window.addEventListener(
   { passive: true }
 );
 
+// Reveal when the pointer reaches the browser's top edge.
 document.addEventListener("mousemove", (event) => {
-  if (event.clientY <= 10) showTopbar();
+  if (isFocusModeEnabled() && event.clientY <= 10) {
+    showTopbar();
+  }
 });
 
+// Keep the revealed bar visible while the pointer is over it; hide it as soon
+// as the pointer leaves. These handlers do nothing while Focus Mode is OFF.
+topbar?.addEventListener("mouseenter", () => {
+  if (isFocusModeEnabled()) showTopbar();
+});
+
+topbar?.addEventListener("mouseleave", () => {
+  if (isFocusModeEnabled()) hideTopbar();
+});
+
+// Keyboard users can reveal the controls too.
 topbar?.addEventListener("focusin", showTopbar);
