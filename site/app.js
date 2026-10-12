@@ -199,3 +199,71 @@ themeToggle?.addEventListener("click", () => {
   const isDark = document.documentElement.getAttribute("data-theme") === "dark";
   setDarkMode(!isDark);
 });
+
+
+// Focus Mode: keep the topbar pinned by default; hide/reveal it only in Focus Mode.
+const focusModeToggle = document.querySelector("#focus-mode-toggle");
+const topbar = document.querySelector(".topbar");
+let lastScrollY = window.scrollY;
+
+function showTopbar() {
+  if (document.body.dataset.focusMode === "true") {
+    topbar?.classList.remove("is-hidden");
+  }
+}
+
+function hideTopbar() {
+  if (document.body.dataset.focusMode === "true") {
+    topbar?.classList.add("is-hidden");
+  }
+}
+
+function setFocusMode(enabled) {
+  document.body.dataset.focusMode = String(enabled);
+  focusModeToggle?.setAttribute("aria-pressed", String(enabled));
+  focusModeToggle?.setAttribute(
+    "aria-label",
+    enabled ? "Turn off Focus Mode" : "Turn on Focus Mode"
+  );
+  focusModeToggle?.setAttribute(
+    "title",
+    enabled ? "Turn off Focus Mode" : "Turn on Focus Mode"
+  );
+
+  if (enabled) {
+    topbar?.classList.add("is-hidden");
+  } else {
+    topbar?.classList.remove("is-hidden");
+  }
+
+  lastScrollY = window.scrollY;
+}
+
+focusModeToggle?.addEventListener("click", () => {
+  const isActive = document.body.dataset.focusMode === "true";
+  setFocusMode(!isActive);
+});
+
+window.addEventListener(
+  "scroll",
+  () => {
+    const currentScrollY = window.scrollY;
+
+    if (document.body.dataset.focusMode === "true") {
+      if (currentScrollY < lastScrollY || currentScrollY <= 10) {
+        showTopbar();
+      } else if (currentScrollY > lastScrollY) {
+        hideTopbar();
+      }
+    }
+
+    lastScrollY = currentScrollY;
+  },
+  { passive: true }
+);
+
+document.addEventListener("mousemove", (event) => {
+  if (event.clientY <= 10) showTopbar();
+});
+
+topbar?.addEventListener("focusin", showTopbar);
