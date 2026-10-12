@@ -5,6 +5,11 @@ const themeToggle = document.querySelector("#theme-toggle");
 const focusModeToggle = document.querySelector("#focus-mode-toggle");
 const sidebarToggle = document.querySelector("#sidebar-toggle");
 const topbar = document.querySelector(".topbar");
+const fullScreenViewportButton = document.querySelector("#viewport-fullscreen");
+const splitScreenViewportButton = document.querySelector("#viewport-split-screen");
+const workspace = document.querySelector(".workspace");
+const fullScreenViewportLayout = document.querySelector("#viewport-fullscreen-layout");
+const splitScreenViewportLayout = document.querySelector("#viewport-split-layout");
 
 const THEME_STORAGE_KEY = "lux-pdf-viewer-theme";
 const FOCUS_MODE_STORAGE_KEY = "lux-pdf-viewer-focus-mode";
@@ -169,3 +174,21 @@ sidebarToggle?.addEventListener("click", () => {
   const isOpen = document.documentElement.getAttribute("data-sidebar-open") === "true";
   setSidebarOpen(!isOpen);
 });
+
+// Viewport layouts: one empty viewport or two separate empty viewports.
+function setViewportMode(mode) {
+  if (!workspace || !fullScreenViewportLayout || !splitScreenViewportLayout) return;
+
+  const isFullScreen = mode === "full";
+  fullScreenViewportLayout.hidden = !isFullScreen;
+  splitScreenViewportLayout.hidden = isFullScreen;
+
+  // Reattach the layout containers if another workspace feature replaced its contents.
+  workspace.replaceChildren(fullScreenViewportLayout, splitScreenViewportLayout);
+
+  fullScreenViewportButton?.setAttribute("aria-pressed", String(isFullScreen));
+  splitScreenViewportButton?.setAttribute("aria-pressed", String(!isFullScreen));
+}
+
+fullScreenViewportButton?.addEventListener("click", () => setViewportMode("full"));
+splitScreenViewportButton?.addEventListener("click", () => setViewportMode("split"));
