@@ -658,7 +658,7 @@ body[data-focus-mode="true"] .workspace-shell {
   display: flex;
   width: min(100%, 680px);
   max-height: min(82vh, 760px);
-  min-height: 280px;
+  min-height: min(280px, 65vh);
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -1071,7 +1071,7 @@ body[data-focus-mode="true"] .workspace {
 
   .dropbox-modal-panel {
     max-height: 88vh;
-    min-height: 220px;
+    min-height: min(220px, 60vh);
     border-radius: 15px;
   }
 
