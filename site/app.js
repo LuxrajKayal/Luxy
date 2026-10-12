@@ -157,3 +157,45 @@ document.addEventListener("keydown", (event) => {
     closeSearch();
   }
 });
+
+
+// Dark mode toggle
+const themeToggle = document.querySelector("#theme-toggle");
+const themeStorageKey = "lux-pdf-viewer-theme";
+
+function setDarkMode(enabled, savePreference = true) {
+  if (enabled) {
+    document.documentElement.setAttribute("data-theme", "dark");
+  } else {
+    document.documentElement.removeAttribute("data-theme");
+  }
+
+  if (themeToggle) {
+    const nextMode = enabled ? "light" : "dark";
+    themeToggle.setAttribute("aria-label", `Switch to ${nextMode} mode`);
+    themeToggle.setAttribute("title", `Switch to ${nextMode} mode`);
+    themeToggle.setAttribute("aria-pressed", String(enabled));
+  }
+
+  if (savePreference) {
+    try {
+      localStorage.setItem(themeStorageKey, enabled ? "dark" : "light");
+    } catch {
+      // Theme switching still works when browser storage is unavailable.
+    }
+  }
+}
+
+let startInDarkMode = false;
+try {
+  startInDarkMode = localStorage.getItem(themeStorageKey) === "dark";
+} catch {
+  // Fall back to the light theme when browser storage is unavailable.
+}
+
+setDarkMode(startInDarkMode, false);
+
+themeToggle?.addEventListener("click", () => {
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark";
+  setDarkMode(!isDark);
+});
