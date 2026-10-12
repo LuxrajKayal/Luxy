@@ -112,7 +112,17 @@
         </svg>
       </button>
     </div>
-    <div id="viewport-topbar" class="viewport-topbar" aria-label="Viewport toolbar" hidden></div>
+    <div id="viewport-composition" class="viewport-composition" hidden>
+      <div id="viewport-topbar" class="viewport-topbar" aria-label="Viewport toolbar"></div>
+      <div id="viewport-fullscreen-layout" class="viewport-stage viewport-stage--full" hidden>
+        <div class="viewport"></div>
+      </div>
+      <div id="viewport-split-layout" class="viewport-stage viewport-stage--split" hidden>
+        <div class="viewport viewport--split"></div>
+        <div class="viewport viewport--split"></div>
+      </div>
+      <div id="viewport-split-divider" class="viewport-split-divider" role="separator" aria-label="Resize viewports" aria-orientation="vertical" aria-valuemin="20" aria-valuemax="80" aria-valuenow="50" tabindex="0" hidden></div>
+    </div>
 
     <div class="workspace-layout">
       <aside id="sidebar" class="sidebar" aria-label="Sidebar">
@@ -142,14 +152,6 @@
         <div class="workspace-empty-state">
           <h1>Open a PDF from Dropbox</h1>
           <p>Your selected PDF will appear here. The current workspace has a browser preview placeholder; editing/export will need to be connected before Sync can overwrite a source file.</p>
-        </div>
-        <div id="viewport-fullscreen-layout" class="viewport-stage viewport-stage--full" hidden>
-          <div class="viewport"></div>
-        </div>
-        <div id="viewport-split-layout" class="viewport-stage viewport-stage--split" hidden>
-          <div class="viewport viewport--split"></div>
-          <div id="viewport-split-divider" class="viewport-split-divider" role="separator" aria-label="Resize viewports" aria-orientation="vertical" aria-valuemin="20" aria-valuemax="80" aria-valuenow="50" tabindex="0"></div>
-          <div class="viewport viewport--split"></div>
         </div>
       </main>
     </div>
