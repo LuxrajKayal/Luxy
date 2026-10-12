@@ -5,6 +5,7 @@ const themeToggle = document.querySelector("#theme-toggle");
 const focusModeToggle = document.querySelector("#focus-mode-toggle");
 const sidebarToggle = document.querySelector("#sidebar-toggle");
 const topbar = document.querySelector(".topbar");
+const workspaceShell = document.querySelector(".workspace-shell");
 const fullScreenViewportButton = document.querySelector("#viewport-fullscreen");
 const splitScreenViewportButton = document.querySelector("#viewport-split-screen");
 const workspace = document.querySelector(".workspace");
@@ -61,16 +62,23 @@ function isFocusModeEnabled() {
 }
 
 function showTopbar() {
-  if (isFocusModeEnabled()) topbar?.classList.add("is-visible");
+  if (isFocusModeEnabled()) {
+    topbar?.classList.add("is-visible");
+    workspaceShell?.classList.add("topbar-visible");
+  }
 }
 
 function hideTopbar() {
-  if (isFocusModeEnabled()) topbar?.classList.remove("is-visible");
+  if (isFocusModeEnabled()) {
+    topbar?.classList.remove("is-visible");
+    workspaceShell?.classList.remove("topbar-visible");
+  }
 }
 
 function setFocusMode(enabled, savePreference = true) {
   document.body.dataset.focusMode = String(enabled);
   topbar?.classList.remove("is-visible");
+  workspaceShell?.classList.remove("topbar-visible");
 
   focusModeToggle?.setAttribute("aria-pressed", String(enabled));
   focusModeToggle?.setAttribute(
