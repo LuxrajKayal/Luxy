@@ -535,10 +535,27 @@ body[data-focus-mode="true"] .workspace-shell {
 
 .viewport {
   width: 100%;
+  height: calc(100vh - 120px);
   min-width: 0;
-  min-height: inherit;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
   border: 1px solid var(--line);
   background: #ffffff;
+}
+
+body[data-focus-mode="true"] .viewport {
+  height: calc(100vh - 44px);
+}
+
+@media (max-width: 560px) {
+  .viewport {
+    height: calc(100vh - 112px);
+  }
+
+  body[data-focus-mode="true"] .viewport {
+    height: calc(100vh - 44px);
+  }
 }
 
 .sidebar-cloud-actions {
