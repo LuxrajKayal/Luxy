@@ -1,4 +1,4 @@
-/* Lux Learning Tool — Dropbox Bring Your Own Cloud integration.
+/* Lux PDF Viewer — Dropbox Bring Your Own Cloud integration.
  * Browser-only OAuth uses authorization-code + PKCE. Never add an app secret here.
  * The PDF editor must supply an exported Blob before Sync can overwrite a source file.
  */
@@ -44,8 +44,7 @@
   const modalSelectButton = document.querySelector("#dropbox-modal-select");
   const modalCancelButton = document.querySelector("#dropbox-modal-cancel");
   const accessibleStatus = document.querySelector("#dropbox-accessible-status");
-  const workspace = document.querySelector("#source-viewer-content") || document.querySelector(".workspace");
-  const markdownEditor = document.querySelector("#markdown-editor");
+  const workspace = document.querySelector(".workspace");
 
   let dbx = null;
   let activeFilePathLower = null;
@@ -92,7 +91,7 @@
 
     if (accountMenuDescription) {
       if (dbx && (normalizedState === "connected" || normalizedState === "saved" || normalizedState === "uploading")) {
-        accountMenuDescription.textContent = "Your Dropbox account is connected to Lux Learning Tool.";
+        accountMenuDescription.textContent = "Your Dropbox account is connected to Lux PDF Viewer.";
       } else if (normalizedState === "connection-failed") {
         accountMenuDescription.textContent = dbx
           ? "The last Dropbox request failed. You can disconnect this session or try again."
@@ -352,7 +351,7 @@
 
       initializeClient(result.access_token);
       setModalOpen(true);
-      setStatus("Connected. Loading supported files from Dropbox…");
+      setStatus("Connected. Loading your Dropbox PDFs…");
       await listDropboxPdfs();
       return true;
     } catch (error) {
@@ -658,22 +657,6 @@
       return;
     }
 
-    if (fileKind === "markdown" && markdownEditor) {
-      markdownEditor.value = await fileBlob.text();
-      if (workspace) {
-        workspace.replaceChildren();
-        const notice = document.createElement("div");
-        notice.className = "pane-empty-state";
-        const heading = document.createElement("h2");
-        heading.textContent = "Markdown source loaded into your notes";
-        const note = document.createElement("p");
-        note.textContent = "This text area is a basic editor. Formatting tools and syncing edited Markdown back to Dropbox are planned, not connected yet.";
-        notice.append(heading, note);
-        workspace.append(notice);
-      }
-      return;
-    }
-
     if (!workspace) return;
 
     if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
@@ -694,10 +677,18 @@
       return;
     }
 
+    if (fileKind === "markdown") {
+      const markdownPreview = document.createElement("pre");
+      markdownPreview.className = "file-preview-markdown";
+      markdownPreview.textContent = await fileBlob.text();
+      workspace.append(heading, markdownPreview);
+      return;
+    }
+
     const note = document.createElement("p");
     note.className = "pdf-preview-note";
     note.textContent =
-      "Interface-first preview: PDF annotation and export are not connected yet. Dropbox Sync will not overwrite this source until an edited PDF Blob is available.";
+      "Browser preview only: PDF editing/export is not connected in this project build. Sync will not overwrite the source until an edited PDF Blob is provided.";
 
     const frame = document.createElement("iframe");
     frame.className = "pdf-preview-frame";
@@ -721,8 +712,8 @@
     if (editedPdfBlob instanceof Blob) return editedPdfBlob;
 
     throw new Error(
-      "PDF annotation/export is not connected yet, and Markdown-note syncing is not implemented. " +
-      "No Dropbox file was overwritten. Connect a PDF export through LuxDropboxIntegration.setEditedPdfBlob(blob)."
+      "The current workspace only previews PDFs; its editing/export hook is not connected yet. " +
+      "No Dropbox file was overwritten. Connect your editor through LuxDropboxIntegration.setEditedPdfBlob(blob)."
     );
   }
 
@@ -877,7 +868,7 @@
       if (tokenRevoked) {
         setAccountFeedback("Dropbox disconnected. Your session has been cleared and the access token was revoked.", "success");
       } else {
-        setAccountFeedback("You are signed out of Luxy on this tab, but Dropbox could not confirm token revocation. To revoke access completely, remove Lux Learning Tool from your Dropbox connected apps.", "error");
+        setAccountFeedback("You are signed out of Luxy on this tab, but Dropbox could not confirm token revocation. To revoke access completely, remove Lux PDF Viewer from your Dropbox connected apps.", "error");
       }
     }
   });
