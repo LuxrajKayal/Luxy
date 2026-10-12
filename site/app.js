@@ -15,6 +15,7 @@ const splitScreenViewportLayout = document.querySelector("#viewport-split-layout
 const THEME_STORAGE_KEY = "lux-pdf-viewer-theme";
 const FOCUS_MODE_STORAGE_KEY = "lux-pdf-viewer-focus-mode";
 const SIDEBAR_STORAGE_KEY = "lux-pdf-viewer-sidebar-open";
+const SIDEBAR_LAYOUT_MIGRATION_KEY = "lux-pdf-viewer-sidebar-toggle-location-migrated";
 
 // Dark Mode
 function setDarkMode(enabled, savePreference = true) {
@@ -170,7 +171,14 @@ function setSidebarOpen(isOpen, savePreference = true) {
 let savedSidebarOpen = document.documentElement.getAttribute("data-sidebar-open") !== "false";
 try {
   const storedSidebarState = localStorage.getItem(SIDEBAR_STORAGE_KEY);
-  if (storedSidebarState === "true" || storedSidebarState === "false") {
+  const sidebarLayoutMigrated = localStorage.getItem(SIDEBAR_LAYOUT_MIGRATION_KEY) === "true";
+
+  if (!sidebarLayoutMigrated) {
+    // Restore the sidebar once because its toggle has moved outside the collapsible column.
+    savedSidebarOpen = true;
+    localStorage.setItem(SIDEBAR_STORAGE_KEY, "true");
+    localStorage.setItem(SIDEBAR_LAYOUT_MIGRATION_KEY, "true");
+  } else if (storedSidebarState === "true" || storedSidebarState === "false") {
     savedSidebarOpen = storedSidebarState === "true";
   }
 } catch {
