@@ -52,4 +52,4 @@ Access to this repository and use of GitHub features are subject to GitHub's ter
 
 ## Contact and project issues
 
-For a project issue, use the [GitHub Issues page](https://github.com/LuxrajKayal/Luxy/issues). Do not post private documents, access tokens, or other sensitive information in public issues.
+For a project issue, use the [GitHub Issues page](https://github.com/LuxrajKayal/Luxy/issues). Do not post private documents, access tokens, or other sensitive information in GitHub issues.
