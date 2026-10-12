@@ -308,3 +308,47 @@ topbar?.addEventListener("mouseleave", () => {
 
 // Keyboard users can reveal the controls too.
 topbar?.addEventListener("focusin", showTopbar);
+
+
+// Manual sidebar toggle: its state changes only when the user presses the button.
+const sidebarToggle = document.querySelector("#sidebar-toggle");
+const sidebarStorageKey = "lux-pdf-viewer-sidebar-open";
+
+function setSidebarOpen(isOpen, savePreference = true) {
+  document.documentElement.setAttribute("data-sidebar-open", String(isOpen));
+  sidebarToggle?.setAttribute("aria-expanded", String(isOpen));
+  sidebarToggle?.setAttribute(
+    "aria-label",
+    isOpen ? "Close sidebar" : "Open sidebar"
+  );
+  sidebarToggle?.setAttribute(
+    "title",
+    isOpen ? "Close sidebar" : "Open sidebar"
+  );
+
+  if (savePreference) {
+    try {
+      localStorage.setItem(sidebarStorageKey, String(isOpen));
+    } catch {
+      // The sidebar still works for this page when storage is unavailable.
+    }
+  }
+}
+
+// The HTML sets this before first paint; repeat it here to synchronize the button.
+let sidebarStartsOpen = document.documentElement.getAttribute("data-sidebar-open") !== "false";
+try {
+  const savedSidebarState = localStorage.getItem(sidebarStorageKey);
+  if (savedSidebarState === "true" || savedSidebarState === "false") {
+    sidebarStartsOpen = savedSidebarState === "true";
+  }
+} catch {
+  // Keep the initially applied state if storage is unavailable.
+}
+
+setSidebarOpen(sidebarStartsOpen, false);
+
+sidebarToggle?.addEventListener("click", () => {
+  const isOpen = document.documentElement.getAttribute("data-sidebar-open") === "true";
+  setSidebarOpen(!isOpen);
+});
