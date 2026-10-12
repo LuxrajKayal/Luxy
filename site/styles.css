@@ -1087,6 +1087,15 @@ body[data-focus-mode="true"] .workspace {
     padding: 0 12px 14px;
   }
 
+  .dropbox-modal-footer {
+    padding: 12px 17px;
+  }
+
+  .dropbox-modal-footer .dropbox-button {
+    min-width: 90px;
+    padding: 9px 10px;
+  }
+
   .topbar {
     min-height: 68px;
     gap: 10px;
