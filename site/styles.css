@@ -117,8 +117,14 @@ input {
 }
 
 .topbar {
-  position: relative;
-  z-index: 2;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 10;
+  width: 100%;
+  transform: translateY(0);
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), background-color 180ms ease, color 180ms ease, border-color 180ms ease;
   display: flex;
   min-height: 76px;
   align-items: center;
@@ -187,6 +193,60 @@ input {
   gap: 8px;
 }
 
+.focus-toggle {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 11px;
+  border: 1px solid var(--control-border);
+  border-radius: 9px;
+  color: var(--control-text);
+  background: var(--control-bg);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.focus-toggle:hover,
+.focus-toggle[aria-pressed="true"] {
+  border-color: var(--control-hover-border);
+  background: var(--control-hover-bg);
+}
+
+.focus-toggle svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.focus-icon-exit {
+  display: none;
+}
+
+body[data-focus-mode="true"] .focus-icon-enter {
+  display: none;
+}
+
+body[data-focus-mode="true"] .focus-icon-exit {
+  display: block;
+}
+
+body[data-focus-mode="true"] .topbar.is-hidden {
+  transform: translateY(-100%);
+  pointer-events: none;
+}
+
+body[data-focus-mode="true"] .workspace {
+  margin-top: 0;
+  min-height: 100vh;
+}
+
 .theme-toggle {
   display: grid;
   width: 40px;
@@ -250,6 +310,7 @@ input {
 
 .find-button:focus-visible,
 .theme-toggle:focus-visible,
+.focus-toggle:focus-visible,
 .find-input:focus-visible,
 .find-action:focus-visible,
 .find-close:focus-visible,
@@ -371,6 +432,7 @@ input {
 }
 
 .workspace {
+  margin-top: 76px;
   min-height: calc(100vh - 76px);
   background: var(--workspace);
 }
@@ -427,6 +489,17 @@ mark.lux-find-match.lux-find-active {
     font-size: 10px;
   }
 
+  .focus-toggle {
+    width: 40px;
+    min-width: 40px;
+    padding: 0;
+    gap: 0;
+  }
+
+  .focus-toggle span {
+    display: none;
+  }
+
   .find-button {
     width: 40px;
     min-width: 40px;
@@ -452,6 +525,7 @@ mark.lux-find-match.lux-find-active {
   }
 
   .workspace {
+    margin-top: 68px;
     min-height: calc(100vh - 68px);
   }
 }
