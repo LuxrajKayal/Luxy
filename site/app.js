@@ -10,6 +10,7 @@ const splitScreenViewportButton = document.querySelector("#viewport-split-screen
 const workspace = document.querySelector(".workspace");
 const fullScreenViewportLayout = document.querySelector("#viewport-fullscreen-layout");
 const splitScreenViewportLayout = document.querySelector("#viewport-split-layout");
+const viewportTopbar = document.querySelector("#viewport-topbar");
 const splitViewportDivider = document.querySelector("#viewport-split-divider");
 
 const THEME_STORAGE_KEY = "lux-pdf-viewer-theme";
@@ -181,6 +182,7 @@ function setViewportMode(mode) {
   if (!workspace || !fullScreenViewportLayout || !splitScreenViewportLayout) return;
 
   const isFullScreen = mode === "full";
+  if (viewportTopbar) viewportTopbar.hidden = false;
   fullScreenViewportLayout.hidden = !isFullScreen;
   splitScreenViewportLayout.hidden = isFullScreen;
 
