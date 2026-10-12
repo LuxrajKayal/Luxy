@@ -53,11 +53,28 @@
     </a>
 
     <div class="topbar-actions">
-      <div class="dropbox-topbar-status" title="Dropbox connection status">
-        <svg class="dropbox-status-logo" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M7.2 2.8 2.4 5.9l4.8 3 4.8-3-4.8-3Zm9.6 0L12 5.9l4.8 3 4.8-3-4.8-3ZM7.2 9l-4.8 3 4.8 3 4.8-3-4.8-3Zm9.6 0L12 12l4.8 3 4.8-3-4.8-3-4.8 3 4.8 3 4.8-3-4.8-3ZM7.2 15.2l4.8 3 4.8-3-4.8-3-4.8 3Z"/>
-        </svg>
-        <span id="dropbox-status-text" class="dropbox-status-text" data-state="not-connected" role="status" aria-live="polite">Not connected</span>
+      <div class="dropbox-account">
+        <button id="dropbox-account-toggle" class="dropbox-topbar-status" type="button" aria-label="Dropbox account: Not connected" aria-controls="dropbox-account-menu" aria-expanded="false" title="Dropbox account">
+          <svg class="dropbox-status-logo" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7.2 2.8 2.4 5.9l4.8 3 4.8-3-4.8-3Zm9.6 0L12 5.9l4.8 3 4.8-3-4.8-3ZM7.2 9l-4.8 3 4.8 3 4.8-3-4.8-3Zm9.6 0L12 12l4.8 3 4.8-3-4.8-3-4.8 3 4.8 3 4.8-3-4.8-3ZM7.2 15.2l4.8 3 4.8-3-4.8-3-4.8 3Z"/>
+          </svg>
+          <span id="dropbox-status-text" class="dropbox-status-text" data-state="not-connected">Not connected</span>
+          <svg class="dropbox-account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+        </button>
+        <section id="dropbox-account-menu" class="dropbox-account-menu" aria-label="Dropbox account options" hidden>
+          <div class="dropbox-account-menu-heading">Dropbox</div>
+          <p id="dropbox-account-menu-description" class="dropbox-account-menu-description">Connect your Dropbox account to open your PDFs.</p>
+          <button id="dropbox-menu-connect" class="dropbox-menu-button dropbox-menu-button-primary" type="button">Connect Dropbox</button>
+          <button id="dropbox-menu-disconnect" class="dropbox-menu-button dropbox-menu-button-danger" type="button" hidden>Disconnect</button>
+          <div id="dropbox-disconnect-confirmation" class="dropbox-disconnect-confirmation" hidden>
+            <p>Disconnect Dropbox from Lux PDF Viewer? You will need to reconnect before opening or syncing files.</p>
+            <div class="dropbox-confirmation-actions">
+              <button id="dropbox-disconnect-cancel" class="dropbox-menu-button" type="button">Cancel</button>
+              <button id="dropbox-disconnect-confirm" class="dropbox-menu-button dropbox-menu-button-danger" type="button">Disconnect</button>
+            </div>
+          </div>
+          <p id="dropbox-account-feedback" class="dropbox-account-feedback" role="status" aria-live="polite" hidden></p>
+        </section>
       </div>
       <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode" aria-pressed="false">
         <svg class="theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
