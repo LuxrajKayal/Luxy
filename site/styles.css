@@ -237,9 +237,15 @@ body[data-focus-mode="true"] .focus-icon-exit {
   display: block;
 }
 
-body[data-focus-mode="true"] .topbar.is-hidden {
+/* In Focus Mode the topbar stays hidden until explicitly revealed. */
+body[data-focus-mode="true"] .topbar {
   transform: translateY(-100%);
   pointer-events: none;
+}
+
+body[data-focus-mode="true"] .topbar.is-visible {
+  transform: translateY(0);
+  pointer-events: auto;
 }
 
 body[data-focus-mode="true"] .workspace {
