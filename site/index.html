@@ -122,6 +122,17 @@
                 <path d="M7.2 2.8 2.4 5.9l4.8 3 4.8-3-4.8-3Zm9.6 0L12 5.9l4.8 3 4.8-3-4.8-3ZM7.2 9l-4.8 3 4.8 3 4.8-3-4.8-3Zm9.6 0L12 12l4.8 3 4.8-3-4.8-3-4.8 3 4.8 3 4.8-3-4.8-3ZM7.2 15.2l4.8 3 4.8-3-4.8-3-4.8 3Z"/>
               </svg>
             </button>
+            <button id="viewport-fullscreen" class="dropbox-button dropbox-icon-button viewport-mode-button" type="button" aria-label="Open full-screen viewport" title="Full Screen" aria-pressed="false">
+              <svg class="viewport-mode-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 3H4v5M16 3h4v5M20 16v5h-4M8 21H4v-5"></path>
+              </svg>
+            </button>
+            <button id="viewport-split-screen" class="dropbox-button dropbox-icon-button viewport-mode-button" type="button" aria-label="Open split-screen viewports" title="Split Screen" aria-pressed="false">
+              <svg class="viewport-mode-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="16" rx="2"></rect>
+                <path d="M12 4v16"></path>
+              </svg>
+            </button>
           </div>
           <p id="dropbox-accessible-status" class="visually-hidden" role="status" aria-live="polite"></p>
         </div>
@@ -130,6 +141,13 @@
         <div class="workspace-empty-state">
           <h1>Open a PDF from Dropbox</h1>
           <p>Your selected PDF will appear here. The current workspace has a browser preview placeholder; editing/export will need to be connected before Sync can overwrite a source file.</p>
+        </div>
+        <div id="viewport-fullscreen-layout" class="viewport-stage viewport-stage--full" hidden>
+          <div class="viewport"></div>
+        </div>
+        <div id="viewport-split-layout" class="viewport-stage viewport-stage--split" hidden>
+          <div class="viewport"></div>
+          <div class="viewport"></div>
         </div>
       </main>
     </div>
