@@ -51,6 +51,29 @@
     </a>
 
     <div class="topbar-actions">
+      <button id="drive-connect-button" class="drive-connect-button" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M8.2 3.5h7.6l6.3 11h-7.6z" fill="#34a853" stroke="none"></path>
+          <path d="M8.2 3.5 2 14.5l3.8 6h7.7l-3.8-6-1.5-2.5" fill="#4285f4" stroke="none"></path>
+          <path d="M5.8 20.5 2 14.5h12.5l-3.5 6z" fill="#fbbc04" stroke="none"></path>
+        </svg>
+        <span>Google Drive</span>
+      </button>
+      <div id="drive-connected-controls" class="drive-connected-controls" hidden>
+        <span class="drive-connected-label"><span class="drive-status-dot" aria-hidden="true"></span>Drive Connected</span>
+        <button id="drive-avatar-button" class="drive-avatar-button" type="button" aria-label="Open Google Drive picker" title="Open Google Drive">
+          <img id="drive-avatar" class="drive-avatar" alt="" hidden>
+          <span id="drive-avatar-fallback" class="drive-avatar-fallback" aria-hidden="true">G</span>
+        </button>
+      </div>
+      <button id="drive-sync-button" class="drive-sync-button" type="button" hidden disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M20 7v5h-5M4 17v-5h5"></path>
+          <path d="M6.1 9A6.5 6.5 0 0 1 17 6.5L20 12M4 12l3 5.5A6.5 6.5 0 0 0 18 15"></path>
+        </svg>
+        <span id="drive-sync-label">Sync to Drive</span>
+      </button>
+      <span id="drive-feedback" class="drive-feedback" role="status" aria-live="polite" hidden></span>
       <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode" aria-pressed="false">
         <svg class="theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M20.2 15.4A8.4 8.4 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"></path>
