@@ -791,6 +791,32 @@
       editedPdfBlob = null;
       setStatus("Editor changes cleared; no updated PDF is ready to sync.");
     },
+    discardActiveFile: function () {
+      if (isOpeningFile || isSyncing) {
+        setStatus("Wait for the current Dropbox operation to finish before discarding the document.", "error");
+        return false;
+      }
+
+      if (syncFeedbackTimer) {
+        window.clearTimeout(syncFeedbackTimer);
+        syncFeedbackTimer = null;
+      }
+      if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+        previewObjectUrl = null;
+      }
+
+      activeFilePathLower = null;
+      activeFileName = null;
+      activeFileKind = null;
+      activeSourcePdfBlob = null;
+      editedPdfBlob = null;
+      updateSyncButton();
+      setConnectionStatus(dbx ? "connected" : "not-connected");
+      setStatus("Document discarded.");
+      window.dispatchEvent(new CustomEvent("lux:dropbox-document-discarded"));
+      return true;
+    },
     getActiveFile: function () {
       if (!activeFilePathLower) return null;
       return {
