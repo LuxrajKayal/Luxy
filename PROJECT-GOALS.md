@@ -12,7 +12,7 @@ This is the working source of truth for the product direction agreed by the proj
 - The product is being developed as a real product intended for users and eventual commercial distribution, not merely as a coding exercise.
 - Attribute original first-party product work to the project owner. Do not claim that third-party library authors authored the Lux Omni application, and do not claim ownership of third-party code.
 
-The owner has expressed an intent to control use and reproduction of first-party product work and to provide a free version for students. The exact license, eligibility rules, and legally enforceable terms have not yet been finalized. Do not draft or publish a final license or assert legal conclusions without discussing the terms with the owner. Any first-party restrictions must not be represented as overriding rights granted by third-party library licenses.
+The first-party rights notice for original Lux Omni materials is recorded in the root `LICENSE` and `COPYRIGHT.md` files. Third-party software intentionally loaded by the current application is identified in `THIRD_PARTY_NOTICES.md`; its own licence terms remain separate from the first-party terms.
 
 ## 2. Long-term product direction
 
@@ -61,25 +61,15 @@ The visual design details (exact header, placement, dimensions, colors, icons, t
 - Feature descriptions are requirements only; they are not permission to copy another implementation.
 - If a proposed approach resembles a previously observed project, make decisions based on requirements and independently reasoned engineering choices, not by transplanting that project's design or code.
 
-## 5. Third-party dependencies and first-party work
+## 5. First-party work and dependencies
 
-The owner has approved evaluating these two external PDF libraries with proper attribution:
-
-- **Mozilla PDF.js** — Apache License 2.0.
-- **pdf-lib** — MIT License.
-
-The current repository records pinned upstream Git submodule references under `Used third party dependencies/`. A submodule reference pins an upstream commit; it is not itself a copy of every upstream source file, and does not prove that the dependency has been integrated into or tested with the application.
-
-Rules:
-
-- Do not add any other third-party library, framework, CDN, external service, authentication provider or build dependency without first explaining its purpose, dependency boundaries, exact applicable license, local-hosting options, alternatives and limitations, then receiving owner approval.
-- Keep third-party source distinct from first-party application code.
-- Preserve applicable upstream license text, copyright notices and required attribution when distributing the libraries or product builds that contain them.
-- Keep third-party disclosures in the designated `Used third party dependencies/` folder where legally sufficient; do not add credits to the application UI unless the owner approves, except where a specific legal requirement makes another placement necessary.
-- Do not remove upstream legal notices or misrepresent ownership.
-- Do not claim the product has only two total dependency packages until the actual bundles and any transitive dependencies have been audited.
-- Do not describe any first-party PDF-engine component as complete or generally compatible without code evidence, representative test results and a stated support scope.
-- Replace third-party functionality only after an independently developed replacement has been tested sufficiently for the intended use cases.
+- Original Lux Omni source code, project documentation, and original assets are attributed to the project owner where created by or rightsfully owned by the owner.
+- Only describe a third-party library as used by the application when it is intentionally loaded or integrated into the current build.
+- The current application loads the Dropbox JavaScript SDK. Its version and MIT licence notice are recorded in the root `THIRD_PARTY_NOTICES.md`.
+- Do not add another third-party library, framework, CDN, external service, authentication provider, or build dependency without first explaining its purpose, boundaries, licence, alternatives, and limitations, then receiving the owner's approval.
+- Keep first-party work separate from third-party material. Preserve required third-party copyright and licence notices for software intentionally used or distributed.
+- Do not claim ownership of third-party code or misrepresent what is actually integrated and tested.
+- Do not describe PDF editing, export, or other components as complete without code evidence and suitable testing.
 
 ## 6. Working method
 
@@ -101,13 +91,13 @@ Do not claim that files, commits, tests, deployments, permissions or features ex
 ### Agreed
 
 - Product name: Lux Omni.
-- New repository: public `LuxrajKayal/Luxy`.
+- Repository: `LuxrajKayal/Luxy`.
 - First development focus: the standalone web-based application interface.
 - The initial workspace starts in PDF mode, with the Markdown editor opened via a dedicated action.
 - Opening the Markdown editor displays PDF and Markdown panels side by side by default; users can resize them, and each panel has its own controls.
 - Both iframe embedding and Web Component integration are intended future features, not initial tasks.
 - Chrome extension adaptation is a later product goal, not the current focus.
-- PDF.js and pdf-lib are the two currently approved third-party PDF-library candidates, subject to correct licensing and notices.
+- The Dropbox JavaScript SDK is loaded by the current application; its details are recorded in `THIRD_PARTY_NOTICES.md`.
 - Interface design and product wording are controlled by the owner.
 - No code or assets from prior repositories may be copied into this project.
 
@@ -117,7 +107,7 @@ Do not claim that files, commits, tests, deployments, permissions or features ex
 - Final source layout and public application/module boundaries.
 - Exact iframe API, Web Component API, and which one to implement first.
 - Authentication architecture and Google Drive permissions.
-- Final first-party product license and student eligibility terms.
+- Additional licensing permissions, if any, beyond the current root `LICENSE` remain subject to a separate decision.
 - Release and distribution approach for the eventual commercial product.
 
 If future conversation conflicts with this ledger, point out the conflict and ask the owner to resolve it instead of silently selecting a new direction.
