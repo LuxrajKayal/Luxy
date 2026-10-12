@@ -1,6 +1,6 @@
 # Third-party MIT disclosure
 
-This disclosure records the MIT-licensed upstream project selected for evaluation with Lux PDF Viewer.
+This disclosure records the MIT-licensed upstream project selected for evaluation with Lux Omni.
 
 ## Component details
 
@@ -12,7 +12,7 @@ This disclosure records the MIT-licensed upstream project selected for evaluatio
 - **Upstream copyright notice:** Copyright (c) 2019 Andrew Dillon
 - **Source checkout:** `Used third party dependencies/pdf-lib` (Git submodule)
 
-The upstream project is referenced at an exact release commit and is not modified. Its presence here does not mean it has already been integrated into the Lux PDF Viewer application or tested in a browser build.
+The upstream project is referenced at an exact release commit and is not modified. Its presence here does not mean it has already been integrated into the Lux Omni application or tested in a browser build.
 
 ## MIT license notice
 
@@ -44,4 +44,4 @@ SOFTWARE.
 
 Upstream license file: https://github.com/Hopding/pdf-lib/blob/v1.17.1/LICENSE.md
 
-This notice applies to pdf-lib; it does not assert that Lux PDF Viewer first-party code is authored by the pdf-lib project, and it does not replace any license selected for first-party application code.
+This notice applies to pdf-lib; it does not assert that Lux Omni first-party code is authored by the pdf-lib project, and it does not replace any license selected for first-party application code.
