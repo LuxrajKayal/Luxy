@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Lux PDF Viewer">
+  <title>Lux PDF Viewer</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Lux PDF Viewer home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 40 40" role="presentation">
+          <path d="M8 5v25h21" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M17 14h16v16H17z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <span class="brand-copy">
+        <span class="brand-name">Lux PDF Viewer</span>
+        <span class="brand-slogan">Slogan placeholder — awaiting your wording</span>
+      </span>
+    </a>
+
+    <div class="topbar-actions">
+      <button id="find-text-button" class="find-button" type="button" aria-expanded="false" aria-controls="find-help">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="10.8" cy="10.8" r="6.8"></circle>
+          <path d="m16 16 4.2 4.2"></path>
+        </svg>
+        <span>Find text</span>
+        <kbd>Ctrl F</kbd>
+      </button>
+      <div id="find-help" class="find-help" role="status" hidden>
+        Use <kbd>Ctrl</kbd>+<kbd>F</kbd> (or <kbd>⌘</kbd>+<kbd>F</kbd> on macOS) to open your browser’s Find bar. A regular website cannot open the browser’s native Find bar directly.
+      </div>
+    </div>
+  </header>
+
+  <main class="workspace" aria-label="PDF workspace"></main>
+</body>
+</html>

@@ -1,0 +1,255 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  --ink: #1d2636;
+  --muted: #758196;
+  --line: #e5e9f0;
+  --panel: #ffffff;
+  --workspace: #f6f8fb;
+  --accent: #4263eb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--ink);
+  background: var(--workspace);
+}
+
+button,
+a {
+  font: inherit;
+}
+
+.topbar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 12px 28px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.brand {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--accent);
+  background: #eef2ff;
+}
+
+.brand-mark svg {
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+
+.brand-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.brand-name {
+  overflow: hidden;
+  color: #172033;
+  font-size: 19px;
+  font-weight: 720;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brand-slogan {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.topbar-actions {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+.find-button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 12px;
+  border: 1px solid #dce2ec;
+  border-radius: 9px;
+  color: #273449;
+  background: #ffffff;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.find-button:hover,
+.find-button[aria-expanded="true"] {
+  border-color: #bac7ff;
+  background: #f7f8ff;
+}
+
+.find-button:focus-visible,
+.brand:focus-visible {
+  outline: 3px solid #a5b4fc;
+  outline-offset: 3px;
+}
+
+.find-button svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.8;
+}
+
+.find-button span {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.find-button kbd {
+  margin-left: 4px;
+  padding: 3px 5px;
+  border: 1px solid #e2e7ef;
+  border-radius: 5px;
+  color: #6b7587;
+  background: #f8f9fb;
+  font-family: inherit;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.find-help {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(330px, calc(100vw - 32px));
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px rgb(22 34 56 / 12%);
+  color: #485469;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.find-help kbd {
+  display: inline-block;
+  padding: 1px 5px;
+  border: 1px solid #dfe4ec;
+  border-radius: 4px;
+  background: #f7f8fb;
+  color: #29364a;
+  font-family: inherit;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.workspace {
+  min-height: calc(100vh - 76px);
+  background: var(--workspace);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+@media (max-width: 560px) {
+  .topbar {
+    min-height: 68px;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .brand {
+    gap: 8px;
+  }
+
+  .brand-mark {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+    border-radius: 10px;
+  }
+
+  .brand-mark svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .brand-name {
+    font-size: 15px;
+  }
+
+  .brand-slogan {
+    max-width: 180px;
+    font-size: 10px;
+  }
+
+  .find-button {
+    width: 40px;
+    min-width: 40px;
+    padding: 0;
+    gap: 0;
+  }
+
+  .find-button span,
+  .find-button kbd {
+    display: none;
+  }
+
+  .workspace {
+    min-height: calc(100vh - 68px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
