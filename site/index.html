@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#ffffff">
   <meta name="description" content="Lux PDF Viewer">
   <title>Lux PDF Viewer</title>
-  <link rel="stylesheet" href="./styles.css?v=20261012-theme-toggle">
+  <link rel="stylesheet" href="./styles.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js"></script>
-  <script type="module" src="./app.js?v=20261012-theme-toggle"></script>
+  <script type="module" src="./app.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -26,15 +26,6 @@
     </a>
 
     <div class="topbar-actions">
-      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode" aria-pressed="false">
-        <svg class="theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M20.2 15.4A8.4 8.4 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"></path>
-        </svg>
-        <svg class="theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="12" cy="12" r="4"></circle>
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path>
-        </svg>
-      </button>
       <button id="find-text-button" class="find-button" type="button" aria-expanded="false" aria-controls="find-panel" aria-label="Find on page" title="Find on page">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <circle cx="10.8" cy="10.8" r="6.8"></circle>
