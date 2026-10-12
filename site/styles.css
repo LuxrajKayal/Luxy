@@ -529,8 +529,34 @@ body[data-focus-mode="true"] .workspace-shell {
 
 .viewport-stage--split {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: minmax(0, var(--split-left-share, 1fr)) 5px minmax(0, var(--split-right-share, 1fr));
+  gap: 0;
+}
+
+.viewport-split-divider {
+  position: relative;
+  z-index: 1;
+  width: 5px;
+  cursor: col-resize;
+  touch-action: none;
+  user-select: none;
+}
+
+.viewport-split-divider::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 2px;
+  width: 1px;
+  background: var(--line);
+  content: "";
+  transition: background-color 160ms ease;
+}
+
+.viewport-split-divider:hover::before,
+.viewport-split-divider:focus-visible::before,
+.viewport-split-divider:active::before {
+  background: var(--accent);
 }
 
 .viewport {
