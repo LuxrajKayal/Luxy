@@ -406,19 +406,33 @@ function restoreMinimizedViewport(side) {
   const savedState = minimizedViewportStates.get(side);
   if (!savedState) return;
 
-  if (savedState.originalMode === "full" || side === "full") {
+  if (side === "full" || savedState.originalMode === "full") {
+    // Keep any currently visible split viewport(s) minimized when restoring Full Screen.
+    if (activeViewportMode === "solo" && soloSplitSide) {
+      rememberMinimizedViewport(soloSplitSide, "split");
+    } else if (activeViewportMode === "split") {
+      rememberMinimizedViewport("left", "split");
+      rememberMinimizedViewport("right", "split");
+    }
+
     minimizedViewportStates.delete("full");
     activeViewportMode = "full";
     soloSplitSide = null;
   } else {
-    // A split viewport restores its original two-pane composition.
-    minimizedViewportStates.delete("left");
-    minimizedViewportStates.delete("right");
+    // Restore only the clicked split viewport. Any currently visible viewport is
+    // retained as its own bottom bar rather than being maximized together with it.
+    if (activeViewportMode === "full") {
+      rememberMinimizedViewport("full", "full");
+    } else if (activeViewportMode === "solo" && soloSplitSide && soloSplitSide !== side) {
+      rememberMinimizedViewport(soloSplitSide, "split");
+    }
+
+    minimizedViewportStates.delete(side);
     ensureSplitViewports();
     rememberedSplitRatio = savedState.splitRatio || rememberedSplitRatio;
     setSplitViewportRatio(rememberedSplitRatio);
-    activeViewportMode = "split";
-    soloSplitSide = null;
+    activeViewportMode = "solo";
+    soloSplitSide = side;
   }
 
   if (workspaceEmptyState) workspaceEmptyState.hidden = true;
