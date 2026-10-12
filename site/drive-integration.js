@@ -1,12 +1,12 @@
 // Lux PDF Viewer — Google Drive integration.
-// Replace these placeholders with values from your Google Cloud project.
-// OAuth access tokens are kept in memory, never in localStorage.
-
+// Paste these two values once. The Picker project number is inferred from
+// the standard Google Web OAuth client ID prefix.
 const DRIVE_CONFIG = {
   clientId: "YOUR_GOOGLE_OAUTH_CLIENT_ID.apps.googleusercontent.com",
-  apiKey: "YOUR_GOOGLE_PICKER_API_KEY",
-  appId: "YOUR_GOOGLE_CLOUD_PROJECT_NUMBER"
+  apiKey: "YOUR_GOOGLE_PICKER_API_KEY"
 };
+
+// OAuth access tokens are kept in memory, never in localStorage.
 
 const DRIVE_SCOPE = "openid email profile https://www.googleapis.com/auth/drive.file";
 const GIS_SCRIPT_URL = "https://accounts.google.com/gsi/client";
@@ -52,8 +52,17 @@ function validateDriveConfig() {
   const missing = [];
   if (!DRIVE_CONFIG.clientId || DRIVE_CONFIG.clientId.startsWith("YOUR_")) missing.push("Google OAuth Client ID");
   if (!DRIVE_CONFIG.apiKey || DRIVE_CONFIG.apiKey.startsWith("YOUR_")) missing.push("Google Picker API key");
-  if (!DRIVE_CONFIG.appId || DRIVE_CONFIG.appId.startsWith("YOUR_")) missing.push("Google Cloud project number");
-  if (missing.length) throw new Error("Configure " + missing.join(", ") + " in site/drive-integration.js first.");
+  if (missing.length) throw new Error("Google Drive is not configured yet. Please contact the site owner.");
+}
+
+function getGoogleCloudProjectNumber() {
+  // Google Web OAuth client IDs use the Cloud project number as their prefix.
+  // If your project uses a nonstandard ID format, set it explicitly here.
+  const match = DRIVE_CONFIG.clientId.match(/^(\\d+)-.+\\.apps\\.googleusercontent\\.com$/);
+  if (!match) {
+    throw new Error("Could not determine the Google Cloud project number from the OAuth client ID.");
+  }
+  return match[1];
 }
 
 function loadScript(url, readyCheck) {
@@ -317,7 +326,7 @@ function openGooglePicker(token) {
 
       const picker = new window.google.picker.PickerBuilder()
         .setDeveloperKey(DRIVE_CONFIG.apiKey)
-        .setAppId(DRIVE_CONFIG.appId)
+        .setAppId(getGoogleCloudProjectNumber())
         .setOAuthToken(token)
         .setOrigin(window.location.origin)
         .setTitle("Open a PDF from Google Drive")
@@ -422,7 +431,7 @@ async function connectDrive() {
 
   try {
     validateDriveConfig();
-    const token = await requestAccessToken("consent select_account");
+    const token = await requestAccessToken("select_account");
     const profile = storeProfile(await fetchGoogleProfile(token));
     renderConnected(profile);
     setDriveFeedback("Connected as " + (profile.email || profile.name) + ".", "success");
