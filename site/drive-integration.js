@@ -64,13 +64,17 @@ function loadScript(url, readyCheck) {
 
     const onLoad = () => {
       if (!readyCheck()) {
+        script.remove();
         reject(new Error("Google library loaded but is unavailable: " + url));
         return;
       }
       script.dataset.loaded = "true";
       resolve();
     };
-    const onError = () => reject(new Error("Could not load Google library: " + url));
+    const onError = () => {
+      script && script.remove();
+      reject(new Error("Could not load Google library: " + url));
+    };
 
     if (!script) {
       script = document.createElement("script");
@@ -327,7 +331,8 @@ function openGooglePicker(token) {
           if (data.action !== window.google.picker.Action.PICKED) return;
 
           try {
-            const picked = data.docs && data.docs[0];
+            const documents = data[window.google.picker.Response.DOCUMENTS] || data.docs || [];
+            const picked = documents[0];
             if (!picked || !picked.id) throw new Error("Google Picker did not return a file ID.");
 
             setDriveFeedback("Loading PDF from Drive…");
