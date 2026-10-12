@@ -245,12 +245,12 @@ workspaceDivider?.addEventListener("lostpointercapture", () => {
 workspaceDivider?.addEventListener("keydown", (event) => {
   const step = event.shiftKey ? 10 : 5;
   if (event.key === "Home") {
-    applyLearningPaneRatio(50);
+    applyLearningPaneRatio(25);
     event.preventDefault();
     return;
   }
   if (event.key === "End") {
-    applyLearningPaneRatio(50);
+    applyLearningPaneRatio(75);
     event.preventDefault();
     return;
   }
