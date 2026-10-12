@@ -244,7 +244,13 @@ function getViewportFileName(side) {
   const explicitName = viewport?.dataset.fileName?.trim();
   const headingName = viewport?.querySelector(".pdf-preview-heading")?.textContent?.trim();
   const ariaName = viewport?.getAttribute("aria-label")?.trim();
-  return explicitName || headingName || ariaName || "Untitled";
+  let activeFileName = "";
+  try {
+    activeFileName = window.LuxDropboxIntegration?.getActiveFile?.()?.fileName?.trim() || "";
+  } catch {
+    // The viewport can still be minimized before a cloud file is connected.
+  }
+  return explicitName || headingName || ariaName || activeFileName || "Untitled";
 }
 
 function renderMinimizedViewportDock() {
