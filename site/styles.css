@@ -147,6 +147,51 @@ a {
   gap: 8px;
 }
 
+.dropbox-topbar-status {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 3px;
+  white-space: nowrap;
+}
+
+.dropbox-status-logo {
+  display: block;
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  fill: #2469dc;
+}
+
+.dropbox-status-text {
+  max-width: 148px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropbox-status-text[data-state="connected"] {
+  color: #21865b;
+}
+
+.dropbox-status-text[data-state="connection-failed"] {
+  color: #d13f49;
+}
+
+.dropbox-status-text[data-state="uploading"] {
+  color: #2469dc;
+}
+
+.dropbox-status-text[data-state="saved"] {
+  color: #21865b;
+}
+
 .theme-toggle,
 .focus-toggle,
 .sidebar-toggle {
@@ -160,6 +205,7 @@ a {
 .theme-toggle:hover,
 .focus-toggle:hover,
 .focus-toggle[aria-pressed="true"],
+.dropbox-sync-button:hover:not(:disabled),
 .sidebar-toggle:hover {
   border-color: var(--control-hover-border);
   background: var(--control-hover-bg);
@@ -168,6 +214,7 @@ a {
 .theme-toggle:focus-visible,
 .focus-toggle:focus-visible,
 .sidebar-toggle:focus-visible,
+.dropbox-sync-button:focus-visible,
 .brand:focus-visible {
   outline: 3px solid var(--focus-outline);
   outline-offset: 3px;
@@ -402,15 +449,18 @@ body[data-focus-mode="true"] .workspace-shell {
 }
 
 .dropbox-sync-button {
-  width: 100%;
-  min-height: 34px;
+  width: auto;
+  min-width: 58px;
+  height: 40px;
+  min-height: 40px;
+  flex: 0 0 auto;
   justify-content: center;
-  padding: 5px 1px;
-  border-radius: 8px;
+  padding: 0 12px;
+  border-radius: 9px;
   color: var(--control-text);
   background: var(--control-bg);
-  font-size: 10px;
-  font-weight: 750;
+  font-size: 12px;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -738,6 +788,38 @@ body[data-focus-mode="true"] .workspace {
 }
 
 @media (max-width: 560px) {
+  .topbar {
+    gap: 10px;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .topbar-actions {
+    gap: 5px;
+  }
+
+  .dropbox-topbar-status {
+    gap: 4px;
+    padding: 0;
+  }
+
+  .dropbox-status-logo {
+    width: 17px;
+    height: 17px;
+    flex-basis: 17px;
+  }
+
+  .dropbox-status-text {
+    max-width: 92px;
+    font-size: 10px;
+  }
+
+  .dropbox-sync-button {
+    min-width: 48px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
   .dropbox-modal {
     padding: 12px;
   }
