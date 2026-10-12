@@ -463,11 +463,16 @@ body[data-focus-mode="true"] .workspace-shell {
   position: relative;
   z-index: 4;
   display: flex;
+  width: var(--sidebar-width);
   height: 44px;
   align-items: center;
   padding: 0 12px;
   background: var(--workspace);
   pointer-events: none;
+}
+
+:root[data-sidebar-open="false"] .sidebar-toggle-row {
+  background: transparent;
 }
 
 .sidebar-toggle {
