@@ -148,12 +148,16 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
         </button>
       </header>
-      <p id="dropbox-modal-status" class="dropbox-modal-status" role="status" aria-live="polite">Loading your PDF files…</p>
+      <p id="dropbox-modal-status" class="dropbox-modal-status" role="status" aria-live="polite">Browse supported files in your Dropbox account.</p>
       <div id="dropbox-modal-loading" class="dropbox-modal-loading" hidden>
         <span class="dropbox-spinner" aria-hidden="true"></span>
-        <span>Loading PDFs from Dropbox…</span>
+        <span id="dropbox-modal-loading-text">Loading supported files from Dropbox…</span>
       </div>
-      <ul id="dropbox-modal-file-list" class="dropbox-modal-file-list" aria-label="PDF files in Dropbox" hidden></ul>
+      <ul id="dropbox-modal-file-list" class="dropbox-modal-file-list" aria-label="Supported files in Dropbox" aria-multiselectable="false" hidden></ul>
+      <footer class="dropbox-modal-footer">
+        <button id="dropbox-modal-cancel" class="dropbox-button dropbox-modal-action" type="button">Cancel</button>
+        <button id="dropbox-modal-select" class="dropbox-button dropbox-button-primary dropbox-modal-action" type="button" disabled>Select File</button>
+      </footer>
     </section>
   </div>
 
