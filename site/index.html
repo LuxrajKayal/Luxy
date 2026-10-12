@@ -91,10 +91,35 @@
 
     <div class="workspace-layout">
       <aside id="sidebar" class="sidebar" aria-label="Sidebar">
-        <div class="sidebar-inner"></div>
+        <div class="sidebar-inner">
+          <section class="cloud-panel" aria-labelledby="dropbox-heading">
+            <p class="sidebar-eyebrow">Cloud storage</p>
+            <h2 id="dropbox-heading" class="sidebar-heading">Dropbox</h2>
+            <p id="dropbox-connection-status" class="dropbox-connection-status" role="status" aria-live="polite">Not connected</p>
+
+            <button id="dropbox-connect" class="dropbox-button dropbox-button-primary" type="button">Connect Dropbox</button>
+
+            <div id="dropbox-connected-controls" class="dropbox-connected-controls" hidden>
+              <button id="dropbox-open-file" class="dropbox-button" type="button">Open File</button>
+              <button id="dropbox-sync" class="dropbox-button dropbox-button-primary" type="button" disabled>Sync to Dropbox</button>
+              <p id="dropbox-active-file" class="dropbox-active-file">No PDF selected</p>
+              <ul id="dropbox-file-list" class="dropbox-file-list" aria-label="PDF files in Dropbox" hidden></ul>
+            </div>
+
+            <p id="dropbox-message" class="dropbox-message" role="status" aria-live="polite">Connect Dropbox to browse your PDFs.</p>
+          </section>
+        </div>
       </aside>
-      <main class="workspace" aria-label="PDF workspace"></main>
+      <main class="workspace" aria-label="PDF workspace">
+        <div class="workspace-empty-state">
+          <h1>Open a PDF from Dropbox</h1>
+          <p>Your selected PDF will appear here. The current workspace has a browser preview placeholder; editing/export will need to be connected before Sync can overwrite a source file.</p>
+        </div>
+      </main>
     </div>
   </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dropbox.js/10.33.0/Dropbox-sdk.min.js"></script>
+  <script src="./dropbox-integration.js"></script>
 </body>
 </html>
