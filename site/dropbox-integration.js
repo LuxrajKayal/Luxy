@@ -352,7 +352,7 @@
 
       initializeClient(result.access_token);
       setModalOpen(true);
-      setStatus("Connected. Loading your Dropbox PDFs…");
+      setStatus("Connected. Loading supported files from Dropbox…");
       await listDropboxPdfs();
       return true;
     } catch (error) {
@@ -721,8 +721,8 @@
     if (editedPdfBlob instanceof Blob) return editedPdfBlob;
 
     throw new Error(
-      "The current workspace only previews PDFs; its editing/export hook is not connected yet. " +
-      "No Dropbox file was overwritten. Connect your editor through LuxDropboxIntegration.setEditedPdfBlob(blob)."
+      "PDF annotation/export is not connected yet, and Markdown-note syncing is not implemented. " +
+      "No Dropbox file was overwritten. Connect a PDF export through LuxDropboxIntegration.setEditedPdfBlob(blob)."
     );
   }
 
