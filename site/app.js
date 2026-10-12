@@ -8,6 +8,8 @@ const topbar = document.querySelector(".topbar");
 const fullScreenViewportButton = document.querySelector("#viewport-fullscreen");
 const splitScreenViewportButton = document.querySelector("#viewport-split-screen");
 const workspace = document.querySelector(".workspace");
+const workspaceEmptyState = workspace?.querySelector(".workspace-empty-state");
+const viewportComposition = document.querySelector("#viewport-composition");
 const fullScreenViewportLayout = document.querySelector("#viewport-fullscreen-layout");
 const splitScreenViewportLayout = document.querySelector("#viewport-split-layout");
 const viewportTopbar = document.querySelector("#viewport-topbar");
@@ -179,15 +181,15 @@ sidebarToggle?.addEventListener("click", () => {
 
 // Viewport layouts: one empty viewport or two separate empty viewports.
 function setViewportMode(mode) {
-  if (!workspace || !fullScreenViewportLayout || !splitScreenViewportLayout) return;
+  if (!workspace || !viewportComposition || !fullScreenViewportLayout || !splitScreenViewportLayout) return;
 
   const isFullScreen = mode === "full";
-  if (viewportTopbar) viewportTopbar.hidden = false;
+  if (workspaceEmptyState) workspaceEmptyState.hidden = true;
+  viewportComposition.hidden = false;
   fullScreenViewportLayout.hidden = !isFullScreen;
   splitScreenViewportLayout.hidden = isFullScreen;
-
-  // Reattach the layout containers if another workspace feature replaced its contents.
-  workspace.replaceChildren(fullScreenViewportLayout, splitScreenViewportLayout);
+  if (viewportTopbar) viewportTopbar.hidden = false;
+  if (splitViewportDivider) splitViewportDivider.hidden = isFullScreen;
 
   fullScreenViewportButton?.setAttribute("aria-pressed", String(isFullScreen));
   splitScreenViewportButton?.setAttribute("aria-pressed", String(!isFullScreen));
@@ -201,18 +203,18 @@ function setSplitViewportRatio(ratio) {
   if (!splitScreenViewportLayout || !splitViewportDivider) return;
 
   const boundedRatio = Math.max(0.2, Math.min(0.8, ratio));
-  splitScreenViewportLayout.style.setProperty("--split-left-share", boundedRatio + "fr");
-  splitScreenViewportLayout.style.setProperty("--split-right-share", (1 - boundedRatio) + "fr");
+  viewportComposition?.style.setProperty("--split-left-share", boundedRatio + "fr");
+  viewportComposition?.style.setProperty("--split-right-share", (1 - boundedRatio) + "fr");
   splitViewportDivider.setAttribute("aria-valuenow", String(Math.round(boundedRatio * 100)));
 }
 
-if (splitViewportDivider && splitScreenViewportLayout) {
+if (splitViewportDivider && splitScreenViewportLayout && viewportComposition) {
   let activePointerId = null;
 
   function updateSplitRatioFromPointer(event) {
     if (event.pointerId !== activePointerId) return;
 
-    const layoutBounds = splitScreenViewportLayout.getBoundingClientRect();
+    const layoutBounds = viewportComposition.getBoundingClientRect();
     const dividerWidth = splitViewportDivider.getBoundingClientRect().width;
     const usableWidth = layoutBounds.width - dividerWidth;
     if (usableWidth <= 0) return;
