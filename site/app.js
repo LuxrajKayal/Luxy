@@ -1,18 +1,22 @@
 const findButton = document.querySelector("#find-text-button");
+const findHelp = document.querySelector("#find-help");
 
-function dispatchCtrlF() {
-  const shortcut = {
-    key: "f",
-    code: "KeyF",
-    ctrlKey: true,
-    bubbles: true,
-    cancelable: true
-  };
+findButton?.addEventListener("click", () => {
+  const isOpen = findButton.getAttribute("aria-expanded") === "true";
+  findButton.setAttribute("aria-expanded", String(!isOpen));
+  if (findHelp) findHelp.hidden = isOpen;
+});
 
-  // Dispatch Ctrl+F keyboard events for page-level listeners.
-  // Synthetic keyboard events cannot invoke browser chrome's native Find UI.
-  document.dispatchEvent(new KeyboardEvent("keydown", shortcut));
-  document.dispatchEvent(new KeyboardEvent("keyup", shortcut));
-}
+document.addEventListener("pointerdown", (event) => {
+  if (!findButton?.parentElement?.contains(event.target)) {
+    findButton?.setAttribute("aria-expanded", "false");
+    if (findHelp) findHelp.hidden = true;
+  }
+});
 
-findButton?.addEventListener("click", dispatchCtrlF);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    findButton?.setAttribute("aria-expanded", "false");
+    if (findHelp) findHelp.hidden = true;
+  }
+});
