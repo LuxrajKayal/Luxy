@@ -4,21 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Lux All-in-One Learning Tool is an interface-first prototype for PDF reading and annotation, YouTube-to-notes study, captions, screenshots, Markdown notes, and Dropbox workflows.">
-  <meta name="keywords" content="PDF reader, PDF annotation, Markdown editor, YouTube to notes, YouTube captions, YouTube note-taking, study notes, Dropbox learning tool">
-  <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://luxrajkayal.github.io/Luxy/">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Lux All-in-One Learning Tool">
-  <meta property="og:description" content="A dual-pane learning workspace concept combining a PDF reader, YouTube-to-notes tools, and a Markdown editor.">
-  <meta property="og:url" content="https://luxrajkayal.github.io/Luxy/">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Lux All-in-One Learning Tool">
-  <meta name="twitter:description" content="PDF reader, Markdown editor, and YouTube-to-notes learning workspace.">
+  <meta name="description" content="Lux PDF Viewer">
   <link rel="icon" type="image/svg+xml" href="./icons/lux-pdf-viewer-icon.svg">
   <link rel="icon" type="image/png" sizes="64x64" href="./icons/lux-pdf-viewer-icon-64.png">
   <link rel="icon" type="image/png" sizes="256x256" href="./icons/lux-pdf-viewer-icon-256.png">
-  <title>Lux All-in-One Learning Tool | PDF Reader, Markdown Editor &amp; YouTube Notes</title>
+  <title>Lux PDF Viewer</title>
   <script>
     try {
       if (localStorage.getItem("lux-pdf-viewer-theme") === "dark") {
@@ -49,13 +39,13 @@
     }
   </script>
   <header class="topbar">
-    <a class="brand" href="./" aria-label="Lux Learning Tool home">
+    <a class="brand" href="./" aria-label="Lux PDF Viewer home">
       <span class="brand-mark" aria-hidden="true">
         <img src="./icons/lux-pdf-viewer-icon.svg" alt="" width="42" height="42">
       </span>
       <span class="brand-copy">
-        <span class="brand-name">Lux Learning Tool</span>
-        <span class="brand-slogan">PDF Reader · Markdown Editor · YouTube to Notes</span>
+        <span class="brand-name">Lux PDF Viewer</span>
+        <span class="brand-slogan">Slogan placeholder — awaiting your wording</span>
       </span>
     </a>
 
@@ -74,7 +64,7 @@
           <button id="dropbox-menu-connect" class="dropbox-menu-button dropbox-menu-button-primary" type="button">Connect Dropbox</button>
           <button id="dropbox-menu-disconnect" class="dropbox-menu-button dropbox-menu-button-danger" type="button" hidden>Disconnect</button>
           <div id="dropbox-disconnect-confirmation" class="dropbox-disconnect-confirmation" hidden>
-            <p>Disconnect Dropbox from Lux Learning Tool? You will need to reconnect before opening or syncing files.</p>
+            <p>Disconnect Dropbox from Lux PDF Viewer? You will need to reconnect before opening or syncing files.</p>
             <div class="dropbox-confirmation-actions">
               <button id="dropbox-disconnect-cancel" class="dropbox-menu-button" type="button">Cancel</button>
               <button id="dropbox-disconnect-confirm" class="dropbox-menu-button dropbox-menu-button-danger" type="button">Disconnect</button>
@@ -136,78 +126,10 @@
           <p id="dropbox-accessible-status" class="visually-hidden" role="status" aria-live="polite"></p>
         </div>
       </aside>
-      <main class="workspace" aria-label="Lux Learning Tool workspace">
-        <div id="learning-workspace" class="learning-workspace" aria-label="Dual-pane study workspace">
-          <section class="source-pane" aria-labelledby="source-pane-title">
-            <header class="pane-header source-pane-header">
-              <div class="pane-heading-copy">
-                <span class="pane-kicker">SOURCE MATERIAL</span>
-                <h1 id="source-pane-title">Media workspace</h1>
-                <p>PDF reader · Images · YouTube video</p>
-              </div>
-              <div class="source-toolbar" role="toolbar" aria-label="Source material tools">
-                <label class="youtube-url-control">
-                  <span class="visually-hidden">YouTube video URL</span>
-                  <input id="youtube-url" type="url" placeholder="Paste YouTube URL (planned)" aria-label="YouTube video URL">
-                </label>
-                <button class="workspace-tool-button workspace-tool-button-primary" type="button" disabled title="Interface placeholder only — YouTube embedding is not connected yet">Embed Video</button>
-                <span class="toolbar-divider" aria-hidden="true"></span>
-                <button class="workspace-tool-button" type="button" disabled title="Interface placeholder only — screenshot capture is not connected yet">Take Screenshot</button>
-                <button class="workspace-tool-button" type="button" disabled title="Interface placeholder only — caption extraction is not connected yet">Extract CC</button>
-                <button class="workspace-tool-button" type="button" disabled title="Interface placeholder only — PDF annotation is not connected yet">Annotate PDF</button>
-                <button class="workspace-tool-button" type="button" disabled title="Interface placeholder only — PDF text extraction is not connected yet">Copy PDF Text</button>
-              </div>
-            </header>
-
-            <div id="source-viewer-content" class="source-viewer-content">
-              <div class="pane-empty-state">
-                <div class="pane-empty-icon" aria-hidden="true">
-                  <svg viewBox="0 0 48 48"><rect x="5" y="7" width="38" height="34" rx="7"></rect><path d="M19 17 31 24 19 31z"></path></svg>
-                </div>
-                <span class="pane-kicker">LEARN FROM ANY SOURCE</span>
-                <h2>Bring your learning material here</h2>
-                <p>Open a PDF or image from Dropbox. YouTube embedding, closed-caption extraction, and video screenshots are planned for a later stage.</p>
-                <div class="source-type-chips" aria-label="Planned source types">
-                  <span>PDF reader</span>
-                  <span>Images</span>
-                  <span>YouTube</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <div id="workspace-divider" class="workspace-divider" role="separator" tabindex="0" aria-label="Resize source and notes panes" aria-orientation="vertical" aria-valuemin="25" aria-valuemax="75" aria-valuenow="50" title="Drag to resize panes">
-            <span aria-hidden="true"></span>
-          </div>
-
-          <section class="notes-pane" aria-labelledby="notes-pane-title">
-            <header class="pane-header notes-pane-header">
-              <div class="pane-heading-copy">
-                <span class="pane-kicker">YOUR OUTPUT</span>
-                <h2 id="notes-pane-title">Markdown notes</h2>
-                <p>Capture ideas as you learn</p>
-              </div>
-              <span class="editor-mode-label">MARKDOWN</span>
-            </header>
-
-            <div class="editor-toolbar" role="toolbar" aria-label="Markdown formatting tools">
-              <button class="workspace-tool-button" type="button" disabled aria-label="Bold" title="Formatting is a UI placeholder">B</button>
-              <button class="workspace-tool-button editor-italic" type="button" disabled aria-label="Italic" title="Formatting is a UI placeholder">I</button>
-              <button class="workspace-tool-button" type="button" disabled aria-label="Heading" title="Formatting is a UI placeholder">H</button>
-              <button class="workspace-tool-button" type="button" disabled aria-label="Bullet list" title="Formatting is a UI placeholder">☷</button>
-              <span class="toolbar-divider" aria-hidden="true"></span>
-              <button class="workspace-tool-button" type="button" disabled title="Interface placeholder only — screenshot insertion is not connected yet">Paste Screenshot</button>
-              <button class="workspace-tool-button" type="button" disabled title="Interface placeholder only — PDF text insertion is not connected yet">Paste PDF Text</button>
-            </div>
-
-            <label class="visually-hidden" for="markdown-editor">Markdown notes editor</label>
-            <textarea id="markdown-editor" class="markdown-editor" spellcheck="true" placeholder="# Learning notes&#10;&#10;Write your notes here. Markdown formatting, source extraction, screenshot insertion, and Dropbox note syncing will be connected in later stages."></textarea>
-
-            <footer class="editor-status">
-              <span class="editor-status-dot" aria-hidden="true"></span>
-              <span>Text entry is available. Formatting, capture tools, and Markdown sync are not connected yet.</span>
-            </footer>
-          </section>
+      <main class="workspace" aria-label="PDF workspace">
+        <div class="workspace-empty-state">
+          <h1>Open a PDF from Dropbox</h1>
+          <p>Your selected PDF will appear here. The current workspace has a browser preview placeholder; editing/export will need to be connected before Sync can overwrite a source file.</p>
         </div>
       </main>
     </div>
