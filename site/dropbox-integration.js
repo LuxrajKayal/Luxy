@@ -1,4 +1,4 @@
-/* Lux PDF Viewer — Dropbox Bring Your Own Cloud integration.
+/* Lux Omni — Dropbox Bring Your Own Cloud integration.
  * Browser-only OAuth uses authorization-code + PKCE. Never add an app secret here.
  * The PDF editor must supply an exported Blob before Sync can overwrite a source file.
  */
@@ -91,7 +91,7 @@
 
     if (accountMenuDescription) {
       if (dbx && (normalizedState === "connected" || normalizedState === "saved" || normalizedState === "uploading")) {
-        accountMenuDescription.textContent = "Your Dropbox account is connected to Lux PDF Viewer.";
+        accountMenuDescription.textContent = "Your Dropbox account is connected to Lux Omni.";
       } else if (normalizedState === "connection-failed") {
         accountMenuDescription.textContent = dbx
           ? "The last Dropbox request failed. You can disconnect this session or try again."
@@ -894,7 +894,7 @@
       if (tokenRevoked) {
         setAccountFeedback("Dropbox disconnected. Your session has been cleared and the access token was revoked.", "success");
       } else {
-        setAccountFeedback("You are signed out of Luxy on this tab, but Dropbox could not confirm token revocation. To revoke access completely, remove Lux PDF Viewer from your Dropbox connected apps.", "error");
+        setAccountFeedback("You are signed out of Luxy on this tab, but Dropbox could not confirm token revocation. To revoke access completely, remove Lux Omni from your Dropbox connected apps.", "error");
       }
     }
   });
