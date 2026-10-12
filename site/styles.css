@@ -490,7 +490,7 @@ body[data-focus-mode="true"] .workspace-shell {
   min-width: 0;
   min-height: 0;
   grid-template-columns: minmax(0, var(--split-left-share, 1fr)) 5px minmax(0, var(--split-right-share, 1fr));
-  grid-template-rows: 44px minmax(0, 1fr);
+  grid-template-rows: 44px minmax(0, 1fr) auto;
 }
 
 :root[data-sidebar-open="false"] .viewport-composition {
@@ -513,6 +513,7 @@ body[data-focus-mode="true"] .workspace-shell {
   min-height: 0;
   align-items: center;
   justify-content: flex-end;
+  gap: 6px;
   padding: 0 8px;
 }
 
@@ -528,6 +529,7 @@ body[data-focus-mode="true"] .workspace-shell {
   grid-column: 3;
 }
 
+.viewport-minimize-button,
 .viewport-close-button {
   display: grid;
   width: 24px;
@@ -544,6 +546,32 @@ body[data-focus-mode="true"] .workspace-shell {
   font-weight: 700;
   line-height: 1;
   transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.viewport-minimize-button {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  color: #ffffff;
+  background: #6b7280;
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1;
+  transition: background-color 140ms ease, box-shadow 140ms ease;
+}
+
+.viewport-minimize-button:hover {
+  background: #4b5563;
+}
+
+.viewport-minimize-button:focus-visible {
+  outline: 2px solid #374151;
+  outline-offset: 2px;
 }
 
 .viewport-close-button:hover {
@@ -635,6 +663,141 @@ body[data-focus-mode="true"] .workspace-shell {
 .viewport-stage--split > .viewport:last-child {
   grid-column: 3;
   grid-row: 2;
+}
+
+.viewport-composition[data-mode^="solo-"] {
+  grid-template-columns: minmax(0, 1fr) 0 minmax(0, 0fr);
+}
+
+.viewport-composition[data-mode^="solo-"] .viewport-topbar {
+  grid-template-columns: minmax(0, 1fr) 0 minmax(0, 0fr);
+}
+
+.viewport-composition[data-mode^="solo-"] .viewport-stage--split > .viewport {
+  display: none;
+}
+
+.viewport-composition[data-mode="solo-left"] .viewport-stage--split > .viewport[data-viewport-side="left"],
+.viewport-composition[data-mode="solo-right"] .viewport-stage--split > .viewport[data-viewport-side="right"] {
+  display: block;
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+
+.viewport-number {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  width: 25px;
+  height: 30px;
+  align-self: center;
+  justify-self: end;
+  place-items: center;
+  margin-right: 7px;
+  border: 1px solid #94a3b8;
+  border-radius: 5px;
+  color: #111827;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 12%);
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+  pointer-events: none;
+  grid-row: 2;
+}
+
+.viewport-number--full {
+  grid-column: 1 / -1;
+}
+
+.viewport-number--left {
+  grid-column: 1;
+}
+
+.viewport-number--right {
+  grid-column: 3;
+}
+
+.viewport-composition[data-mode="solo-right"] .viewport-number--right {
+  grid-column: 1 / -1;
+}
+
+.viewport-minimized-dock {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  grid-column: 1 / -1;
+  grid-row: 3;
+  align-items: center;
+  padding: 7px 9px;
+  border-top: 1px solid var(--line);
+  background: var(--workspace);
+}
+
+.viewport-minimized-items {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.viewport-minimized-bar {
+  display: grid;
+  width: min(100%, 340px);
+  min-width: min(220px, 100%);
+  min-height: 34px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--control-border);
+  border-radius: 7px;
+  color: var(--control-text);
+  background: var(--panel);
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 8%);
+}
+
+.viewport-minimized-bar:hover {
+  border-color: var(--control-hover-border);
+  background: var(--control-hover-bg);
+}
+
+.viewport-minimized-bar:focus-visible {
+  outline: 2px solid var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.viewport-minimized-file {
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viewport-minimized-number {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.viewport-minimized-restore {
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1;
+}
+
+.viewport-composition.is-minimized-only {
+  pointer-events: none;
+}
+
+.viewport-composition.is-minimized-only .viewport-minimized-dock {
+  pointer-events: auto;
 }
 
 .viewport-split-divider {
