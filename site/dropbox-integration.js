@@ -384,7 +384,7 @@
     }
   }
 
-  async function defaultLoadPdfIntoViewer(pdfBlob, fileName) {
+  async function loadPdfIntoViewer(pdfBlob, fileName) {
     if (window.LuxPdfViewer && typeof window.LuxPdfViewer.loadPdf === "function") {
       await window.LuxPdfViewer.loadPdf(pdfBlob, fileName);
       return;
@@ -410,6 +410,10 @@
     frame.src = previewObjectUrl;
 
     workspace.append(heading, note, frame);
+  }
+
+  if (typeof window.loadPdfIntoViewer !== "function") {
+    window.loadPdfIntoViewer = loadPdfIntoViewer;
   }
 
   async function getEditedPdfBlob() {
