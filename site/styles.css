@@ -517,6 +517,37 @@ body[data-focus-mode="true"] .workspace-shell {
   padding: 0 8px;
 }
 
+.viewport-youtube-button {
+  display: grid;
+  width: 30px;
+  height: 26px;
+  flex: 0 0 30px;
+  place-items: center;
+  margin-right: auto;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.viewport-youtube-button:hover {
+  border-color: rgb(255 0 51 / 20%);
+  background: rgb(255 255 255 / 55%);
+}
+
+.viewport-youtube-button:focus-visible {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+}
+
+.viewport-youtube-button svg {
+  display: block;
+  width: 20px;
+  height: 15px;
+}
+
 .viewport-toolbar-section--full {
   grid-column: 1 / -1;
 }
@@ -837,6 +868,31 @@ body[data-focus-mode="true"] .workspace-shell {
   overflow-y: scroll;
   border: 1px solid var(--line);
   background: #ffffff;
+}
+
+.viewport-youtube-content {
+  display: grid;
+  width: 100%;
+  min-height: 100%;
+  place-items: start center;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.viewport-youtube-frame {
+  display: block;
+  width: min(100%, 960px);
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  background: #000000;
+}
+
+.viewport-youtube-error {
+  margin: 12px;
+  color: #dc2626;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .sidebar-cloud-actions {
