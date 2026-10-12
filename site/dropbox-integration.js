@@ -368,7 +368,7 @@
       if (typeof window.loadPdfIntoViewer === "function") {
         await window.loadPdfIntoViewer(downloadedBlob, file.name);
       } else {
-        await defaultLoadPdfIntoViewer(downloadedBlob, file.name);
+        await loadPdfIntoViewer(downloadedBlob, file.name);
       }
 
       setMessage(
