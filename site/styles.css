@@ -1570,7 +1570,7 @@ body[data-focus-mode="true"] .workspace {
     height: max(calc(100vh - 130px), 680px);
     min-height: 680px;
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, var(--source-pane-height)) 10px minmax(0, var(--notes-pane-height));
+    grid-template-rows: minmax(320px, var(--source-pane-height)) 10px minmax(300px, var(--notes-pane-height));
     border-radius: 10px;
   }
 
