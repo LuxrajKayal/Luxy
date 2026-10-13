@@ -127,6 +127,8 @@
 .lux-snip-editor-toolbar button.lux-snip-color.is-active { outline:2px solid #2563eb; outline-offset:2px; }
 #lux-snip-copy { margin-left:auto; border-color:#2563eb; background:#2563eb; color:#fff; }
 #lux-snip-copy:hover { background:#1d4ed8; }
+#lux-snip-log { border-color:var(--control-border,#cbd5e1); background:var(--control-bg,#fff); }
+#lux-snip-log:hover { background:var(--panel-muted,#f1f5f9); }
 #lux-snip-save { border-color:var(--control-border,#cbd5e1); background:var(--control-bg,#fff); }
 .lux-snip-workarea { flex:1 1 0; min-height:0; max-height:none; overflow:auto; padding:clamp(8px,1.4vw,22px); background:var(--panel-muted,#f8fafc); }
 #lux-snip-stage { position:relative; margin:0 auto; overflow:hidden; background:#fff; box-shadow:0 2px 12px rgb(15 23 42 / 15%); }
