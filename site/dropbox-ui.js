@@ -4,9 +4,8 @@
  * This module bridges the Dropbox API utilities to the website's topbar,
  * sidebar, file-manager modal, upload control, and viewport-routing buttons.
  *
- * Viewport rendering is intentionally left as an integration seam. The file
- * is downloaded and emitted as a custom event; connect the actual viewport
- * renderer in response to "lux:dropbox-viewport-assignment-request".
+ * Downloaded files are routed to the registered viewport bridge, which
+ * reports rendering success or failure before the UI reports completion.
  */
 
 import {
