@@ -141,7 +141,7 @@ function createDocumentShell(fileName, mode) {
 // nodes only; file-provided HTML is never parsed or executed.
 function createInlineMarkdown(source) {
   const fragment = document.createDocumentFragment();
-  const pattern = new RegExp("(\\*\\*[^*]+\\*\\*|__[^_]+__|~~[^~]+~~|\\x60[^\\x60]+\\x60|\\[[^\\]]+\\]\\([^)]+\\)|\\*[^*\\n]+\\*|_[^_\\n]+_)");
+  const pattern = new RegExp("(\\*\\*[^*]+\\*\\*|__[^_]+__|~~[^~]+~~|\\x60[^\\x60]+\\x60|\\[[^\\]]+\\]\\([^)]+\\)|\\*[^*\\n]+\\*|_[^_\\n]+_)", "g");
   let cursor = 0;
   let match;
   while ((match = pattern.exec(source)) !== null) {
