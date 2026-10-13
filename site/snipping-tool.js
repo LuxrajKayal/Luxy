@@ -15,6 +15,7 @@
   const editorModal = document.querySelector("#lux-snip-editor-modal");
   const editorClose = document.querySelector("#lux-snip-discard");
   const editorCopy = document.querySelector("#lux-snip-copy");
+  const editorLog = document.querySelector("#lux-snip-log");
   const editorSave = document.querySelector("#lux-snip-save");
   const editorStatus = document.querySelector("#lux-snip-status");
   const editorWorkarea = document.querySelector("#lux-snip-workarea");
@@ -751,6 +752,82 @@
       canvas.toBlob((blob) => blob ? resolve(blob) : reject(new Error("The screenshot could not be encoded.")), "image/png");
     });
   }
+
+  // Lux Omni Clipboard and Snipping Tool share the same browser-local history.
+  const HISTORY_DATABASE = "lux-omni-clipboard-history";
+  const HISTORY_STORE = "entries";
+  const HISTORY_LIMIT = 10;
+  let historyDatabasePromise = null;
+
+  function openSnippingHistoryDatabase() {
+    if (!("indexedDB" in window)) {
+      return Promise.reject(new Error("This browser does not support local clipboard history storage."));
+    }
+    if (historyDatabasePromise) return historyDatabasePromise;
+    historyDatabasePromise = new Promise((resolve, reject) => {
+      const request = window.indexedDB.open(HISTORY_DATABASE, 1);
+      request.onupgradeneeded = () => {
+        const database = request.result;
+        if (!database.objectStoreNames.contains(HISTORY_STORE)) {
+          database.createObjectStore(HISTORY_STORE, { keyPath: "id" });
+        }
+      };
+      request.onsuccess = () => {
+        const database = request.result;
+        database.onversionchange = () => database.close();
+        resolve(database);
+      };
+      request.onerror = () => {
+        historyDatabasePromise = null;
+        reject(request.error || new Error("Could not open local clipboard history."));
+      };
+      request.onblocked = () => {
+        historyDatabasePromise = null;
+        reject(new Error("Clipboard history is busy in another tab. Close other clipboard tabs and try again."));
+      };
+    });
+    return historyDatabasePromise;
+  }
+
+  async function addScreenshotToLog(blob) {
+    const database = await openSnippingHistoryDatabase();
+    const entry = {
+      id: "snip-" + String(Date.now()).padStart(13, "0") + "-" + Math.random().toString(36).slice(2, 10),
+      type: "image",
+      createdAt: Date.now(),
+      blob
+    };
+    return new Promise((resolve, reject) => {
+      const transaction = database.transaction(HISTORY_STORE, "readwrite");
+      const store = transaction.objectStore(HISTORY_STORE);
+      const request = store.getAll();
+      let writeError = null;
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error || writeError || new Error("Could not save the screenshot to the log."));
+      transaction.onabort = () => reject(transaction.error || writeError || new Error("The screenshot log update was cancelled."));
+      request.onerror = () => {
+        writeError = request.error || new Error("Could not read the existing screenshot log.");
+        try { transaction.abort(); } catch {}
+      };
+      request.onsuccess = () => {
+        try {
+          const existing = Array.isArray(request.result) ? request.result : [];
+          const sorted = existing.concat(entry).sort((a, b) =>
+            ((b.createdAt || 0) - (a.createdAt || 0)) || String(b.id).localeCompare(String(a.id))
+          );
+          const retained = sorted.slice(0, HISTORY_LIMIT);
+          const retainedIds = new Set(retained.map(item => item.id));
+          store.put(entry);
+          existing.forEach(item => {
+            if (!retainedIds.has(item.id)) store.delete(item.id);
+          });
+        } catch (error) {
+          writeError = error;
+          try { transaction.abort(); } catch {}
+        }
+      };
+    });
+  }
   editorCopy?.addEventListener("click", async () => {
     finishText(true);
     editorCopy.disabled = true;
@@ -767,6 +844,20 @@
       editorCopy.disabled = false;
     }
   });
+  editorLog?.addEventListener("click", async () => {
+    finishText(true);
+    editorLog.disabled = true;
+    try {
+      const blob = await canvasBlob(composeImage());
+      await addScreenshotToLog(blob);
+      setStatus("Screenshot added to the Lux Omni Clipboard log. The ten newest items are kept in this browser.");
+    } catch (error) {
+      setStatus(error?.message || "Could not add the screenshot to the log.");
+    } finally {
+      editorLog.disabled = false;
+    }
+  });
+
   editorSave?.addEventListener("click", async () => {
     finishText(true);
     editorSave.disabled = true;
