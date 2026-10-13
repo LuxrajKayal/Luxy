@@ -150,6 +150,16 @@ try {
   console.log("PASS: Left, Right, and Full Screen load the chosen URL into the correct viewport.");
   console.log("PASS: invalid links show inline feedback and no native browser dialogs are opened.");
 
+  // Start the PDF migration test with empty split panes; the YouTube routing
+  // test above intentionally left examples in both panes.
+  await page.evaluate(() => {
+    for (const side of ["left", "right"]) {
+      const viewport = document.querySelector('#viewport-split-layout [data-viewport-side="' + side + '"]');
+      viewport?.replaceChildren();
+      if (viewport) delete viewport.dataset.fileName;
+    }
+  });
+
   const sidebarBefore = await page.locator("#sidebar").evaluate((element) => ({
     width: element.getBoundingClientRect().width,
     position: getComputedStyle(element).position,
