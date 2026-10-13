@@ -82,3 +82,28 @@ Copy this template for each new change, then fill it with confirmed details afte
 - **Document-type behavior:** The new toolbar should eventually show relevant tools for the document assigned to each viewport. PDF, image, and Markdown tool sets are separate future feature work; do not presume their controls or invent designs before the owner specifies them.
 - **Scope of this entry:** Planning decision only. No application code changed and no toolbar feature implemented.
 - **Next action:** Wait for the owner to specify the first toolbar feature. Analyze it and present a narrow implementation plan; ask for approval before editing application code.
+
+
+## LOG-003 — Connect PDF scrolling to the existing viewport scrollbar (proposal; awaiting approval)
+
+- **Status:** Proposed only; implementation not approved or started.
+- **Owner's requested feature:** Wire the existing viewport scrollbar to the Mozilla PDF.js viewer.
+- **Code findings:**
+  - `site/styles.css` gives each outer `.viewport` `overflow-y: scroll`; this is the workspace's existing scrollbar.
+  - For PDFs, `site/dropbox-viewport-bridge.js` makes the PDF preview mount fill the viewport and sets its overflow to hidden.
+  - `site/pdf-engine.js` creates a separate `.lux-pdf-viewer-container` with `overflow: auto`, inside the PDF editor's Shadow DOM. That element is passed to Mozilla's `PDFViewer` as its scroll container.
+  - Consequently, PDF pages currently scroll through the inner PDF.js container rather than the outer workspace viewport's scrollbar. The outer `.viewport` scrollbar remains a separate scroll owner.
+  - Mozilla's current `PDFViewer` implementation expects a DIV scroll container and, in the Generic build, checks that a positioned container is used. The current outer viewport is a grid item and the viewer is nested in a Shadow DOM, so connecting it directly is not a one-line CSS change.
+- **Proposed implementation (not yet approved):**
+  1. Make the outer Full/Left/Right `.viewport` the single vertical scroll owner for PDF documents, while preserving the existing per-viewport layout and the current PDF toolbar.
+  2. Adjust PDF viewer DOM/CSS integration so Mozilla PDF.js observes the chosen viewport scroll host and the page stack plus annotation layers move together. Keep the PDF toolbar accessible without introducing a second scrolling region.
+  3. Apply PDF-specific behavior only while that viewport contains a PDF. Do not alter scrolling behavior for image, Markdown, text, YouTube, or other content.
+  4. Avoid two-way scroll-position synchronization if a single native scroll owner is feasible; duplicated scroll state could drift during page navigation, zoom, annotation, or viewport movement.
+  5. Add/adjust browser smoke coverage with a multi-page PDF: verify dragging the existing outer scrollbar changes PDF page position and the PDF.js current page remains in sync; verify zoom, text selection, annotations and export still work; verify Full/Left/Right viewports stay independent; verify image/Markdown/text scrolling remains unchanged.
+- **Files expected to review/change if approved:** `site/pdf-engine.js`, `site/dropbox-viewport-bridge.js`, `site/pdf-editor.css`, potentially `site/styles.css` for PDF-only scroll-host layout, and PDF browser/contract tests. The final file list must be based on the actual implementation diff.
+- **Risks to resolve in implementation/testing:** PDF.js container positioning requirements; Shadow DOM boundaries; keeping the toolbar visible; preserving the existing viewport grid geometry; page navigation/zoom and annotation-layer alignment; avoiding regressions in non-PDF previews.
+- **Proposed verification:** Run JavaScript syntax checks, contract tests, and a real browser test with a multi-page fixture and interactions. Also verify PDF loading still fails gracefully if the PDF.js CDN is unavailable. Record only tests that were actually run.
+- **Approval:** Waiting for the owner to approve this proposed scope.
+- **Application code changed:** No.
+- **Implementation commit:** None.
+- **Rollback:** No application change to roll back. If approved later, record the actual implementation commit and exact rollback instructions after testing.
