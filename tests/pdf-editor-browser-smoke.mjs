@@ -196,7 +196,15 @@ try {
   }, Array.from(pdfBytes));
 
   assert.equal(assignment.success, true, "the viewport bridge should successfully open the PDF: " + (assignment.message || ""));
-  await page.locator(".lux-pdf-toolbar").waitFor({ state: "visible", timeout: 45000 });
+  await page.locator('[data-viewport-tools="full"] .lux-pdf-toolbar').waitFor({ state: "visible", timeout: 45000 });
+  assert.equal(await page.locator('[data-viewport-side="full"] .lux-dropbox-preview').evaluate((host) =>
+    host.shadowRoot?.querySelector(".lux-pdf-toolbar") === null
+  ), true, "the PDF toolbar must live in Lux Omni's toolbar, not inside the PDF viewer");
+  assert.equal(await page.locator(".lux-pdf-viewer-container").count(), 0,
+    "the PDF viewer must not create a nested scroll container");
+  assert.equal(await page.locator('[data-viewport-side="full"]').evaluate((viewport) =>
+    getComputedStyle(viewport).overflowX === "auto" && getComputedStyle(viewport).overflowY === "scroll"
+  ), true, "the native viewport must own the horizontal and vertical scrollbars");
   await page.locator(".pdfViewer .page canvas").first().waitFor({ state: "visible", timeout: 30000 });
   await page.waitForFunction(() => {
     const host = document.querySelector('[data-viewport-side="full"] .lux-dropbox-preview');
@@ -213,8 +221,14 @@ try {
   console.log("PASS: generated PDF rendered through PDF.js inside the Lux Omni viewport.");
   console.log("PASS: PDF.js styles do not alter the previous 68px sidebar width or geometry.");
 
-  const pageCount = await page.locator(".lux-pdf-page-count").textContent();
+  const pageCount = await page.locator('[data-viewport-tools="full"] .lux-pdf-page-count').textContent();
   assert.match(pageCount || "", /of 1$/, "page count should be correct");
+  await page.locator('[data-viewport-tools="full"] [data-pdf-command="zoom-in"]').click();
+  await page.waitForFunction(() => {
+    const viewport = document.querySelector('[data-viewport-side="full"]');
+    return viewport && viewport.scrollWidth > viewport.clientWidth;
+  }, null, { timeout: 10000 });
+  console.log("PASS: PDF zoom expands the outer viewport horizontal scroll range without a nested scrollbar.");
 
   const highlightButton = page.locator('[data-pdf-command="highlight"]');
   await highlightButton.click();
@@ -235,7 +249,7 @@ try {
   await page.mouse.click(bounds.x + bounds.width * 0.85, bounds.y + bounds.height * 0.85);
   await page.waitForFunction(() => {
     const host = document.querySelector('[data-viewport-side="full"] .lux-dropbox-preview');
-    const status = host?.shadowRoot?.querySelector(".lux-pdf-status");
+    const status = document.querySelector('[data-viewport-tools="full"] .lux-pdf-status');
     return status?.dataset.state === "dirty";
   }, null, { timeout: 12000 });
   console.log("PASS: a free-text annotation can be created and marks the document as changed.");
@@ -286,7 +300,7 @@ try {
   assert.equal(afterMoveExport.header, "%PDF-");
   assert.ok(afterMoveExport.size > 100);
   const movedPdfState = await page.locator('[data-viewport-side="left"] .lux-dropbox-preview').evaluate((host) => ({
-    status: host.shadowRoot?.querySelector(".lux-pdf-status")?.textContent || "",
+    status: document.querySelector('[data-viewport-tools="left"] .lux-pdf-status')?.textContent || "",
     editorCount: host.shadowRoot?.querySelectorAll(".pdfViewer .page").length || 0
   }));
   assert.equal(movedPdfState.editorCount, 1, "PDF editor should remain mounted after migration");
