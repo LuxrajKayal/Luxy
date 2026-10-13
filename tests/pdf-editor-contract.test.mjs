@@ -76,3 +76,20 @@ test("PDF editor styling is linked and licence/privacy notices disclose the CDN"
   assert.match(privacy, /jsDelivr CDN/);
   assert.match(readme, /Mozilla PDF\.js \*\*6\.4\.299\*\*/);
 });
+
+
+test("minimized viewports can be dragged between sides without losing the active assignment mapping", () => {
+  const app = read("site/app.js");
+  assert.match(app, /previousMode === "full"[\s\S]*?rememberViewportWhenChangingLayout\("full", "full"\)/);
+  assert.match(app, /button\.draggable = true/);
+  assert.match(app, /registerViewportDropTarget/);
+  assert.match(app, /showViewportReplaceDialog/);
+  assert.match(app, /viewportReplaceCancel\?\.addEventListener/);
+  assert.match(app, /viewportReplaceConfirm\?\.addEventListener/);
+  assert.match(bridge, /moveViewportContents\(sourceSide, targetSide\)/);
+  assert.match(bridge, /sourceAssignment\.viewportType = targetSide/);
+  assert.match(bridge, /currentViewportType = assignment\.viewportType \|\| viewportType/);
+  assert.match(index, /id="viewport-replace-dialog"[\s\S]*?aria-modal="true"/);
+  assert.match(styles, /\.viewport\.is-drop-target/);
+  assert.match(styles, /\.viewport-replace-confirm/);
+});
