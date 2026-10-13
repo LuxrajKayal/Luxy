@@ -218,10 +218,35 @@ function getViewportElement(side) {
   return splitScreenViewportLayout?.querySelector(`:scope > .viewport[data-viewport-side="${side}"]`) || null;
 }
 
+function createViewportScrollArea(side) {
+  const scrollArea = document.createElement("div");
+  scrollArea.className = "viewport-scroll-area";
+  scrollArea.dataset.viewportScrollArea = side;
+  scrollArea.setAttribute("aria-label", (side === "full" ? "Full Screen" : side === "left" ? "Left" : "Right") + " document viewport");
+  return scrollArea;
+}
+
+function getViewportScrollElement(side) {
+  const viewport = getViewportElement(side);
+  return viewport?.querySelector(":scope > .viewport-scroll-area") || viewport;
+}
+
+function clearViewportContents(side) {
+  const viewport = getViewportElement(side);
+  const scrollArea = getViewportScrollElement(side);
+  scrollArea?.replaceChildren();
+  if (viewport) delete viewport.dataset.fileName;
+  if (scrollArea) {
+    scrollArea.scrollTop = 0;
+    scrollArea.scrollLeft = 0;
+  }
+}
+
 function createSplitViewport(side) {
   const viewport = document.createElement("div");
   viewport.className = "viewport viewport--split";
   viewport.dataset.viewportSide = side;
+  viewport.append(createViewportScrollArea(side));
   return viewport;
 }
 
@@ -245,6 +270,7 @@ function ensureFullViewport() {
   const viewport = document.createElement("div");
   viewport.className = "viewport";
   viewport.dataset.viewportSide = "full";
+  viewport.append(createViewportScrollArea("full"));
   fullScreenViewportLayout.append(viewport);
 }
 
@@ -264,7 +290,8 @@ function getViewportFileName(side) {
 
 function hasViewportContent(side) {
   const viewport = getViewportElement(side);
-  return Boolean(viewport && (viewport.dataset.fileName || viewport.childElementCount > 0));
+  const scrollArea = getViewportScrollElement(side);
+  return Boolean(viewport && (viewport.dataset.fileName || (scrollArea && scrollArea.childElementCount > 0)));
 }
 
 function rememberViewportWhenChangingLayout(side, originalMode) {
@@ -528,7 +555,7 @@ function closeFullScreenViewport() {
     return;
   }
   if (activeViewportMode !== "full" || !window.confirm("Discard documents?")) return;
-  getViewportElement("full")?.replaceChildren();
+  clearViewportContents("full");
   activeViewportMode = null;
   soloSplitSide = null;
   renderViewportComposition();
@@ -539,7 +566,7 @@ function closeSplitViewport(side) {
   const isSplit = activeViewportMode === "split";
   const isCurrentSoloSide = activeViewportMode === "solo" && soloSplitSide === side;
   if ((!isSplit && !isCurrentSoloSide) || !window.confirm("Discard documents?")) return;
-  getViewportElement(side)?.replaceChildren();
+  clearViewportContents(side);
   minimizedViewportStates.delete(side);
 
   if (isSplit) {
@@ -764,7 +791,8 @@ function openYoutubeTile() {
 
 function loadYoutubeVideoIntoViewport(requestedSide, videoId) {
   const viewport = getViewportElement(requestedSide);
-  if (!viewport || !videoId) return false;
+  const scrollArea = getViewportScrollElement(requestedSide);
+  if (!viewport || !scrollArea || !videoId) return false;
 
   const embedUrl = "https://www.youtube.com/embed/" + videoId;
   const content = document.createElement("div");
@@ -779,9 +807,10 @@ function loadYoutubeVideoIntoViewport(requestedSide, videoId) {
   frame.setAttribute("allowfullscreen", "");
   content.append(frame);
 
-  viewport.replaceChildren(content);
+  scrollArea.replaceChildren(content);
   viewport.dataset.fileName = "YouTube video " + videoId;
-  viewport.scrollTop = 0;
+  scrollArea.scrollTop = 0;
+  scrollArea.scrollLeft = 0;
   return true;
 }
 
