@@ -4,7 +4,7 @@ Lux Omni is a browser-based workspace created by **Luxraj Kayal (Subrata Kayal)*
 
 ## Current features
 
-- **Dropbox integration (frontend foundation):** browser-based PKCE authorization, connection status, folder/file browsing, local file upload to Dropbox, and file-to-viewport routing events. Actual viewport rendering still needs to be connected to the existing viewport UI, and Sync requires a viewport export adapter.
+- **Dropbox integration:** browser-based PKCE authorization, persistent same-origin token storage, connection status that responds to sign-in changes across tabs, folder/file browsing, local file uploads, and Dropbox file previews in the Full / Left / Right workspaces. Previewing PDFs and images is read-only; real edit-and-save requires an editor to register edited bytes with the viewport bridge. Sync clearly confirms before re-uploading unchanged preview bytes.
 - **Workspace viewports:** open a full-screen viewport or a resizable split-screen layout; minimize, restore, or close viewports.
 - **YouTube playback:** load a YouTube video into a workspace viewport.
 - **Display controls:** switch between light and dark themes and enable Focus Mode.
@@ -12,7 +12,7 @@ Lux Omni is a browser-based workspace created by **Luxraj Kayal (Subrata Kayal)*
 
 ## Current application status
 
-The current build includes the workspace interface, browser-based tools, and Dropbox manager UI. The PDF workspace still uses a browser preview placeholder; a complete PDF editing, annotation, and export engine is not connected. Features should be understood from the current implementation rather than assumed from the product name.
+The current build includes the workspace interface, browser-based tools, Dropbox manager, and a read-only Dropbox preview bridge for PDFs and common image formats. The PDF workspace does not yet include a complete PDF editing, annotation, and export engine. The viewport bridge exposes an integration hook for a future editor to provide an edited Blob. Features should be understood from the current implementation rather than assumed from the product name.
 
 ## Run locally
 
