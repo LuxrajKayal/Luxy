@@ -19,14 +19,15 @@
     <h1>Privacy Policy</h1>
     <p>Last updated: 13 October 2026</p>
   </header>
-  <p>Lux Omni (“Luxy”) is a browser-based project maintained by Luxraj Kayal (Subrata Kayal). It includes a browser-based workspace and supporting tools. Cloud-storage integrations are not currently enabled. This policy explains how the website handles information when you use it.</p>
+  <p>Lux Omni (“Luxy”) is a browser-based project maintained by Luxraj Kayal (Subrata Kayal). It includes a browser-based workspace, local clipboard tools, and an optional Dropbox connection. Dropbox access is initiated only when you use the Dropbox controls. This policy explains how the website handles information when you use it.</p>
 
 
 
   <section>
     <h2>Where information is processed and stored</h2>
     <ul>
-      <li>Luxy is a static website hosted through GitHub Pages. The current application does not send PDF contents to a Luxy-operated application server or store them in a Luxy-operated database.</li>
+      <li>Luxy is a static website hosted through GitHub Pages. The current application does not send document contents to a Luxy-operated application server or store them in a Luxy-operated database.</li>
+      <li>When you connect Dropbox, its short-lived access token is held in this browser tab's <code>sessionStorage</code>. The integration requests Dropbox API access to list folders, download files you select, and upload files you explicitly choose.</li>
       <li>Lux Omni Clipboard history is stored locally in this browser using IndexedDB. You can clear this history from the clipboard page or clear this website's browser data.</li>
     </ul>
   </section>
@@ -39,12 +40,12 @@
 
   <section>
     <h2>Third-party services</h2>
-    <p>Luxy is hosted on GitHub Pages. If you use the YouTube workspace tool, content is provided by YouTube and is subject to its applicable terms and privacy policy.</p>
+    <p>Luxy is hosted on GitHub Pages. If you connect Dropbox, your browser communicates directly with Dropbox for authorization and file API requests. If you use the YouTube workspace tool, content is provided by YouTube and is subject to its applicable terms and privacy policy.</p>
   </section>
 
   <section>
     <h2>Your choices and security</h2>
-    <p>Use the website only in browsers and on devices you trust. Clear this website's browser data to remove locally stored records. Avoid placing private documents or other sensitive information in content you do not intend to store in this browser.</p>
+    <p>Use the website only in browsers and on devices you trust. Disconnect Dropbox in Lux Omni to clear the local session and request token revocation from Dropbox; you can also remove Lux Omni from your Dropbox connected-app settings. Uploads occur only when you explicitly choose a file and start the upload. The Sync control currently needs a viewport-export adapter before it can write editor changes back to Dropbox. Clear this website's browser data to remove locally stored records.</p>
   </section>
 
   <section>
