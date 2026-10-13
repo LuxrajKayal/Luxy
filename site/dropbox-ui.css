@@ -1,0 +1,191 @@
+/* Dropbox UI integration — isolated from the main application stylesheet. */
+.dropbox-topbar-button {
+  gap: 7px;
+  max-width: min(250px, 34vw);
+}
+.dropbox-topbar-label[data-state="connected"] { color: #17834e; }
+.dropbox-topbar-label[data-state="disconnected"] { color: var(--muted); }
+
+.dropbox-ui-action,
+.dropbox-ui-upload-button,
+.dropbox-ui-back,
+.dropbox-ui-close,
+.dropbox-ui-viewport-actions button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 38px; padding: 8px 11px; border: 1px solid var(--control-border);
+  border-radius: 9px; color: var(--control-text); background: var(--control-bg);
+  font: inherit; font-size: 12px; font-weight: 650; cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+}
+.dropbox-ui-action:hover:not(:disabled),
+.dropbox-ui-upload-button:hover,
+.dropbox-ui-back:hover:not(:disabled),
+.dropbox-ui-close:hover,
+.dropbox-ui-viewport-actions button:hover:not(:disabled) {
+  border-color: var(--control-hover-border); background: var(--control-hover-bg);
+}
+.dropbox-ui-action:focus-visible, .dropbox-ui-upload-button:focus-visible,
+.dropbox-ui-back:focus-visible, .dropbox-ui-close:focus-visible,
+.dropbox-ui-viewport-actions button:focus-visible,
+.dropbox-ui-file-row:focus-visible {
+  outline: 3px solid var(--focus-outline); outline-offset: 2px;
+}
+.dropbox-ui-action:disabled, .dropbox-ui-back:disabled,
+.dropbox-ui-viewport-actions button:disabled { cursor: not-allowed; opacity: .48; }
+.dropbox-ui-action svg, .dropbox-ui-upload-button svg,
+.dropbox-ui-back svg, .dropbox-ui-close svg {
+  width: 16px; height: 16px; flex: 0 0 16px; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+}
+.dropbox-ui-sync { border-color: #2469dc; color: #fff; background: #2469dc; }
+.dropbox-ui-sync:hover:not(:disabled) { border-color: #1e5ec9; background: #1e5ec9; }
+.dropbox-ui-modal[hidden], .dropbox-ui-toast[hidden],
+.dropbox-ui-empty[hidden], .dropbox-ui-selection[hidden] { display: none !important; }
+.dropbox-ui-modal {
+  position: fixed; inset: 0; z-index: 1500; display: grid; place-items: center;
+  padding: clamp(10px, 3vw, 28px);
+}
+.dropbox-ui-backdrop {
+  position: absolute; inset: 0; background: rgb(8 13 25 / 62%);
+  backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+}
+.dropbox-ui-dialog {
+  position: relative; z-index: 1; display: flex; flex-direction: column;
+  width: min(100%, 900px); max-height: min(88vh, 820px);
+  min-height: min(360px, 75vh); overflow: hidden; border: 1px solid var(--line);
+  border-radius: 18px; color: var(--ink); background: var(--panel);
+  box-shadow: 0 24px 85px rgb(0 0 0 / 32%); animation: dropbox-ui-appear 160ms ease-out;
+}
+@keyframes dropbox-ui-appear {
+  from { opacity: 0; transform: translateY(8px) scale(.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.dropbox-ui-header {
+  display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between;
+  gap: 18px; padding: 21px 24px 17px; border-bottom: 1px solid var(--line);
+}
+.dropbox-ui-heading { min-width: 0; }
+.dropbox-ui-heading h2 {
+  margin: 0; color: var(--brand-name); font-size: 22px; font-weight: 750; letter-spacing: -.035em;
+}
+.dropbox-current-location {
+  overflow: hidden; margin: 5px 0 0; color: var(--muted); font-size: 12px;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.dropbox-ui-header-actions { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 9px; }
+.dropbox-ui-upload-button { border-color: #2469dc; color: #fff; background: #2469dc; cursor: pointer; }
+.dropbox-ui-upload-button:hover { border-color: #1e5ec9; background: #1e5ec9; }
+.dropbox-ui-file-input {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%); white-space: nowrap;
+}
+.dropbox-ui-file-input:focus-visible + .dropbox-ui-upload-button {
+  outline: 3px solid var(--focus-outline); outline-offset: 2px;
+}
+.dropbox-ui-close { width: 38px; min-width: 38px; height: 38px; padding: 0; }
+.dropbox-ui-navigation {
+  display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between;
+  gap: 12px; padding: 12px 24px; border-bottom: 1px solid var(--line); background: var(--workspace);
+}
+.dropbox-ui-back { min-height: 32px; padding: 6px 10px; }
+.dropbox-ui-navigation-hint { color: var(--muted); font-size: 12px; }
+.dropbox-ui-status {
+  flex: 0 0 auto; min-height: 18px; margin: 0; padding: 11px 24px;
+  color: var(--muted); font-size: 12px; line-height: 1.45;
+}
+.dropbox-ui-status[data-kind="error"] { color: #c33d4a; }
+.dropbox-ui-status[data-kind="success"] { color: #17834e; }
+.dropbox-ui-list-wrap { position: relative; min-height: 0; flex: 1 1 auto; overflow: auto; overscroll-behavior: contain; }
+.dropbox-ui-file-list {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 255px), 1fr));
+  align-content: start; gap: 9px; margin: 0; padding: 0 24px 22px; list-style: none;
+}
+.dropbox-ui-file-item { min-width: 0; }
+.dropbox-ui-file-row {
+  display: flex; width: 100%; min-width: 0; min-height: 62px; align-items: center; gap: 12px;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 11px;
+  color: var(--control-text); background: var(--control-bg); text-align: left; cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease, box-shadow 140ms ease;
+}
+.dropbox-ui-file-row:hover { border-color: var(--control-hover-border); background: var(--control-hover-bg); }
+.dropbox-ui-file-row[aria-pressed="true"] {
+  border-color: #2469dc; background: rgb(36 105 220 / 9%);
+  box-shadow: inset 0 0 0 1px rgb(36 105 220 / 28%);
+}
+.dropbox-ui-file-icon {
+  display: grid; width: 38px; height: 38px; flex: 0 0 38px; place-items: center;
+  border-radius: 10px; color: #2469dc; background: rgb(36 105 220 / 10%);
+}
+.dropbox-ui-file-icon[data-kind="folder"] { color: #be8508; background: rgb(190 133 8 / 12%); }
+.dropbox-ui-file-icon svg {
+  width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.dropbox-ui-file-copy { display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; gap: 4px; }
+.dropbox-ui-file-name {
+  overflow: hidden; color: var(--ink); font-size: 13px; font-weight: 650;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.dropbox-ui-file-meta {
+  overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap;
+}
+.dropbox-ui-empty {
+  display: grid; min-height: 190px; justify-items: center; align-content: center;
+  gap: 8px; padding: 24px; color: var(--muted); text-align: center;
+}
+.dropbox-ui-empty svg {
+  width: 44px; height: 44px; margin-bottom: 6px; fill: none; stroke: currentColor;
+  stroke-width: 1.6; stroke-linejoin: round;
+}
+.dropbox-ui-empty strong { color: var(--ink); font-size: 14px; }
+.dropbox-ui-empty span { font-size: 12px; }
+.dropbox-ui-selection {
+  display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 14px 20px; border-top: 1px solid var(--line); background: var(--panel);
+}
+.dropbox-ui-selected-copy { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.dropbox-ui-selected-label {
+  color: var(--muted); font-size: 10px; font-weight: 750; letter-spacing: .07em; text-transform: uppercase;
+}
+.dropbox-ui-selected-copy strong {
+  overflow: hidden; max-width: 220px; color: var(--ink); font-size: 12px;
+  text-overflow: ellipsis; white-space: nowrap;
+}
+.dropbox-ui-viewport-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+.dropbox-ui-viewport-actions button { min-height: 34px; padding: 7px 9px; font-size: 11px; }
+.dropbox-ui-toast {
+  position: fixed; right: 18px; bottom: 18px; z-index: 1600;
+  max-width: min(440px, calc(100vw - 36px)); padding: 12px 15px; border: 1px solid var(--line);
+  border-radius: 12px; color: var(--ink); background: var(--panel);
+  box-shadow: 0 12px 40px rgb(0 0 0 / 18%); font-size: 12px; line-height: 1.5;
+}
+.dropbox-ui-toast[data-kind="error"] { border-color: #d95d67; }
+.dropbox-ui-toast[data-kind="success"] { border-color: #2a9d69; }
+body.dropbox-ui-open { overflow: hidden; }
+
+@media (max-width: 760px) {
+  .dropbox-ui-selection { align-items: stretch; flex-direction: column; }
+  .dropbox-ui-selected-copy strong { max-width: none; }
+  .dropbox-ui-viewport-actions { justify-content: stretch; }
+  .dropbox-ui-viewport-actions button { flex: 1 1 150px; }
+}
+@media (max-width: 560px) {
+  .topbar-actions { gap: 4px; }
+  .dropbox-topbar-button { max-width: 115px; gap: 4px; padding: 0 4px; }
+  .dropbox-topbar-label { max-width: 92px; font-size: 10px; }
+  .dropbox-ui-action { width: 38px; min-width: 38px; padding: 0; }
+  .dropbox-ui-action svg { width: 16px; height: 16px; }
+  .dropbox-ui-action-label { display: none; }
+  .dropbox-ui-dialog { min-height: min(330px, 78vh); max-height: 90vh; border-radius: 14px; }
+  .dropbox-ui-header { align-items: flex-start; padding: 16px; gap: 10px; }
+  .dropbox-ui-heading h2 { font-size: 18px; }
+  .dropbox-ui-header-actions { gap: 6px; }
+  .dropbox-ui-upload-button { min-height: 36px; padding: 7px 8px; font-size: 11px; }
+  .dropbox-ui-upload-button span { max-width: 66px; }
+  .dropbox-ui-navigation { padding: 10px 16px; }
+  .dropbox-ui-navigation-hint { display: none; }
+  .dropbox-ui-status { padding: 10px 16px; }
+  .dropbox-ui-file-list { grid-template-columns: 1fr; padding: 0 16px 16px; }
+  .dropbox-ui-selection { padding: 12px 16px; }
+  .dropbox-ui-viewport-actions button { flex-basis: 100%; }
+}
