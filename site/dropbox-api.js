@@ -1,13 +1,11 @@
 /*
  * Lux Omni — Dropbox OAuth + API v2 utilities.
  *
- * This module deliberately contains no UI code and is not imported by the
- * live page yet. It can be wired to the topbar and sidebar after this layer
- * is reviewed and tested.
+ * This module contains Dropbox OAuth and API helpers used by dropbox-ui.js.
  *
  * OAuth uses authorization-code + PKCE for a browser/public client. No app
  * secret is used. The current implementation requests online access and keeps
- * the short-lived access token in sessionStorage only (no refresh token).
+ * the short-lived access token in localStorage (no refresh token).
  */
 
 import { DROPBOX_CONFIG } from "./dropbox-config.js";
@@ -28,10 +26,10 @@ export class DropboxApiError extends Error {
 
 function getStorage() {
   try {
-    return window.sessionStorage;
+    return window.localStorage;
   } catch (_) {
     throw new DropboxApiError(
-      "Browser session storage is unavailable. Enable site storage and try again."
+      "Browser local storage is unavailable. Enable site storage and try again."
     );
   }
 }
@@ -178,7 +176,7 @@ async function requestContent(endpoint, args, body) {
 
 /**
  * Create an OAuth authorization URL and store one-time PKCE values in this
- * tab's sessionStorage. Call beginAuthorization() to redirect to this URL.
+ * browser's localStorage. Call beginAuthorization() to redirect to this URL.
  */
 export async function createAuthorizationUrl() {
   const storage = getStorage();
@@ -280,7 +278,7 @@ export function getAccessToken() {
   return token;
 }
 
-/** Clear all Dropbox credentials and any unfinished OAuth attempt from this tab. */
+/** Clear all Dropbox credentials and any unfinished OAuth attempt from localStorage. */
 export function clearSession() {
   const storage = getStorage();
   for (const key of Object.values(DROPBOX_CONFIG.storageKeys)) {
