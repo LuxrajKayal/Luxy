@@ -357,6 +357,23 @@
     clearFreeformPath();
   });
 
+  document.querySelectorAll("[data-lux-snip-selection-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const mode = button.dataset.luxSnipSelectionMode;
+      setMode(mode);
+      if (mode === "viewport") {
+        takeViewportSnip();
+      } else {
+        selectionBox.hidden = true;
+        clearFreeformPath();
+        selectionHelp.textContent = mode === "freeform"
+          ? "Draw around the area to snip · Esc to cancel"
+          : "Drag a rectangle around the area to snip · Esc to cancel";
+      }
+    });
+  });
+  document.querySelector("#lux-snip-selection-cancel")?.addEventListener("click", closeCaptureUi);
+
   function cropSource(source, bounds, pathPoints) {
     const scaleX = source.width / captureWidth;
     const scaleY = source.height / captureHeight;
