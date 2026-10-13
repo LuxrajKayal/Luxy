@@ -168,12 +168,14 @@ export async function mountPdfEditor({ root, blob, fileName, viewportType, onDir
   status.setAttribute("aria-live", "polite");
   toolbar.append(toolGroup, pageGroup, zoomGroup, searchGroup, saveGroup, status);
 
+  const viewerFrame = createElement("div", "lux-pdf-viewer-frame");
   const scrollContainer = createElement("div", "lux-pdf-viewer-container");
   scrollContainer.tabIndex = 0;
   scrollContainer.setAttribute("aria-label", "PDF pages");
   const pages = createElement("div", "pdfViewer");
   scrollContainer.append(pages);
-  shell.append(toolbar, scrollContainer);
+  viewerFrame.append(scrollContainer);
+  shell.append(toolbar, viewerFrame);
   root.replaceChildren(shell);
 
   const eventBus = new pdfjsViewer.EventBus();
