@@ -102,7 +102,7 @@ test("PDF commands are portaled to per-viewport hosts and scrolling belongs to t
   assert.match(index, /data-viewport-tools="right"/);
   assert.match(engine, /toolbarContainer\.replaceChildren\(toolbar\)/);
   assert.match(engine, /scrollContainer: externalScrollContainer/);
-  assert.match(bridge, /scrollContainer: viewport/);
+  assert.match(bridge, /scrollContainer: scrollArea/);
   assert.match(bridge, /toolbarContainer: getViewportToolbarElement\(viewportType\)/);
   assert.match(appStyles, /\.viewport-document-tools \.lux-pdf-toolbar/);
   assert.match(appStyles, /overflow-x: auto;\s*overflow-y: scroll;/);
@@ -117,4 +117,18 @@ test("minimized documents remain compact without altering the protected sidebar"
   assert.match(index, /<aside id="sidebar" class="sidebar" aria-label="Sidebar">/);
   assert.match(appStyles, /\.sidebar \{/);
   assert.match(appStyles, /--sidebar-width: 68px/);
+});
+
+
+test("PDF editor uses absolute viewport-owned scroll areas shared by all document types", () => {
+  assert.match(index, /class="viewport-scroll-area" data-viewport-scroll-area="full"/);
+  assert.match(index, /data-viewport-scroll-area="left"/);
+  assert.match(index, /data-viewport-scroll-area="right"/);
+  assert.match(app, /function getViewportScrollElement\(side\)/);
+  assert.match(appStyles, /\.viewport-scroll-area \{[\s\S]*?position: absolute;[\s\S]*?overflow-x: auto;[\s\S]*?overflow-y: scroll;/);
+  assert.match(bridge, /getViewportScrollElement\(viewportType\)/);
+  assert.match(bridge, /ensureViewportObserver\(viewportType, scrollArea\)/);
+  assert.match(bridge, /scrollContainer: targetScrollArea/);
+  assert.doesNotMatch(bridge, /targetViewport\.replaceChildren\(\)/);
+  assert.doesNotMatch(app, /getViewportElement\((?:side|"full")\)\?\.replaceChildren\(\)/);
 });
