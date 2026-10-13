@@ -7,11 +7,13 @@
 }
 .lux-pdf-editor {
   display: flex;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   flex-direction: column;
   width: 100%;
+  height: auto;
   min-width: 0;
-  min-height: 0;
+  min-height: 100%;
+  overflow: visible;
   color: #172033;
   background: #e9edf3;
   color-scheme: light;
@@ -120,12 +122,21 @@
 .lux-pdf-status[data-state="error"] { color: #b42318; }
 .lux-pdf-viewer-frame {
   position: relative;
-  flex: 1 1 auto;
+  display: block;
+  flex: 0 0 auto;
   width: 100%;
   min-width: 0;
-  min-height: 0;
-  overflow: hidden;
+  min-height: 100%;
+  overflow: visible;
   background: #e9edf3;
+}
+
+.lux-pdf-viewer-frame > .pdfViewer {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+  padding: 16px 0 24px;
+  box-sizing: border-box;
 }
 .lux-pdf-viewer-container {
   position: absolute;
@@ -150,7 +161,10 @@
 .lux-pdf-viewer-container.is-panning { cursor: grabbing; }
 .lux-pdf-viewer-container.is-hand-tool .textLayer,
 .lux-pdf-viewer-container.is-hand-tool .annotationLayer,
-.lux-pdf-viewer-container.is-hand-tool .annotationEditorLayer { pointer-events: none; }
+.lux-pdf-viewer-container.is-hand-tool .annotationEditorLayer,
+.lux-pdf-editor.is-hand-tool .textLayer,
+.lux-pdf-editor.is-hand-tool .annotationLayer,
+.lux-pdf-editor.is-hand-tool .annotationEditorLayer { pointer-events: none; }
 .lux-pdf-editor .pdfViewer .page {
   margin: 0 auto 16px;
   border: 1px solid #cbd3df;
