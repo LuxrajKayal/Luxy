@@ -92,6 +92,11 @@ try {
   assert.equal(response?.status(), 200, "Lux Omni index should load successfully");
   await page.waitForFunction(() => typeof window.LuxOmniViewportBridge?.exportEditedBlob === "function", null, { timeout: 15000 });
 
+  const sidebarBefore = await page.locator("#sidebar").evaluate((element) => ({
+    width: element.getBoundingClientRect().width,
+    position: getComputedStyle(element).position,
+    innerWidth: element.querySelector(".sidebar-inner")?.getBoundingClientRect().width
+  }));
   const pdfBytes = makeOnePagePdf();
   const assignment = await page.evaluate(async (numericBytes) => {
     const requestId = "pdfjs-smoke-" + Date.now();
@@ -125,8 +130,20 @@ try {
   assert.equal(assignment.success, true, "the viewport bridge should successfully open the PDF: " + (assignment.message || ""));
   await page.locator(".lux-pdf-toolbar").waitFor({ state: "visible", timeout: 45000 });
   await page.locator(".pdfViewer .page canvas").first().waitFor({ state: "visible", timeout: 30000 });
-  await page.waitForFunction(() => document.querySelectorAll(".pdfViewer .page").length === 1, null, { timeout: 15000 });
+  await page.waitForFunction(() => {
+    const host = document.querySelector('[data-viewport-side="full"] .lux-dropbox-preview');
+    return host?.shadowRoot?.querySelectorAll(".pdfViewer .page").length === 1;
+  }, null, { timeout: 15000 });
+
+  const sidebarAfter = await page.locator("#sidebar").evaluate((element) => ({
+    width: element.getBoundingClientRect().width,
+    position: getComputedStyle(element).position,
+    innerWidth: element.querySelector(".sidebar-inner")?.getBoundingClientRect().width
+  }));
+  assert.deepEqual(sidebarAfter, sidebarBefore, "loading the PDF.js viewer must not change the Lux Omni sidebar geometry");
+  assert.equal(sidebarAfter.width, 68, "the desktop compact sidebar must retain its original 68px width");
   console.log("PASS: generated PDF rendered through PDF.js inside the Lux Omni viewport.");
+  console.log("PASS: PDF.js styles do not alter the previous 68px sidebar width or geometry.");
 
   const pageCount = await page.locator(".lux-pdf-page-count").textContent();
   assert.match(pageCount || "", /of 1$/, "page count should be correct");
@@ -149,7 +166,8 @@ try {
   await editorTextBox.fill("Lux Omni annotation smoke test");
   await page.mouse.click(bounds.x + bounds.width * 0.85, bounds.y + bounds.height * 0.85);
   await page.waitForFunction(() => {
-    const status = document.querySelector(".lux-pdf-status");
+    const host = document.querySelector('[data-viewport-side="full"] .lux-dropbox-preview');
+    const status = host?.shadowRoot?.querySelector(".lux-pdf-status");
     return status?.dataset.state === "dirty";
   }, null, { timeout: 12000 });
   console.log("PASS: a free-text annotation can be created and marks the document as changed.");

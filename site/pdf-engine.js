@@ -8,34 +8,47 @@ const PDFJS_BASE = "https://cdn.jsdelivr.net/npm/pdfjs-dist@" + PDFJS_VERSION;
 const PDFJS_VIEWER_STYLESHEET = PDFJS_BASE + "/web/pdf_viewer.css";
 
 let pdfjsModulesPromise = null;
-let stylesheetPromise = null;
+const stylesheetPromises = new WeakMap();
 
-function ensureViewerStylesheet() {
-  if (stylesheetPromise) return stylesheetPromise;
-  stylesheetPromise = new Promise((resolve, reject) => {
-    const existing = document.querySelector('link[data-lux-pdfjs-stylesheet="true"]');
-    if (existing) {
-      if (existing.dataset.loaded === "true") return resolve();
-      existing.addEventListener("load", resolve, { once: true });
-      existing.addEventListener("error", () => reject(new Error("Mozilla PDF.js viewer styles could not be loaded.")), { once: true });
-      return;
+function ensureViewerStylesheet(shadowRoot) {
+  const existingPromise = stylesheetPromises.get(shadowRoot);
+  if (existingPromise) return existingPromise;
+
+  const stylesheetUrls = [
+    { url: PDFJS_VIEWER_STYLESHEET, attribute: "data-lux-pdfjs-stylesheet" },
+    { url: new URL("./pdf-editor.css", import.meta.url).href, attribute: "data-lux-pdf-editor-stylesheet" }
+  ];
+  let links = [];
+  const promise = new Promise((resolve, reject) => {
+    let remaining = stylesheetUrls.length;
+    let settled = false;
+    const fail = () => {
+      if (settled) return;
+      settled = true;
+      for (const link of links) link.remove();
+      stylesheetPromises.delete(shadowRoot);
+      reject(new Error("PDF editor styles could not be loaded into the isolated viewer."));
+    };
+
+    for (const item of stylesheetUrls) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = item.url;
+      link.setAttribute(item.attribute, "true");
+      link.addEventListener("load", () => {
+        remaining -= 1;
+        if (remaining === 0 && !settled) {
+          settled = true;
+          resolve();
+        }
+      }, { once: true });
+      link.addEventListener("error", fail, { once: true });
+      links.push(link);
+      shadowRoot.append(link);
     }
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = PDFJS_VIEWER_STYLESHEET;
-    link.dataset.luxPdfjsStylesheet = "true";
-    link.addEventListener("load", () => {
-      link.dataset.loaded = "true";
-      resolve();
-    }, { once: true });
-    link.addEventListener("error", () => {
-      stylesheetPromise = null;
-      link.remove();
-      reject(new Error("Mozilla PDF.js viewer styles could not be loaded."));
-    }, { once: true });
-    document.head.append(link);
   });
-  return stylesheetPromise;
+  stylesheetPromises.set(shadowRoot, promise);
+  return promise;
 }
 
 function loadPdfJsModules() {
@@ -83,7 +96,20 @@ function normalizePdfName(name) {
 
 export async function mountPdfEditor({ root, blob, fileName, viewportType, onDirty, onEdited }) {
   if (!(blob instanceof Blob)) throw new TypeError("PDF.js needs a PDF Blob.");
-  await ensureViewerStylesheet();
+
+  root.classList.add("lux-pdf-editor-root");
+  root.style.alignItems = "stretch";
+  root.style.justifyContent = "flex-start";
+  root.style.flexDirection = "column";
+  root.style.overflow = "hidden";
+  root.style.background = "#e9edf3";
+
+  // PDF.js ships generic selectors such as ".sidebar". Keep all viewer CSS and
+  // its imported stylesheets inside an open Shadow DOM so they cannot restyle Lux Omni.
+  const shadowRoot = root.shadowRoot || root.attachShadow({ mode: "open" });
+  root.replaceChildren();
+  shadowRoot.replaceChildren();
+  await ensureViewerStylesheet(shadowRoot);
   const modules = await loadPdfJsModules();
   const pdfjsLib = modules.pdfjsLib;
   const pdfjsViewer = modules.pdfjsViewer;
@@ -92,13 +118,6 @@ export async function mountPdfEditor({ root, blob, fileName, viewportType, onDir
       AnnotationEditorType.FREETEXT === undefined || AnnotationEditorType.INK === undefined) {
     throw new Error("This Mozilla PDF.js build does not expose the annotation tools Lux Omni requires.");
   }
-
-  root.classList.add("lux-pdf-editor-root");
-  root.style.alignItems = "stretch";
-  root.style.justifyContent = "flex-start";
-  root.style.flexDirection = "column";
-  root.style.overflow = "hidden";
-  root.style.background = "#e9edf3";
 
   const shell = createElement("section", "lux-pdf-editor");
   shell.setAttribute("aria-label", "PDF editor");
@@ -178,7 +197,7 @@ export async function mountPdfEditor({ root, blob, fileName, viewportType, onDir
   scrollContainer.append(pages);
   viewerFrame.append(scrollContainer);
   shell.append(toolbar, viewerFrame);
-  root.replaceChildren(shell);
+  shadowRoot.append(shell);
 
   const eventBus = new pdfjsViewer.EventBus();
   const linkService = new pdfjsViewer.PDFLinkService({ eventBus });

@@ -427,7 +427,8 @@ async function renderAssignment(detail) {
       explanation.textContent = (error?.message || "Unknown loading error") + " Check the connection to the pinned Mozilla PDF.js assets and try opening the PDF again.";
       const download = makeDownloadLink(objectUrl, fileName);
       errorPanel.append(heading, explanation, download);
-      mount.replaceChildren(errorPanel);
+      const errorTarget = mount.shadowRoot || mount;
+      errorTarget.replaceChildren(errorPanel);
       throw error;
     }
   }
