@@ -430,6 +430,9 @@ export async function mountPdfEditor({ root, blob, fileName, viewportType, onDir
     setEditorMode("NONE", "select");
   } catch (error) {
     setStatus("Could not open PDF: " + (error?.message || "unknown error"), "error");
+    try { pdfViewer.setDocument(null); } catch (_) {}
+    try { linkService.setDocument(null, null); } catch (_) {}
+    try { await loadingTask?.destroy(); } catch (_) {}
     throw error;
   }
 
