@@ -42,6 +42,11 @@ function getViewportElement(viewportType) {
   return document.querySelector(selectors[viewportType]);
 }
 
+function getViewportScrollElement(viewportType) {
+  const viewport = getViewportElement(viewportType);
+  return viewport?.querySelector(":scope > .viewport-scroll-area") || viewport;
+}
+
 function getViewportToolbarElement(viewportType) {
   return document.querySelector('[data-viewport-tools="' + viewportType + '"]');
 }
@@ -108,16 +113,17 @@ function revokeAssignment(viewportType, assignment) {
   if (viewportAssignments.get(viewportType) === assignment) viewportAssignments.delete(viewportType);
 }
 
-function ensureViewportObserver(viewportType, viewport) {
+function ensureViewportObserver(viewportType, scrollArea) {
   if (viewportObservers.has(viewportType)) return;
   const observer = new MutationObserver(() => {
     const current = viewportAssignments.get(viewportType);
-    if (current?.mount && !viewport.contains(current.mount)) {
+    if (current?.mount && !scrollArea.contains(current.mount)) {
       revokeAssignment(viewportType, current);
-      if (viewport.dataset.fileName === current.fileData?.name) delete viewport.dataset.fileName;
+      const viewport = getViewportElement(viewportType);
+      if (viewport?.dataset.fileName === current.fileData?.name) delete viewport.dataset.fileName;
     }
   });
-  observer.observe(viewport, { childList: true, subtree: true });
+  observer.observe(scrollArea, { childList: true, subtree: true });
   viewportObservers.set(viewportType, observer);
 }
 
@@ -322,7 +328,8 @@ async function renderAssignment(detail) {
 
   activateViewportLayout(viewportType);
   const viewport = getViewportElement(viewportType);
-  if (!viewport) throw new Error("The " + viewportType + " viewport container was not found.");
+  const scrollArea = getViewportScrollElement(viewportType);
+  if (!viewport || !scrollArea) throw new Error("The " + viewportType + " viewport container was not found.");
 
   const fileName = fileData?.name || "Dropbox file";
   const kind = classifyFile(blob, fileName);
@@ -389,9 +396,9 @@ async function renderAssignment(detail) {
   }
 
   const previous = viewportAssignments.get(viewportType);
-  viewport.scrollTop = 0;
-  viewport.scrollLeft = 0;
-  viewport.replaceChildren(mount);
+  scrollArea.scrollTop = 0;
+  scrollArea.scrollLeft = 0;
+  scrollArea.replaceChildren(mount);
   viewport.dataset.fileName = fileName;
   const assignment = {
     blob, editedBlob: null, editor: null, hasPdfEdits: false, kind,
@@ -399,7 +406,7 @@ async function renderAssignment(detail) {
   };
   viewportAssignments.set(viewportType, assignment);
   if (previous) revokeAssignment(viewportType, previous);
-  ensureViewportObserver(viewportType, viewport);
+  ensureViewportObserver(viewportType, scrollArea);
 
   if (needsPdfMount) {
     try {
@@ -408,7 +415,7 @@ async function renderAssignment(detail) {
         blob: previewBlob,
         fileName,
         viewportType,
-        scrollContainer: viewport,
+        scrollContainer: scrollArea,
         toolbarContainer: getViewportToolbarElement(viewportType),
         onDirty() {
           assignment.hasPdfEdits = true;
@@ -508,12 +515,14 @@ window.LuxOmniViewportBridge = {
 
     const sourceViewport = getViewportElement(sourceSide);
     const targetViewport = getViewportElement(targetSide);
-    if (!sourceViewport || !targetViewport) return false;
+    const sourceScrollArea = getViewportScrollElement(sourceSide);
+    const targetScrollArea = getViewportScrollElement(targetSide);
+    if (!sourceViewport || !targetViewport || !sourceScrollArea || !targetScrollArea) return false;
 
     const sourceName = sourceViewport.dataset.fileName || "";
     const sourceAssignment = viewportAssignments.get(sourceSide);
     const targetAssignment = viewportAssignments.get(targetSide);
-    const sourceNodes = Array.from(sourceViewport.childNodes);
+    const sourceNodes = Array.from(sourceScrollArea.childNodes);
     if (!sourceName && sourceNodes.length === 0 && !sourceAssignment) return false;
 
     // PDF.js is attached to a concrete viewport scroll element. Capture the
@@ -540,26 +549,26 @@ window.LuxOmniViewportBridge = {
     // The UI only calls this after the occupied-destination confirmation.
     if (targetAssignment) revokeAssignment(targetSide, targetAssignment);
 
-    const preservedScrollTop = pdfViewState?.scrollTop ?? sourceViewport.scrollTop;
-    const preservedScrollLeft = pdfViewState?.scrollLeft ?? sourceViewport.scrollLeft;
+    const preservedScrollTop = pdfViewState?.scrollTop ?? sourceScrollArea.scrollTop;
+    const preservedScrollLeft = pdfViewState?.scrollLeft ?? sourceScrollArea.scrollLeft;
     viewportAssignments.delete(sourceSide);
-    targetViewport.replaceChildren();
-    sourceViewport.replaceChildren();
-    targetViewport.append(...sourceNodes);
+    targetScrollArea.replaceChildren();
+    sourceScrollArea.replaceChildren();
+    targetScrollArea.append(...sourceNodes);
     targetViewport.dataset.fileName = sourceName;
     delete sourceViewport.dataset.fileName;
-    sourceViewport.scrollTop = 0;
-    sourceViewport.scrollLeft = 0;
-    targetViewport.scrollTop = 0;
-    targetViewport.scrollLeft = 0;
+    sourceScrollArea.scrollTop = 0;
+    sourceScrollArea.scrollLeft = 0;
+    targetScrollArea.scrollTop = 0;
+    targetScrollArea.scrollLeft = 0;
 
     if (sourceAssignment) {
       sourceAssignment.viewportType = targetSide;
       viewportAssignments.set(targetSide, sourceAssignment);
     }
 
-    ensureViewportObserver(sourceSide, sourceViewport);
-    ensureViewportObserver(targetSide, targetViewport);
+    ensureViewportObserver(sourceSide, sourceScrollArea);
+    ensureViewportObserver(targetSide, targetScrollArea);
 
     if (sourceAssignment?.kind === "pdf") {
       try {
@@ -568,7 +577,7 @@ window.LuxOmniViewportBridge = {
           blob: sourceAssignment.editedBlob || sourceAssignment.blob,
           fileName: sourceAssignment.fileData?.name || sourceName,
           viewportType: targetSide,
-          scrollContainer: targetViewport,
+          scrollContainer: targetScrollArea,
           toolbarContainer: getViewportToolbarElement(targetSide),
           initiallyDirty: Boolean(sourceAssignment.hasPdfEdits),
           viewState: pdfViewState,
@@ -581,10 +590,10 @@ window.LuxOmniViewportBridge = {
           }
         });
         if (viewportAssignments.get(targetSide) === sourceAssignment &&
-            targetViewport.contains(sourceAssignment.mount)) {
+            targetScrollArea.contains(sourceAssignment.mount)) {
           sourceAssignment.editor = pdfEditor;
-          targetViewport.scrollTop = Math.max(0, Number(preservedScrollTop) || 0);
-          targetViewport.scrollLeft = Math.max(0, Number(preservedScrollLeft) || 0);
+          targetScrollArea.scrollTop = Math.max(0, Number(preservedScrollTop) || 0);
+          targetScrollArea.scrollLeft = Math.max(0, Number(preservedScrollLeft) || 0);
         } else {
           await pdfEditor.dispose();
           sourceAssignment.editor = null;
