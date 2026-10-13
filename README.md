@@ -4,7 +4,6 @@ Lux Omni is a browser-based workspace created by **Luxraj Kayal (Subrata Kayal)*
 
 ## Current features
 
-- **Dropbox connection:** connect to Dropbox through the browser, browse supported files, and open a selected file.
 - **Workspace viewports:** open a full-screen viewport or a resizable split-screen layout; minimize, restore, or close viewports.
 - **YouTube playback:** load a YouTube video into a workspace viewport.
 - **Display controls:** switch between light and dark themes and enable Focus Mode.
@@ -12,7 +11,7 @@ Lux Omni is a browser-based workspace created by **Luxraj Kayal (Subrata Kayal)*
 
 ## Current application status
 
-The current build includes the interface and Dropbox integration. The PDF workspace still uses a browser preview placeholder; a complete PDF editing, annotation, and export engine is not connected. Features should be understood from the current implementation rather than assumed from the product name.
+The current build includes the workspace interface and browser-based tools. The PDF workspace still uses a browser preview placeholder; a complete PDF editing, annotation, and export engine is not connected. Features should be understood from the current implementation rather than assumed from the product name.
 
 ## Run locally
 
@@ -24,14 +23,12 @@ python3 -m http.server 8000 --directory site
 
 Then open [http://localhost:8000/](http://localhost:8000/).
 
-Dropbox authentication requires the redirect URI used by the local address to be allowed in the Dropbox app configuration. The integration uses a browser-based OAuth flow and requires a supported browser environment.
 
 ## Project files
 
 - `site/index.html` — main Lux Omni interface.
 - `site/app.js` — interface interactions, themes, Focus Mode, and viewport behavior.
 - `site/styles.css` — main interface styling.
-- `site/dropbox-integration.js` — Dropbox connection and file selection logic.
 - `site/clipboard.html` — standalone Lux Omni Clipboard page.
 - `site/privacy.html` — privacy policy for the current website.
 - `PROJECT-GOALS.md` — product requirements and development decisions.
