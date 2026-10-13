@@ -78,6 +78,11 @@ let browser;
 try {
   browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, acceptDownloads: true });
+  const nativeDialogs = [];
+  page.on("dialog", async (dialog) => {
+    nativeDialogs.push(dialog.type());
+    await dialog.dismiss();
+  });
   page.on("pageerror", (error) => browserErrors.push(error.message));
   page.on("requestfailed", (request) => {
     if (request.url().includes("cdn.jsdelivr.net")) {
@@ -102,28 +107,48 @@ try {
   assert.equal(
     await page.locator("#viewport-youtube-full, #viewport-youtube-left, #viewport-youtube-right").count(),
     0,
-    "YouTube actions should no longer occupy viewport toolbars"
+    "YouTube actions should not occupy viewport toolbars"
   );
-  const youtubeAnswers = ["https://youtu.be/dQw4w9WgXcQ", "right", "https://youtu.be/oHg5SJYRHA0"];
-  await page.evaluate((answers) => {
-    window.prompt = () => answers.shift() ?? null;
-  }, youtubeAnswers);
+
+  const youtubeTile = page.locator("#youtube-tile");
+  const youtubeUrl = page.locator("#youtube-video-url");
   await page.locator("#sidebar-youtube-button").click();
+  await youtubeTile.waitFor({ state: "visible", timeout: 3000 });
+  assert.equal(await youtubeTile.locator("[data-youtube-target]").count(), 3, "tile should show exactly three destination buttons");
+  assert.equal(await youtubeUrl.isVisible(), true, "tile should contain an in-page link field");
+  await youtubeUrl.fill("not a YouTube link");
+  await youtubeTile.locator('[data-youtube-target="full"]').click();
+  await page.locator("#youtube-tile-feedback").waitFor({ state: "visible", timeout: 3000 });
+  assert.equal(await page.locator('[data-viewport-side="full"] .viewport-youtube-frame').count(), 0, "invalid links must not switch the viewport");
+  await youtubeUrl.fill("https://youtu.be/dQw4w9WgXcQ");
+  await youtubeTile.locator('[data-youtube-target="full"]').click();
   const fullYoutubeFrame = page.locator('[data-viewport-side="full"] .viewport-youtube-frame');
   await fullYoutubeFrame.waitFor({ state: "attached", timeout: 5000 });
   assert.equal(await fullYoutubeFrame.getAttribute("src"), "https://www.youtube.com/embed/dQw4w9WgXcQ");
-  await page.locator("#viewport-split-screen").click();
+  assert.equal(await youtubeTile.evaluate((element) => element.hidden), true, "tile should close after choosing a destination");
+
   await page.locator("#sidebar-youtube-button").click();
+  await youtubeUrl.fill("https://www.youtube.com/watch?v=oHg5SJYRHA0");
+  await youtubeTile.locator('[data-youtube-target="left"]').click();
+  const leftYoutubeFrame = page.locator('[data-viewport-side="left"] .viewport-youtube-frame');
+  await leftYoutubeFrame.waitFor({ state: "attached", timeout: 5000 });
+  assert.equal(await leftYoutubeFrame.getAttribute("src"), "https://www.youtube.com/embed/oHg5SJYRHA0");
+
+  await page.locator("#sidebar-youtube-button").click();
+  await youtubeUrl.fill("https://www.youtube.com/shorts/M7lc1UVf-VE");
+  await youtubeTile.locator('[data-youtube-target="right"]').click();
   const rightYoutubeFrame = page.locator('[data-viewport-side="right"] .viewport-youtube-frame');
   await rightYoutubeFrame.waitFor({ state: "attached", timeout: 5000 });
-  assert.equal(await rightYoutubeFrame.getAttribute("src"), "https://www.youtube.com/embed/oHg5SJYRHA0");
-  assert.equal(
-    await page.locator('[data-viewport-side="left"] .viewport-youtube-frame').count(),
-    0,
-    "Split Screen YouTube action should target the selected pane only"
-  );
-  await page.locator("#viewport-fullscreen").click();
-  console.log("PASS: the YouTube icon lives in the sidebar and targets Full Screen or the selected split pane.");
+  assert.equal(await rightYoutubeFrame.getAttribute("src"), "https://www.youtube.com/embed/M7lc1UVf-VE");
+
+  await page.locator("#sidebar-youtube-button").click();
+  await youtubeUrl.fill("https://youtu.be/dQw4w9WgXcQ");
+  await youtubeTile.locator('[data-youtube-target="full"]').click();
+  await fullYoutubeFrame.waitFor({ state: "attached", timeout: 5000 });
+  assert.equal(nativeDialogs.length, 0, "YouTube workflow must not open native browser dialogs");
+  console.log("PASS: YouTube opens an in-page tile with a link field and exactly three destination buttons.");
+  console.log("PASS: Left, Right, and Full Screen load the chosen URL into the correct viewport.");
+  console.log("PASS: invalid links show inline feedback and no native browser dialogs are opened.");
 
   const sidebarBefore = await page.locator("#sidebar").evaluate((element) => ({
     width: element.getBoundingClientRect().width,
