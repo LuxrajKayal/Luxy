@@ -40,16 +40,18 @@ function ensureViewerStylesheet() {
 
 function loadPdfJsModules() {
   if (!pdfjsModulesPromise) {
-    pdfjsModulesPromise = Promise.all([
-      import(PDFJS_BASE + "/build/pdf.mjs"),
-      import(PDFJS_BASE + "/web/pdf_viewer.mjs")
-    ]).then(([pdfjsLib, pdfjsViewer]) => {
+    pdfjsModulesPromise = (async () => {
+      const pdfjsLib = await import(PDFJS_BASE + "/build/pdf.mjs");
+      // The distribution viewer components read the public core API from this namespace.
+      // Assign it before importing the viewer module; parallel imports can race during module evaluation.
+      globalThis.pdfjsLib = pdfjsLib;
+      const pdfjsViewer = await import(PDFJS_BASE + "/web/pdf_viewer.mjs");
       if (!pdfjsLib.getDocument || !pdfjsViewer.PDFViewer) {
         throw new Error("The pinned Mozilla PDF.js build did not expose the viewer APIs Lux Omni requires.");
       }
       pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_BASE + "/build/pdf.worker.mjs";
       return { pdfjsLib, pdfjsViewer };
-    }).catch((error) => {
+    })().catch((error) => {
       pdfjsModulesPromise = null;
       throw error;
     });
