@@ -8,7 +8,7 @@ Lux Omni is a browser-based workspace created by **Luxraj Kayal (Subrata Kayal)*
 - **Workspace viewports:** open a full-screen viewport or a resizable split-screen layout; minimize, restore, or close viewports.
 - **YouTube playback:** load a YouTube video into a workspace viewport.
 - **Display controls:** switch between light and dark themes and enable Focus Mode.
-- **Lux Omni Clipboard:** type or paste plain text, copy it, clear it, or download it as a `.txt` file.
+- **Lux Omni Clipboard:** switch between Text Clipboard, Screenshot Clipboard, and Log List; edit and copy text, paste or choose an image to preview and copy, and import entries from the ten most recent text/image copy actions stored locally in the browser.
 
 ## Current application status
 
