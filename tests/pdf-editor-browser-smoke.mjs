@@ -88,9 +88,42 @@ try {
     if (message.type() === "error") browserErrors.push(message.text());
   });
 
+  await page.route("https://www.youtube.com/embed/**", (route) => route.fulfill({
+    status: 200,
+    contentType: "text/html; charset=utf-8",
+    body: "<!doctype html><title>Embedded YouTube smoke test</title>"
+  }));
+
   const response = await page.goto(baseUrl, { waitUntil: "load", timeout: 30000 });
   assert.equal(response?.status(), 200, "Lux Omni index should load successfully");
   await page.waitForFunction(() => typeof window.LuxOmniViewportBridge?.exportEditedBlob === "function", null, { timeout: 15000 });
+
+  assert.equal(await page.locator("#sidebar-youtube-button").count(), 1, "YouTube action should live in the sidebar");
+  assert.equal(
+    await page.locator("#viewport-youtube-full, #viewport-youtube-left, #viewport-youtube-right").count(),
+    0,
+    "YouTube actions should no longer occupy viewport toolbars"
+  );
+  const youtubeAnswers = ["https://youtu.be/dQw4w9WgXcQ", "right", "https://youtu.be/oHg5SJYRHA0"];
+  await page.evaluate((answers) => {
+    window.prompt = () => answers.shift() ?? null;
+  }, youtubeAnswers);
+  await page.locator("#sidebar-youtube-button").click();
+  const fullYoutubeFrame = page.locator('[data-viewport-side="full"] .viewport-youtube-frame');
+  await fullYoutubeFrame.waitFor({ state: "attached", timeout: 5000 });
+  assert.equal(await fullYoutubeFrame.getAttribute("src"), "https://www.youtube.com/embed/dQw4w9WgXcQ");
+  await page.locator("#viewport-split-screen").click();
+  await page.locator("#sidebar-youtube-button").click();
+  const rightYoutubeFrame = page.locator('[data-viewport-side="right"] .viewport-youtube-frame');
+  await rightYoutubeFrame.waitFor({ state: "attached", timeout: 5000 });
+  assert.equal(await rightYoutubeFrame.getAttribute("src"), "https://www.youtube.com/embed/oHg5SJYRHA0");
+  assert.equal(
+    await page.locator('[data-viewport-side="left"] .viewport-youtube-frame').count(),
+    0,
+    "Split Screen YouTube action should target the selected pane only"
+  );
+  await page.locator("#viewport-fullscreen").click();
+  console.log("PASS: the YouTube icon lives in the sidebar and targets Full Screen or the selected split pane.");
 
   const sidebarBefore = await page.locator("#sidebar").evaluate((element) => ({
     width: element.getBoundingClientRect().width,

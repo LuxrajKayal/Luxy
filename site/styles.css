@@ -364,32 +364,7 @@ body[data-focus-mode="true"] .workspace-shell {
   padding: 0 8px;
 }
 
-.viewport-youtube-button {
-  display: grid;
-  width: 30px;
-  height: 26px;
-  flex: 0 0 30px;
-  place-items: center;
-  margin-right: auto;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  background: transparent;
-  cursor: pointer;
-  transition: background-color 140ms ease, border-color 140ms ease;
-}
-
-.viewport-youtube-button:hover {
-  border-color: rgb(255 0 51 / 20%);
-  background: rgb(255 255 255 / 55%);
-}
-
-.viewport-youtube-button:focus-visible {
-  outline: 2px solid #dc2626;
-  outline-offset: 2px;
-}
-
-.viewport-youtube-button svg {
+.youtube-sidebar-button svg {
   display: block;
   width: 20px;
   height: 15px;

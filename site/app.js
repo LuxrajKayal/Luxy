@@ -26,9 +26,7 @@ const splitViewportDivider = document.querySelector("#viewport-split-divider");
 const viewportMinimizeFullButton = document.querySelector("#viewport-minimize-full");
 const viewportMinimizeLeftButton = document.querySelector("#viewport-minimize-left");
 const viewportMinimizeRightButton = document.querySelector("#viewport-minimize-right");
-const viewportYoutubeFullButton = document.querySelector("#viewport-youtube-full");
-const viewportYoutubeLeftButton = document.querySelector("#viewport-youtube-left");
-const viewportYoutubeRightButton = document.querySelector("#viewport-youtube-right");
+const sidebarYoutubeButton = document.querySelector("#sidebar-youtube-button");
 
 const THEME_STORAGE_KEY = "lux-pdf-viewer-theme";
 const FOCUS_MODE_STORAGE_KEY = "lux-pdf-viewer-focus-mode";
@@ -535,9 +533,37 @@ function loadYoutubeVideoIntoViewport(requestedSide) {
   viewport.scrollTop = 0;
 }
 
-viewportYoutubeFullButton?.addEventListener("click", () => loadYoutubeVideoIntoViewport("full"));
-viewportYoutubeLeftButton?.addEventListener("click", () => loadYoutubeVideoIntoViewport("left"));
-viewportYoutubeRightButton?.addEventListener("click", () => loadYoutubeVideoIntoViewport("right"));
+sidebarYoutubeButton?.addEventListener("click", () => {
+  if (activeViewportMode === "split") {
+    const selectedSide = window.prompt(
+      "Which viewport should receive the YouTube video? Enter left or right:",
+      "left"
+    );
+    if (selectedSide === null) return;
+
+    const side = selectedSide.trim().toLowerCase();
+    if (side !== "left" && side !== "right") {
+      window.alert("Please enter left or right.");
+      return;
+    }
+
+    loadYoutubeVideoIntoViewport(side);
+    return;
+  }
+
+  if (activeViewportMode === "solo" && soloSplitSide) {
+    loadYoutubeVideoIntoViewport(soloSplitSide);
+    return;
+  }
+
+  if (activeViewportMode === "full") {
+    loadYoutubeVideoIntoViewport("full");
+    return;
+  }
+
+  setViewportMode("full");
+  loadYoutubeVideoIntoViewport("full");
+});
 
 // Resize the two split viewports by dragging the narrow vertical divider.
 function setSplitViewportRatio(ratio) {
