@@ -239,8 +239,10 @@ try {
   const pdfPage = page.locator(".pdfViewer .page").first();
   const bounds = await pdfPage.boundingBox();
   assert.ok(bounds && bounds.width > 100 && bounds.height > 100, "PDF page should have a measurable rendered size");
-  // Locator clicks scroll the target into view before dispatching pointer events.
-  // That is important now that the viewport-owned scroller can clip large pages.
+  await page.evaluate(() => {
+    const host = document.querySelector('[data-viewport-side="full"] .lux-dropbox-preview');
+    host?.shadowRoot?.addEventListener("click", () => { window.__luxPdfShadowClickSeen = true; }, { once: true });
+  });
   await pdfPage.click({
     position: { x: Math.min(150, bounds.width * 0.3), y: Math.min(180, bounds.height * 0.3) }
   });
@@ -257,6 +259,13 @@ try {
     };
     return {
       textToolPressed: document.querySelector('[data-viewport-tools="full"] [data-pdf-command="text"]')?.getAttribute("aria-pressed"),
+      shadowClickSeen: Boolean(window.__luxPdfShadowClickSeen),
+      pointHit: (() => {
+        if (!shadow || !page) return null;
+        const box = page.getBoundingClientRect();
+        const hit = shadow.elementFromPoint(box.x + Math.min(150, box.width * 0.3), box.y + Math.min(180, box.height * 0.3));
+        return hit ? { tag: hit.tagName, className: String(hit.className?.baseVal || hit.className || "") } : null;
+      })(),
       toolbarStatus: document.querySelector('[data-viewport-tools="full"] .lux-pdf-status')?.textContent,
       scroll: scrollArea ? { top: scrollArea.scrollTop, left: scrollArea.scrollLeft, width: scrollArea.clientWidth, height: scrollArea.clientHeight, scrollWidth: scrollArea.scrollWidth, scrollHeight: scrollArea.scrollHeight } : null,
       page: rect(page),
