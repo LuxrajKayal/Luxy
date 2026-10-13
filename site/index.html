@@ -27,11 +27,13 @@
     }
   </script>
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./dropbox-ui.css">
   <link rel="stylesheet" href="./snipping-tool.css">
   <link rel="stylesheet" href="./temporary-log.css">
   <script type="module" src="./app.js"></script>
   <script type="module" src="./snipping-tool.js"></script>
   <script type="module" src="./temporary-log.js"></script>
+  <script type="module" src="./dropbox-ui.js"></script>
 </head>
 <body data-focus-mode="false">
   <script>
@@ -54,11 +56,19 @@
     </a>
 
     <div class="topbar-actions">
-      <button id="dropbox-topbar-button" class="dropbox-topbar-button" type="button" aria-label="Dropbox" title="Dropbox">
+      <button id="dropbox-topbar-button" class="dropbox-topbar-button" type="button" aria-label="Dropbox disconnected" title="Open Dropbox">
         <svg class="dropbox-topbar-logo" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M7.2 2.8 2.4 5.9l4.8 3 4.8-3-4.8-3Zm9.6 0L12 5.9l4.8 3 4.8-3-4.8-3ZM7.2 9l-4.8 3 4.8 3 4.8-3-4.8-3Zm9.6 0L12 12l4.8 3 4.8-3-4.8-3-4.8 3 4.8 3 4.8-3-4.8-3ZM7.2 15.2l4.8 3 4.8-3-4.8-3-4.8 3Z"/>
-          </svg>
-        <span class="dropbox-topbar-label">Dropbox</span>
+          <path d="M7.2 2.8 2.4 5.9l4.8 3 4.8-3-4.8-3Zm9.6 0L12 5.9l4.8 3 4.8-3-4.8-3ZM7.2 9l-4.8 3 4.8 3 4.8-3-4.8-3Zm9.6 0L12 12l4.8 3 4.8-3-4.8-3-4.8 3 4.8 3 4.8-3-4.8-3ZM7.2 15.2l4.8 3 4.8-3-4.8-3-4.8 3Z"/>
+        </svg>
+        <span id="dropbox-status-indicator" class="dropbox-topbar-label" data-state="disconnected">Disconnected 🔴</span>
+      </button>
+      <button id="dropbox-sync-button" class="dropbox-ui-action dropbox-ui-sync" type="button" title="Save current viewport edits to Dropbox" aria-label="Sync edits to Dropbox" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9A6.5 6.5 0 0 1 17 6l3 6M4 12l3 6a6.5 6.5 0 0 0 10.9-3"/></svg>
+        <span class="dropbox-ui-action-label">Sync</span>
+      </button>
+      <button id="dropbox-disconnect-button" class="dropbox-ui-action dropbox-ui-disconnect" type="button" title="Disconnect Dropbox" aria-label="Disconnect Dropbox" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6V3h6v3M4 6h16M7 6l1 15h8l1-15M10 10v7M14 10v7"/></svg>
+        <span class="dropbox-ui-action-label">Disconnect</span>
       </button>
       <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode" aria-pressed="false">
         <svg class="theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
@@ -267,6 +277,56 @@
     </section>
   </div>
   <div id="lux-snip-notice" role="status" aria-live="polite" hidden></div>
+
+  <div id="dropbox-file-manager" class="dropbox-ui-modal" role="dialog" aria-modal="true" aria-labelledby="dropbox-file-manager-title" aria-describedby="dropbox-file-manager-status" hidden>
+    <div class="dropbox-ui-backdrop" data-dropbox-ui-close></div>
+    <section class="dropbox-ui-dialog" role="document">
+      <header class="dropbox-ui-header">
+        <div class="dropbox-ui-heading">
+          <h2 id="dropbox-file-manager-title">Dropbox Files</h2>
+          <p id="dropbox-current-location" class="dropbox-current-location">My Dropbox</p>
+        </div>
+        <div class="dropbox-ui-header-actions">
+          <input id="dropbox-upload-input" class="dropbox-ui-file-input" type="file" aria-label="Choose a file to upload">
+          <label class="dropbox-ui-upload-button" for="dropbox-upload-input" title="Upload a file from this device">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4m-5 5 5-5 5 5"/><path d="M4 16v4h16v-4"/></svg>
+            <span>Upload File</span>
+          </label>
+          <button id="dropbox-file-manager-close" class="dropbox-ui-close" type="button" aria-label="Close Dropbox Files" title="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+      </header>
+      <div class="dropbox-ui-navigation">
+        <button id="dropbox-folder-back" class="dropbox-ui-back" type="button" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 5-7 7 7 7M7 12h14"/></svg>
+          <span>Back</span>
+        </button>
+        <span class="dropbox-ui-navigation-hint">Choose a file, or open a folder to browse its contents.</span>
+      </div>
+      <p id="dropbox-file-manager-status" class="dropbox-ui-status" role="status" aria-live="polite">Checking Dropbox connection…</p>
+      <div class="dropbox-ui-list-wrap">
+        <ul id="dropbox-file-list" class="dropbox-ui-file-list" aria-label="Dropbox files and folders"></ul>
+        <div id="dropbox-empty-state" class="dropbox-ui-empty" hidden>
+          <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 14.5A3.5 3.5 0 0 1 10.5 11H20l4 4h13.5A3.5 3.5 0 0 1 41 18.5v18a3.5 3.5 0 0 1-3.5 3.5h-27A3.5 3.5 0 0 1 7 36.5Z"/></svg>
+          <strong>This folder is empty</strong>
+          <span>Upload a file or go back to another folder.</span>
+        </div>
+      </div>
+      <footer id="dropbox-selection-actions" class="dropbox-ui-selection" hidden>
+        <div class="dropbox-ui-selected-copy">
+          <span class="dropbox-ui-selected-label">Selected file</span>
+          <strong id="dropbox-selected-name">No file selected</strong>
+        </div>
+        <div class="dropbox-ui-viewport-actions">
+          <button id="dropbox-add-left" type="button">Add to Left Viewport</button>
+          <button id="dropbox-add-right" type="button">Add to Right Viewport</button>
+          <button id="dropbox-add-full" type="button">Add to Full Viewport</button>
+        </div>
+      </footer>
+    </section>
+  </div>
+  <div id="dropbox-ui-toast" class="dropbox-ui-toast" role="status" aria-live="polite" hidden></div>
 
   <footer class="site-footer"><a href="./privacy.html">Privacy Policy</a></footer>
 </body>
