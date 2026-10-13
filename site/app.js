@@ -247,13 +247,7 @@ function getViewportFileName(side) {
   const explicitName = viewport?.dataset.fileName?.trim();
   const headingName = viewport?.querySelector(".pdf-preview-heading")?.textContent?.trim();
   const ariaName = viewport?.getAttribute("aria-label")?.trim();
-  let activeFileName = "";
-  try {
-    activeFileName = window.LuxDropboxIntegration?.getActiveFile?.()?.fileName?.trim() || "";
-  } catch {
-    // The viewport can still be minimized before a cloud file is connected.
-  }
-  return explicitName || headingName || ariaName || activeFileName || "Untitled";
+  return explicitName || headingName || ariaName || "Untitled";
 }
 
 function renderMinimizedViewportDock() {
@@ -456,22 +450,12 @@ function restoreMinimizedViewport(side) {
   renderViewportComposition();
 }
 
-function clearActiveDropboxDocument() {
-  const integration = window.LuxDropboxIntegration;
-  if (integration && typeof integration.discardActiveFile === "function") {
-    return integration.discardActiveFile() !== false;
-  }
-  return true;
-}
-
 function closeFullScreenViewport() {
   if (activeViewportMode === "solo" && soloSplitSide) {
     closeSplitViewport(soloSplitSide);
     return;
   }
   if (activeViewportMode !== "full" || !window.confirm("Discard documents?")) return;
-  if (!clearActiveDropboxDocument()) return;
-
   getViewportElement("full")?.replaceChildren();
   activeViewportMode = null;
   soloSplitSide = null;
@@ -483,8 +467,6 @@ function closeSplitViewport(side) {
   const isSplit = activeViewportMode === "split";
   const isCurrentSoloSide = activeViewportMode === "solo" && soloSplitSide === side;
   if ((!isSplit && !isCurrentSoloSide) || !window.confirm("Discard documents?")) return;
-  if (!clearActiveDropboxDocument()) return;
-
   getViewportElement(side)?.replaceChildren();
   minimizedViewportStates.delete(side);
 
