@@ -92,11 +92,27 @@ try {
   assert.equal(response?.status(), 200, "Lux Omni index should load successfully");
   await page.waitForFunction(() => typeof window.LuxOmniViewportBridge?.exportEditedBlob === "function", null, { timeout: 15000 });
 
-  const sidebarBefore = await page.locator("#sidebar").evaluate((element) => ({
-    width: element.getBoundingClientRect().width,
-    position: getComputedStyle(element).position,
-    innerWidth: element.querySelector(".sidebar-inner")?.getBoundingClientRect().width
-  }));
+  const readSidebarGeometry = async () => page.evaluate(() => {
+    const sidebar = document.querySelector("#sidebar");
+    const inner = sidebar?.querySelector(".sidebar-inner");
+    const toggleRow = document.querySelector(".sidebar-toggle-row");
+    const sidebarStyle = getComputedStyle(sidebar);
+    const innerStyle = getComputedStyle(inner);
+    const toggleStyle = getComputedStyle(toggleRow);
+    return {
+      sidebarWidth: sidebar?.getBoundingClientRect().width,
+      sidebarInnerWidth: inner?.getBoundingClientRect().width,
+      sidebarBackground: sidebarStyle.backgroundColor,
+      sidebarColor: sidebarStyle.color,
+      sidebarBorderRightColor: sidebarStyle.borderRightColor,
+      sidebarPosition: sidebarStyle.position,
+      innerBackground: innerStyle.backgroundColor,
+      toggleRowWidth: toggleRow?.getBoundingClientRect().width,
+      toggleRowBackground: toggleStyle.backgroundColor,
+      sidebarOpenState: document.documentElement.getAttribute("data-sidebar-open")
+    };
+  });
+  const sidebarBefore = await readSidebarGeometry();
   const pdfBytes = makeOnePagePdf();
   const assignment = await page.evaluate(async (numericBytes) => {
     const requestId = "pdfjs-smoke-" + Date.now();
@@ -135,15 +151,13 @@ try {
     return host?.shadowRoot?.querySelectorAll(".pdfViewer .page").length === 1;
   }, null, { timeout: 15000 });
 
-  const sidebarAfter = await page.locator("#sidebar").evaluate((element) => ({
-    width: element.getBoundingClientRect().width,
-    position: getComputedStyle(element).position,
-    innerWidth: element.querySelector(".sidebar-inner")?.getBoundingClientRect().width
-  }));
-  assert.deepEqual(sidebarAfter, sidebarBefore, "loading the PDF.js viewer must not change the Lux Omni sidebar geometry");
-  assert.equal(sidebarAfter.width, 68, "the desktop compact sidebar must retain its original 68px width");
+  const sidebarAfter = await readSidebarGeometry();
+  assert.deepEqual(sidebarAfter, sidebarBefore, "opening the Full Screen viewport must not change sidebar appearance or geometry");
+  assert.equal(sidebarAfter.sidebarWidth, 68, "the desktop compact sidebar must retain its original 68px width");
+  console.log("SIDEBAR BEFORE OPEN:", JSON.stringify(sidebarBefore));
+  console.log("SIDEBAR WHILE OPEN:", JSON.stringify(sidebarAfter));
   console.log("PASS: generated PDF rendered through PDF.js inside the Lux Omni viewport.");
-  console.log("PASS: PDF.js styles do not alter the previous 68px sidebar width or geometry.");
+  console.log("PASS: PDF.js styles do not alter sidebar width, color, or geometry.");
 
   const pageCount = await page.locator(".lux-pdf-page-count").textContent();
   assert.match(pageCount || "", /of 1$/, "page count should be correct");
@@ -193,6 +207,25 @@ try {
   ]);
   assert.match(download.suggestedFilename(), /\.pdf$/i, "Save PDF should download a .pdf file");
   console.log("PASS: Save PDF initiates a PDF download.");
+
+  // Reproduce the reported sequence: confirm discarding the full-screen viewport,
+  // then inspect the sidebar after the overlay has been hidden and the layout settles.
+  page.once("dialog", async (dialog) => {
+    assert.equal(dialog.message(), "Discard documents?");
+    await dialog.accept();
+  });
+  await page.locator("#viewport-close-full").click();
+  await page.waitForFunction(() => document.querySelector("#viewport-composition")?.hidden === true, null, { timeout: 15000 });
+  await page.waitForTimeout(300);
+  const sidebarAfterClose = await readSidebarGeometry();
+  console.log("SIDEBAR AFTER CLOSE:", JSON.stringify(sidebarAfterClose));
+  assert.deepEqual(
+    sidebarAfterClose,
+    sidebarBefore,
+    "closing/discarding the Full Screen viewport must restore the original sidebar color and geometry"
+  );
+  assert.equal(sidebarAfterClose.sidebarWidth, 68, "sidebar width after Full Screen close must remain 68px");
+  console.log("PASS: closing Full Screen preserves the sidebar width, color, border, and open state.");
 
   if (browserErrors.length || networkFailures.length) {
     throw new Error("Browser errors:\n" + browserErrors.join("\n") + "\nCDN request failures:\n" + networkFailures.join("\n"));
