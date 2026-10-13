@@ -398,7 +398,7 @@ async function renderAssignment(detail) {
 
   if (needsPdfMount) {
     try {
-      assignment.editor = await mountPdfEditor({
+      const pdfEditor = await mountPdfEditor({
         root: mount,
         blob: previewBlob,
         fileName,
@@ -411,6 +411,11 @@ async function renderAssignment(detail) {
           assignment.hasPdfEdits = true;
         }
       });
+      if (viewportAssignments.get(viewportType) !== assignment || !viewport.contains(mount)) {
+        await pdfEditor.dispose();
+        return;
+      }
+      assignment.editor = pdfEditor;
     } catch (error) {
       const errorPanel = document.createElement("div");
       errorPanel.className = "lux-pdf-load-error";
