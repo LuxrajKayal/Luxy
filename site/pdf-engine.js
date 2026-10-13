@@ -30,6 +30,7 @@ function ensureViewerStylesheet() {
     }, { once: true });
     link.addEventListener("error", () => {
       stylesheetPromise = null;
+      link.remove();
       reject(new Error("Mozilla PDF.js viewer styles could not be loaded."));
     }, { once: true });
     document.head.append(link);
