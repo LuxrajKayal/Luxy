@@ -31,13 +31,14 @@ test("PDF iframe path is removed while other viewport previews remain independen
   assert.match(renderer, /kind === "image"/);
   assert.match(renderer, /kind === "markdown" \|\| kind === "text"/);
   assert.match(bridge, /const viewportAssignments = new Map\(\)/);
-  assert.match(bridge, /assignment\.editor\?\.dispose/);
+  assert.match(bridge, /assignment\?\.editor\?\.dispose/);
 });
 
 test("annotation toolbar connects to PDF.js editor modes", () => {
-  for (const mode of ["HIGHLIGHT", "INK", "FREETEXT", "STAMP"]) {
+  for (const mode of ["HIGHLIGHT", "INK", "FREETEXT"]) {
     assert.ok(engine.includes("AnnotationEditorType." + mode), "missing editor mode " + mode);
   }
+  assert.match(engine, /setEditorMode\("STAMP", "stamp"\)/);
   assert.match(engine, /AnnotationEditorType\.SIGNATURE/);
   assert.match(engine, /pdfViewer\.annotationEditorMode = \{ mode: chosenMode \}/);
   assert.match(engine, /scrollContainer\.addEventListener\("input", markDirty, true\)/);
