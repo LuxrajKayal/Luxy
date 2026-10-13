@@ -536,9 +536,8 @@ export async function handleSync() {
     const isOriginalBlob = editedBlob === source.originalBlob;
     if (isOriginalBlob) {
       const confirmed = window.confirm(
-        "This viewport currently contains a read-only preview and cannot export PDF edits. " +
-        "Continuing will upload the original, unchanged file bytes to test the Dropbox upload API; " +
-        "it will not save edits made inside the browser preview. Continue?"
+        "This viewport has no edited document bytes ready to save. Continuing will upload the original, unchanged file bytes as a Dropbox API test; " +
+        "it will not save edits from a read-only preview. Continue?"
       );
       if (!confirmed) {
         setToast("Sync cancelled. The read-only preview did not export edits.", "info");

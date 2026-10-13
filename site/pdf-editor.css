@@ -1,0 +1,146 @@
+/* Lux Omni PDF.js workspace and annotation toolbar. */
+.lux-pdf-editor-root {
+  display: flex !important;
+  min-width: 0;
+  min-height: 0 !important;
+  padding: 0;
+}
+.lux-pdf-editor {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  color: #172033;
+  background: #e9edf3;
+  font: 13px/1.4 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.lux-pdf-toolbar {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 8px;
+  border-bottom: 1px solid #cbd3df;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 6%);
+}
+.lux-pdf-toolbar-group {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 3px;
+  padding-right: 6px;
+  border-right: 1px solid #e1e6ee;
+}
+.lux-pdf-toolbar-group:last-of-type { border-right: 0; }
+.lux-pdf-tool {
+  display: inline-flex;
+  min-height: 32px;
+  min-width: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: #273449;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.lux-pdf-tool:hover:not(:disabled) { border-color: #cbd5e1; background: #f3f6fa; }
+.lux-pdf-tool:focus-visible,
+.lux-pdf-page-input:focus-visible,
+.lux-pdf-search-input:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+.lux-pdf-tool.is-active,
+.lux-pdf-tool[aria-pressed="true"] { border-color: #93b4fa; color: #1646a0; background: #eaf1ff; }
+.lux-pdf-tool:disabled { opacity: .42; cursor: not-allowed; }
+.lux-pdf-save-button { border-color: #bfcee7; background: #f5f8ff; font-weight: 650; }
+.lux-pdf-page-input {
+  width: 44px;
+  min-height: 30px;
+  padding: 4px;
+  border: 1px solid #ccd4e0;
+  border-radius: 5px;
+  color: #172033;
+  background: #fff;
+  font: inherit;
+  text-align: center;
+}
+.lux-pdf-page-count,
+.lux-pdf-zoom-value { color: #4b5568; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.lux-pdf-zoom-value { min-width: 42px; text-align: center; }
+.lux-pdf-search-controls { flex: 1 1 180px; }
+.lux-pdf-search-input {
+  width: min(100%, 150px);
+  min-width: 68px;
+  min-height: 30px;
+  padding: 4px 8px;
+  border: 1px solid #ccd4e0;
+  border-radius: 5px;
+  color: #172033;
+  background: #fff;
+  font: inherit;
+}
+.lux-pdf-status {
+  flex: 1 1 150px;
+  min-width: 80px;
+  color: #526077;
+  font-size: 12px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.lux-pdf-status[data-state="dirty"] { color: #a16207; font-weight: 650; }
+.lux-pdf-status[data-state="saved"] { color: #187244; }
+.lux-pdf-status[data-state="error"] { color: #b42318; }
+.lux-pdf-viewer-container {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: #e9edf3;
+  scrollbar-gutter: stable;
+}
+.lux-pdf-viewer-container > .pdfViewer {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+  padding: 16px 0 24px;
+  box-sizing: border-box;
+}
+.lux-pdf-viewer-container.is-hand-tool { cursor: grab; user-select: none; }
+.lux-pdf-viewer-container.is-panning { cursor: grabbing; }
+.lux-pdf-viewer-container.is-hand-tool .textLayer,
+.lux-pdf-viewer-container.is-hand-tool .annotationLayer,
+.lux-pdf-viewer-container.is-hand-tool .annotationEditorLayer { pointer-events: none; }
+.lux-pdf-editor .pdfViewer .page {
+  margin: 0 auto 16px;
+  border: 1px solid #cbd3df;
+  box-shadow: 0 4px 16px rgb(15 23 42 / 14%);
+}
+@media (max-width: 760px) {
+  .lux-pdf-toolbar { gap: 4px; padding: 6px; }
+  .lux-pdf-toolbar-group { gap: 2px; padding-right: 4px; }
+  .lux-pdf-tool { min-height: 30px; min-width: 29px; padding: 4px 6px; font-size: 12px; }
+  .lux-pdf-search-controls { flex: 1 1 140px; }
+  .lux-pdf-search-input { width: 100%; flex: 1 1 auto; }
+  .lux-pdf-status { flex-basis: 100%; text-align: left; }
+}
+@media (max-width: 460px) {
+  .lux-pdf-toolbar { align-items: stretch; }
+  .lux-pdf-toolbar-group { flex-wrap: wrap; }
+  .lux-pdf-toolbar-group .lux-pdf-tool { padding-inline: 6px; }
+  .lux-pdf-zoom-value { display: none; }
+}

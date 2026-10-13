@@ -21,13 +21,13 @@
   </header>
   <p>Lux Omni (“Luxy”) is a browser-based project maintained by Luxraj Kayal (Subrata Kayal). It includes a browser-based workspace, local clipboard tools, and an optional Dropbox connection. Dropbox access is initiated only when you use the Dropbox controls. This policy explains how the website handles information when you use it.</p>
 
-
-
   <section>
     <h2>Where information is processed and stored</h2>
     <ul>
       <li>Luxy is a static website hosted through GitHub Pages. The current application does not send document contents to a Luxy-operated application server or store them in a Luxy-operated database.</li>
-      <li>When you connect Dropbox, its short-lived access token and OAuth flow values are held in this browser's <code>localStorage</code> for this site origin, so the connection can be recognized across tabs while the token remains valid. The integration requests Dropbox API access to list folders, download files you select, and upload files you explicitly choose. These browser-stored values are not sent to a Lux Omni-operated server.</li>
+      <li>When you connect Dropbox, its short-lived access token and OAuth flow values are held in this browser's localStorage for this site origin, so the connection can be recognized across tabs while the token remains valid. The integration requests Dropbox API access to list folders, download files you select, and upload files you explicitly choose. These browser-stored values are not sent to a Lux Omni-operated server.</li>
+      <li>When you open a PDF, the browser loads the pinned Mozilla PDF.js 6.4.299 JavaScript modules, styles, worker, and supporting assets from the versioned jsDelivr CDN. Your selected PDF bytes are passed to the PDF.js engine in the browser; they are not uploaded to the CDN by Lux Omni. Requests to jsDelivr disclose ordinary connection metadata to that service, and the PDF editor depends on the CDN being reachable.</li>
+      <li>PDF annotations and form changes remain in the browser until you export/download the PDF or choose Dropbox Sync. PDF.js serializes supported edits into a new PDF byte stream in the browser. Dropbox Sync uploads those edited bytes directly to Dropbox using the source file revision to detect conflicting changes.</li>
       <li>Lux Omni Clipboard history is stored locally in this browser using IndexedDB. You can clear this history from the clipboard page or clear this website's browser data.</li>
     </ul>
   </section>
@@ -40,12 +40,12 @@
 
   <section>
     <h2>Third-party services</h2>
-    <p>Luxy is hosted on GitHub Pages. If you connect Dropbox, your browser communicates directly with Dropbox for authorization and file API requests. If you use the YouTube workspace tool, content is provided by YouTube and is subject to its applicable terms and privacy policy.</p>
+    <p>Luxy is hosted on GitHub Pages. If you connect Dropbox, your browser communicates directly with Dropbox for authorization and file API requests. When you open a PDF, your browser also requests the pinned Mozilla PDF.js distribution and supporting assets from jsDelivr. If you use the YouTube workspace tool, content is provided by YouTube and is subject to its applicable terms and privacy policy.</p>
   </section>
 
   <section>
     <h2>Your choices and security</h2>
-    <p>Use the website only in browsers and on devices you trust. Browser localStorage is readable by JavaScript running on this site, so keep your browser and device secure. Disconnect Dropbox in Lux Omni to clear stored credentials and request token revocation from Dropbox; you can also remove Lux Omni from your Dropbox connected-app settings. The Dropbox viewport bridge previews PDFs and common images, renders Markdown using a basic first-party renderer, and displays common text/code files as read-only text. Markdown and text bytes are read in the browser and inserted as text/DOM nodes rather than executed as HTML. The bridge cannot extract edits made inside the browser's built-in PDF viewer. Sync therefore asks for confirmation before uploading the original bytes unchanged as an API test; real edited-file saving requires an editor to provide the edited document Blob. Clear this website's browser data to remove locally stored records.</p>
+    <p>Use the website only in browsers and on devices you trust. Browser localStorage is readable by JavaScript running on this site, so keep your browser and device secure. Disconnect Dropbox in Lux Omni to clear stored credentials and request token revocation from Dropbox; you can also remove Lux Omni from your Dropbox connected-app settings. The Dropbox viewport bridge now renders PDFs with Mozilla PDF.js and provides a Lux Omni toolbar for supported annotation and form editing. PDF rendering, editing, and export occur in the browser. Use the toolbar's Save PDF action to download a copy, or use Dropbox Sync to upload the current edited bytes to the selected Dropbox file; Dropbox revision checks help prevent overwriting a file that changed elsewhere. Image previews, the basic Markdown renderer, and text/code previews remain separate viewport types; Markdown and text are inserted as text/DOM nodes rather than executed as HTML. Clear this website's browser data to remove locally stored records.</p>
   </section>
 
   <section>
