@@ -694,6 +694,22 @@ body[data-focus-mode="true"] .workspace-shell {
   grid-column: 1 / -1;
 }
 
+.viewport.is-drop-target {
+  outline: 3px dashed var(--accent);
+  outline-offset: -6px;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.viewport-minimized-bar {
+  cursor: grab;
+}
+
+.viewport-minimized-bar:active,
+.viewport-minimized-bar.is-dragging {
+  cursor: grabbing;
+  opacity: 0.68;
+}
+
 .viewport-minimized-dock {
   display: flex;
   min-width: 0;
@@ -1141,4 +1157,106 @@ body[data-focus-mode="true"] .workspace {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+
+/* Confirm destructive viewport drops before disposing destination content. */
+.viewport-replace-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(15 23 42 / 48%);
+}
+
+.viewport-replace-card {
+  width: min(100%, 460px);
+  padding: 22px;
+  border: 1px solid var(--control-border);
+  border-radius: 16px;
+  color: var(--ink);
+  background: var(--panel);
+  box-shadow: 0 24px 72px rgb(15 23 42 / 28%);
+}
+
+.viewport-replace-heading {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+}
+
+.viewport-replace-warning-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  color: #92400e;
+  background: #fef3c7;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+:root[data-theme="dark"] .viewport-replace-warning-icon {
+  color: #fcd34d;
+  background: #422006;
+}
+
+.viewport-replace-card h2 {
+  margin: 1px 0 8px;
+  color: var(--brand-name);
+  font-size: 18px;
+  line-height: 1.3;
+}
+
+.viewport-replace-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.viewport-replace-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 22px;
+}
+
+.viewport-replace-actions button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  color: var(--control-text);
+  background: var(--control-bg);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.viewport-replace-actions button:focus-visible {
+  outline: 3px solid var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.viewport-replace-actions .viewport-replace-confirm {
+  border-color: #b91c1c;
+  color: #ffffff;
+  background: #dc2626;
+}
+
+.viewport-replace-actions .viewport-replace-confirm:hover {
+  border-color: #991b1b;
+  background: #b91c1c;
+}
+
+.viewport-replace-actions .viewport-replace-cancel:hover {
+  border-color: var(--control-hover-border);
+  background: var(--control-hover-bg);
 }

@@ -150,6 +150,16 @@ try {
   console.log("PASS: Left, Right, and Full Screen load the chosen URL into the correct viewport.");
   console.log("PASS: invalid links show inline feedback and no native browser dialogs are opened.");
 
+  // Start the PDF migration test with empty split panes; the YouTube routing
+  // test above intentionally left examples in both panes.
+  await page.evaluate(() => {
+    for (const side of ["left", "right"]) {
+      const viewport = document.querySelector('#viewport-split-layout [data-viewport-side="' + side + '"]');
+      viewport?.replaceChildren();
+      if (viewport) delete viewport.dataset.fileName;
+    }
+  });
+
   const sidebarBefore = await page.locator("#sidebar").evaluate((element) => ({
     width: element.getBoundingClientRect().width,
     position: getComputedStyle(element).position,
@@ -251,6 +261,94 @@ try {
   ]);
   assert.match(download.suggestedFilename(), /\.pdf$/i, "Save PDF should download a .pdf file");
   console.log("PASS: Save PDF initiates a PDF download.");
+
+  await page.locator("#viewport-split-screen").click();
+  const fullTile = page.locator('#viewport-minimized-items [data-minimized-viewport="full"]');
+  await fullTile.waitFor({ state: "visible", timeout: 5000 });
+  assert.equal(await fullTile.getAttribute("draggable"), "true", "minimized Full Screen tile should be draggable");
+  assert.equal(await page.locator("#viewport-fullscreen-layout").evaluate((element) => element.hidden), true);
+  assert.equal(await page.locator("#viewport-minimized-dock").evaluate((element) => element.hidden), false);
+  console.log("PASS: switching from Full Screen to Split Screen minimizes the existing viewport instead of hiding it.");
+
+  await fullTile.dragTo(page.locator('#viewport-split-layout [data-viewport-side="left"]'));
+  await page.waitForFunction(() => {
+    const left = window.LuxOmniViewportBridge?.getViewportAssignment("left");
+    return left?.fileData?.name === "lux-omni-runtime-smoke.pdf" &&
+      window.LuxOmniViewportBridge?.getViewportAssignment("full") === null;
+  }, null, { timeout: 8000 });
+  assert.equal(await page.locator('#viewport-minimized-items [data-minimized-viewport="full"]').count(), 0);
+  assert.equal(await page.locator('[data-viewport-side="left"] .pdfViewer .page').count(), 1);
+  const afterMoveExport = await page.evaluate(async () => {
+    const blob = await window.LuxOmniViewportBridge.exportEditedBlob("left");
+    return { mime: blob.type, header: await blob.slice(0, 5).text(), size: blob.size };
+  });
+  assert.equal(afterMoveExport.mime, "application/pdf");
+  assert.equal(afterMoveExport.header, "%PDF-");
+  assert.ok(afterMoveExport.size > 100);
+  const movedPdfState = await page.locator('[data-viewport-side="left"] .lux-dropbox-preview').evaluate((host) => ({
+    status: host.shadowRoot?.querySelector(".lux-pdf-status")?.textContent || "",
+    editorCount: host.shadowRoot?.querySelectorAll(".pdfViewer .page").length || 0
+  }));
+  assert.equal(movedPdfState.editorCount, 1, "PDF editor should remain mounted after migration");
+  console.log("PASS: dragging a minimized PDF to an empty viewport preserves its PDF editor and export mapping.");
+
+  const rightTextAssignment = await page.evaluate(async () => {
+    const requestId = "drop-target-text-" + Date.now();
+    return await new Promise((resolveResult, rejectResult) => {
+      const timeoutId = window.setTimeout(() => {
+        window.removeEventListener("lux:dropbox-viewport-assignment-result", listener);
+        rejectResult(new Error("Timed out loading the destination text document."));
+      }, 10000);
+      function listener(event) {
+        if (event.detail?.requestId !== requestId) return;
+        window.clearTimeout(timeoutId);
+        window.removeEventListener("lux:dropbox-viewport-assignment-result", listener);
+        resolveResult(event.detail);
+      }
+      window.addEventListener("lux:dropbox-viewport-assignment-result", listener);
+      window.dispatchEvent(new CustomEvent("lux:dropbox-viewport-assignment-request", {
+        detail: {
+          requestId,
+          blob: new Blob(["Existing destination content"], { type: "text/plain" }),
+          fileData: { name: "existing-destination.txt", path_display: "/existing-destination.txt" },
+          metadata: { rev: "destination-revision" },
+          originalPath: "/existing-destination.txt",
+          originalRevision: "destination-revision",
+          viewportType: "right"
+        }
+      }));
+    });
+  });
+  assert.equal(rightTextAssignment.success, true);
+  await page.locator("#viewport-minimize-left").click();
+  const leftTile = page.locator('#viewport-minimized-items [data-minimized-viewport="left"]');
+  await leftTile.waitFor({ state: "visible", timeout: 5000 });
+  await leftTile.dragTo(page.locator('#viewport-split-layout [data-viewport-side="right"]'));
+  await page.locator("#viewport-replace-dialog").waitFor({ state: "visible", timeout: 3000 });
+  assert.match(await page.locator("#viewport-replace-message").textContent() || "", /existing-destination.txt.*discard.*unsaved changes/i);
+  await page.locator("#viewport-replace-cancel").click();
+  assert.equal(await page.locator("#viewport-replace-dialog").evaluate((element) => element.hidden), true);
+  assert.equal(await page.locator('#viewport-minimized-items [data-minimized-viewport="left"]').count(), 1, "cancel must leave the source minimized");
+  assert.equal(
+    await page.evaluate(() => window.LuxOmniViewportBridge?.getViewportAssignment("right")?.fileData?.name),
+    "existing-destination.txt",
+    "cancel must preserve destination content"
+  );
+  console.log("PASS: dropping onto an occupied viewport asks first; Cancel leaves both sides unchanged.");
+
+  await leftTile.dragTo(page.locator('#viewport-split-layout [data-viewport-side="right"]'));
+  await page.locator("#viewport-replace-dialog").waitFor({ state: "visible", timeout: 3000 });
+  await page.locator("#viewport-replace-confirm").click();
+  await page.waitForFunction(() =>
+    window.LuxOmniViewportBridge?.getViewportAssignment("right")?.fileData?.name === "lux-omni-runtime-smoke.pdf" &&
+    window.LuxOmniViewportBridge?.getViewportAssignment("left") === null,
+    null,
+    { timeout: 8000 }
+  );
+  assert.equal(await page.locator("#viewport-replace-dialog").evaluate((element) => element.hidden), true);
+  assert.equal(await page.locator('#viewport-minimized-items [data-minimized-viewport="left"]').count(), 0);
+  assert.equal(await page.locator('[data-viewport-side="right"] .pdfViewer .page').count(), 1);
+  console.log("PASS: confirming Replace moves the source content and retires the replaced destination assignment.");
 
   if (browserErrors.length || networkFailures.length) {
     throw new Error("Browser errors:\n" + browserErrors.join("\n") + "\nCDN request failures:\n" + networkFailures.join("\n"));

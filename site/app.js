@@ -22,6 +22,10 @@ const viewportNumberRight = document.querySelector("#viewport-number-right");
 const viewportMinimizedDock = document.querySelector("#viewport-minimized-dock");
 const viewportMinimizedItems = document.querySelector("#viewport-minimized-items");
 const splitViewportDivider = document.querySelector("#viewport-split-divider");
+const viewportReplaceDialog = document.querySelector("#viewport-replace-dialog");
+const viewportReplaceMessage = document.querySelector("#viewport-replace-message");
+const viewportReplaceCancel = document.querySelector("#viewport-replace-cancel");
+const viewportReplaceConfirm = document.querySelector("#viewport-replace-confirm");
 
 const viewportMinimizeFullButton = document.querySelector("#viewport-minimize-full");
 const viewportMinimizeLeftButton = document.querySelector("#viewport-minimize-left");
@@ -201,6 +205,9 @@ let activeViewportMode = null;
 let soloSplitSide = null;
 let rememberedSplitRatio = 0.5;
 const minimizedViewportStates = new Map();
+const wiredViewportDropTargets = new WeakSet();
+let draggingMinimizedViewportSide = null;
+let pendingViewportDrop = null;
 
 function getViewportElement(side) {
   if (side === "full") {
@@ -227,6 +234,9 @@ function ensureSplitViewports() {
   if (!getViewportElement("right")) {
     splitScreenViewportLayout.append(createSplitViewport("right"));
   }
+
+  registerViewportDropTarget("left");
+  registerViewportDropTarget("right");
 }
 
 function ensureFullViewport() {
@@ -252,6 +262,19 @@ function getViewportFileName(side) {
   return explicitName || headingName || ariaName || "Untitled";
 }
 
+function hasViewportContent(side) {
+  const viewport = getViewportElement(side);
+  return Boolean(viewport && (viewport.dataset.fileName || viewport.childElementCount > 0));
+}
+
+function rememberViewportWhenChangingLayout(side, originalMode) {
+  if (hasViewportContent(side)) {
+    rememberMinimizedViewport(side, originalMode);
+  } else {
+    minimizedViewportStates.delete(side);
+  }
+}
+
 function renderMinimizedViewportDock() {
   if (!viewportMinimizedDock || !viewportMinimizedItems) return;
 
@@ -266,8 +289,10 @@ function renderMinimizedViewportDock() {
     const button = document.createElement("button");
     button.className = "viewport-minimized-bar";
     button.type = "button";
-    button.setAttribute("aria-label", `Restore viewport ${number}, ${fileName}`);
-    button.title = `Restore viewport ${number}`;
+    button.draggable = true;
+    button.dataset.minimizedViewport = side;
+    button.setAttribute("aria-label", `Restore viewport ${number}, ${fileName}; drag onto Left or Right to move`);
+    button.title = `Restore viewport ${number}, or drag onto Left/Right to move`;
 
     const numberLabel = document.createElement("span");
     numberLabel.className = "viewport-minimized-number";
@@ -283,7 +308,33 @@ function renderMinimizedViewportDock() {
     restoreMark.textContent = "↗";
 
     button.append(numberLabel, fileLabel, restoreMark);
-    button.addEventListener("click", () => restoreMinimizedViewport(side));
+    button.addEventListener("dragstart", (event) => {
+      if (!event.dataTransfer) return;
+      draggingMinimizedViewportSide = side;
+      button.dataset.dragStartedAt = String(Date.now());
+      button.classList.add("is-dragging");
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("application/x-lux-viewport", side);
+      event.dataTransfer.setData("text/plain", side);
+    });
+    button.addEventListener("dragend", () => {
+      draggingMinimizedViewportSide = null;
+      button.classList.remove("is-dragging");
+      document.querySelectorAll(".viewport.is-drop-target").forEach((target) => {
+        target.classList.remove("is-drop-target");
+      });
+    });
+    button.addEventListener("click", (event) => {
+      const dragStartedAt = Number(button.dataset.dragStartedAt || 0);
+      if (dragStartedAt && Date.now() - dragStartedAt < 800) {
+        event.preventDefault();
+        event.stopPropagation();
+        delete button.dataset.dragStartedAt;
+        return;
+      }
+      delete button.dataset.dragStartedAt;
+      restoreMinimizedViewport(side);
+    });
     viewportMinimizedItems.append(button);
   }
 
@@ -338,14 +389,33 @@ function showNormalWorkspaceAfterViewportClose(clearWorkspace = false) {
 function setViewportMode(mode) {
   if (!workspace || !viewportComposition || !fullScreenViewportLayout || !splitScreenViewportLayout) return;
 
+  const previousMode = activeViewportMode;
+  const previousSoloSide = soloSplitSide;
+
   if (mode === "full") {
+    if (previousMode === "split") {
+      rememberViewportWhenChangingLayout("left", "split");
+      rememberViewportWhenChangingLayout("right", "split");
+    } else if (previousMode === "solo" && previousSoloSide) {
+      rememberViewportWhenChangingLayout(previousSoloSide, "split");
+    }
+
     ensureFullViewport();
     minimizedViewportStates.delete("full");
     activeViewportMode = "full";
     soloSplitSide = null;
   } else {
+    if (previousMode === "full") {
+      // Preserve the Full Screen document as a minimized tile when the user
+      // switches to Split Screen instead of merely hiding it.
+      rememberViewportWhenChangingLayout("full", "full");
+    } else if (previousMode === "solo" && previousSoloSide) {
+      // Opening both panes restores the previously minimized partner.
+      // Its contents stay in the same viewport container.
+    }
+
     ensureSplitViewports();
-    // Explicitly opening Split Screen restores both original split panes.
+    // Explicitly opening Split Screen restores both split panes.
     minimizedViewportStates.delete("left");
     minimizedViewportStates.delete("right");
     activeViewportMode = "split";
@@ -408,10 +478,10 @@ function restoreMinimizedViewport(side) {
   if (side === "full" || savedState.originalMode === "full") {
     // Keep any currently visible split viewport(s) minimized when restoring Full Screen.
     if (activeViewportMode === "solo" && soloSplitSide) {
-      rememberMinimizedViewport(soloSplitSide, "split");
+      rememberViewportWhenChangingLayout(soloSplitSide, "split");
     } else if (activeViewportMode === "split") {
-      rememberMinimizedViewport("left", "split");
-      rememberMinimizedViewport("right", "split");
+      rememberViewportWhenChangingLayout("left", "split");
+      rememberViewportWhenChangingLayout("right", "split");
     }
 
     minimizedViewportStates.delete("full");
@@ -436,7 +506,7 @@ function restoreMinimizedViewport(side) {
       soloSplitSide = null;
     } else {
       if (activeViewportMode === "full") {
-        rememberMinimizedViewport("full", "full");
+        rememberViewportWhenChangingLayout("full", "full");
       }
 
       minimizedViewportStates.delete(side);
@@ -492,6 +562,136 @@ viewportMinimizeRightButton?.addEventListener("click", () => minimizeSplitViewpo
 document.querySelector("#viewport-close-full")?.addEventListener("click", closeFullScreenViewport);
 document.querySelector("#viewport-close-left")?.addEventListener("click", () => closeSplitViewport("left"));
 document.querySelector("#viewport-close-right")?.addEventListener("click", () => closeSplitViewport("right"));
+
+function clearViewportDropHighlight() {
+  document.querySelectorAll(".viewport.is-drop-target").forEach((target) => {
+    target.classList.remove("is-drop-target");
+  });
+}
+
+function isViewportOccupied(side) {
+  const viewport = getViewportElement(side);
+  return Boolean(viewport && (viewport.dataset.fileName || viewport.childElementCount > 0));
+}
+
+function closeViewportReplaceDialog() {
+  if (viewportReplaceDialog) viewportReplaceDialog.hidden = true;
+  pendingViewportDrop = null;
+}
+
+function executePendingViewportDrop() {
+  const pending = pendingViewportDrop;
+  if (!pending) return;
+
+  const { sourceSide, targetSide } = pending;
+  const moveContents = window.LuxOmniViewportBridge?.moveViewportContents;
+  if (typeof moveContents !== "function") {
+    if (viewportReplaceMessage) {
+      viewportReplaceMessage.textContent = "The viewport move service is not ready yet. Please try again.";
+    }
+    if (viewportReplaceDialog) viewportReplaceDialog.hidden = false;
+    return;
+  }
+
+  let moved = false;
+  try {
+    moved = moveContents(sourceSide, targetSide) === true;
+  } catch (error) {
+    console.error("Could not move the minimized viewport:", error);
+  }
+
+  if (!moved) {
+    if (viewportReplaceMessage) {
+      viewportReplaceMessage.textContent = "The viewport could not be moved. Its content has been left unchanged.";
+    }
+    if (viewportReplaceDialog) viewportReplaceDialog.hidden = false;
+    return;
+  }
+
+  minimizedViewportStates.delete(sourceSide);
+  minimizedViewportStates.delete(targetSide);
+  closeViewportReplaceDialog();
+  renderViewportComposition();
+}
+
+function showViewportReplaceDialog(sourceSide, targetSide) {
+  pendingViewportDrop = { sourceSide, targetSide };
+  const sourceName = getViewportFileName(sourceSide);
+  const targetName = getViewportFileName(targetSide);
+  if (viewportReplaceMessage) {
+    viewportReplaceMessage.textContent =
+      targetName + " is already open in the " + (targetSide === "left" ? "Left" : "Right") +
+      " viewport. Replacing it will discard its existing content and any unsaved changes. " +
+      "Do you want to replace it with " + sourceName + "?";
+  }
+  if (viewportReplaceDialog) viewportReplaceDialog.hidden = false;
+  viewportReplaceCancel?.focus();
+}
+
+function handleViewportDrop(sourceSide, targetSide) {
+  if (!sourceSide || !targetSide || sourceSide === targetSide) return;
+  if (!minimizedViewportStates.has(sourceSide)) return;
+  const sourceViewport = getViewportElement(sourceSide);
+  const targetViewport = getViewportElement(targetSide);
+  if (!sourceViewport || !targetViewport || !hasViewportContent(sourceSide)) return;
+
+  pendingViewportDrop = { sourceSide, targetSide };
+  if (isViewportOccupied(targetSide)) {
+    showViewportReplaceDialog(sourceSide, targetSide);
+  } else {
+    executePendingViewportDrop();
+  }
+}
+
+function registerViewportDropTarget(side) {
+  if (side !== "left" && side !== "right") return;
+  const viewport = getViewportElement(side);
+  if (!viewport || wiredViewportDropTargets.has(viewport)) return;
+  wiredViewportDropTargets.add(viewport);
+
+  viewport.addEventListener("dragover", (event) => {
+    const sourceSide = event.dataTransfer?.getData("application/x-lux-viewport") || draggingMinimizedViewportSide;
+    if (!sourceSide || sourceSide === side || !minimizedViewportStates.has(sourceSide)) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+    viewport.classList.add("is-drop-target");
+  });
+
+  viewport.addEventListener("dragleave", (event) => {
+    if (!viewport.contains(event.relatedTarget)) viewport.classList.remove("is-drop-target");
+  });
+
+  viewport.addEventListener("drop", (event) => {
+    const sourceSide = event.dataTransfer?.getData("application/x-lux-viewport") || draggingMinimizedViewportSide;
+    if (!sourceSide || sourceSide === side) return;
+    event.preventDefault();
+    event.stopPropagation();
+    viewport.classList.remove("is-drop-target");
+    handleViewportDrop(sourceSide, side);
+  });
+}
+
+viewportReplaceCancel?.addEventListener("click", () => {
+  closeViewportReplaceDialog();
+  renderViewportComposition();
+});
+
+viewportReplaceConfirm?.addEventListener("click", executePendingViewportDrop);
+
+viewportReplaceDialog?.addEventListener("click", (event) => {
+  if (event.target === viewportReplaceDialog) {
+    closeViewportReplaceDialog();
+    renderViewportComposition();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && viewportReplaceDialog && !viewportReplaceDialog.hidden) {
+    event.preventDefault();
+    closeViewportReplaceDialog();
+    renderViewportComposition();
+  }
+});
 
 function extractYoutubeVideoId(value) {
   const rawValue = value.trim();
