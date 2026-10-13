@@ -8,6 +8,7 @@ const bridge = read("site/dropbox-viewport-bridge.js");
 const syncUi = read("site/dropbox-ui.js");
 const index = read("site/index.html");
 const styles = read("site/pdf-editor.css");
+const appStyles = read("site/styles.css");
 const notices = read("THIRD_PARTY_NOTICES.md");
 const privacy = read("site/privacy.html");
 const readme = read("README.md");
@@ -90,6 +91,6 @@ test("minimized viewports can be dragged between sides without losing the active
   assert.match(bridge, /sourceAssignment\.viewportType = targetSide/);
   assert.match(bridge, /currentViewportType = assignment\.viewportType \|\| viewportType/);
   assert.match(index, /id="viewport-replace-dialog"[\s\S]*?aria-modal="true"/);
-  assert.match(styles, /\.viewport\.is-drop-target/);
-  assert.match(styles, /\.viewport-replace-confirm/);
+  assert.match(appStyles, /\.viewport\.is-drop-target/);
+  assert.match(appStyles, /\.viewport-replace-confirm/);
 });
