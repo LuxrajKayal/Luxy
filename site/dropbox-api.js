@@ -64,8 +64,25 @@ async function createCodeChallenge(verifier) {
   return toBase64Url(new Uint8Array(digest));
 }
 
-function clearPendingOAuth() {
+const PENDING_VERIFIER_PREFIX = DROPBOX_CONFIG.storageKeys.pendingVerifier + ":";
+
+function clearPendingOAuth(state = null) {
   const storage = getStorage();
+
+  // Remove the state-specific verifier for a single callback, or every
+  // pending PKCE verifier when the user disconnects/clears credentials.
+  if (state) {
+    storage.removeItem(PENDING_VERIFIER_PREFIX + state);
+  } else {
+    for (let index = storage.length - 1; index >= 0; index -= 1) {
+      const key = storage.key(index);
+      if (key && key.startsWith(PENDING_VERIFIER_PREFIX)) {
+        storage.removeItem(key);
+      }
+    }
+  }
+
+  // Clean legacy single-attempt keys left by earlier builds.
   storage.removeItem(DROPBOX_CONFIG.storageKeys.pendingVerifier);
   storage.removeItem(DROPBOX_CONFIG.storageKeys.pendingState);
 }
@@ -184,8 +201,9 @@ export async function createAuthorizationUrl() {
   const state = randomBase64Url(32);
   const challenge = await createCodeChallenge(verifier);
 
-  storage.setItem(DROPBOX_CONFIG.storageKeys.pendingVerifier, verifier);
-  storage.setItem(DROPBOX_CONFIG.storageKeys.pendingState, state);
+  // Key the verifier by OAuth state so simultaneous sign-ins in separate tabs
+  // cannot overwrite one another's PKCE verifier.
+  storage.setItem(PENDING_VERIFIER_PREFIX + state, verifier);
 
   const url = new URL(DROPBOX_CONFIG.oauthAuthorizeUrl);
   url.searchParams.set("client_id", DROPBOX_CONFIG.appKey);
@@ -217,8 +235,11 @@ export async function handleOAuthCallback() {
   if (!code && !oauthError) return null;
 
   const storage = getStorage();
-  const expectedState = storage.getItem(DROPBOX_CONFIG.storageKeys.pendingState);
-  const verifier = storage.getItem(DROPBOX_CONFIG.storageKeys.pendingVerifier);
+  // Each tab's callback retrieves only the verifier associated with its own
+  // returned state, even if another tab starts a separate authorization flow.
+  const verifier = returnedState
+    ? storage.getItem(PENDING_VERIFIER_PREFIX + returnedState)
+    : null;
 
   removeOAuthParametersFromAddressBar();
 
@@ -226,7 +247,7 @@ export async function handleOAuthCallback() {
     if (oauthError) {
       throw new DropboxApiError("Dropbox authorization was not completed: " + oauthError);
     }
-    if (!returnedState || !expectedState || returnedState !== expectedState || !verifier) {
+    if (!returnedState || !verifier) {
       throw new DropboxApiError("Dropbox sign-in could not be verified. Please authorize again.");
     }
 
@@ -260,7 +281,7 @@ export async function handleOAuthCallback() {
       accountId: tokenResult.account_id || null
     };
   } finally {
-    clearPendingOAuth();
+    clearPendingOAuth(returnedState);
   }
 }
 
@@ -281,6 +302,7 @@ export function getAccessToken() {
 /** Clear all Dropbox credentials and any unfinished OAuth attempt from localStorage. */
 export function clearSession() {
   const storage = getStorage();
+  clearPendingOAuth();
   for (const key of Object.values(DROPBOX_CONFIG.storageKeys)) {
     storage.removeItem(key);
   }
