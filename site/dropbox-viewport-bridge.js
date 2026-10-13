@@ -411,7 +411,9 @@ async function renderAssignment(detail) {
           assignment.hasPdfEdits = true;
         }
       });
-      if (viewportAssignments.get(viewportType) !== assignment || !viewport.contains(mount)) {
+      const currentViewportType = assignment.viewportType || viewportType;
+      const currentViewport = getViewportElement(currentViewportType);
+      if (viewportAssignments.get(currentViewportType) !== assignment || !currentViewport?.contains(mount)) {
         await pdfEditor.dispose();
         return;
       }
@@ -490,6 +492,50 @@ window.LuxOmniViewportBridge = {
       originalRevision: assignment.originalRevision,
       hasEditedBlob: Boolean(assignment.editedBlob || assignment.hasPdfEdits)
     };
+  },
+
+  moveViewportContents(sourceSide, targetSide) {
+    if (!VALID_VIEWPORTS.has(sourceSide) || !VALID_VIEWPORTS.has(targetSide) || sourceSide === targetSide) {
+      return false;
+    }
+
+    const sourceViewport = getViewportElement(sourceSide);
+    const targetViewport = getViewportElement(targetSide);
+    if (!sourceViewport || !targetViewport) return false;
+
+    const sourceName = sourceViewport.dataset.fileName || "";
+    const sourceAssignment = viewportAssignments.get(sourceSide);
+    const targetAssignment = viewportAssignments.get(targetSide);
+    const sourceNodes = Array.from(sourceViewport.childNodes);
+    if (!sourceName && sourceNodes.length === 0 && !sourceAssignment) return false;
+
+    // Stop the old observers before moving nodes so the source observer cannot
+    // mistake a deliberate move for document removal and dispose the editor.
+    for (const side of [sourceSide, targetSide]) {
+      viewportObservers.get(side)?.disconnect();
+      viewportObservers.delete(side);
+    }
+
+    // The app only calls this method after showing a replace warning when the
+    // destination is occupied. Dispose any previous target editor and URL now.
+    if (targetAssignment) revokeAssignment(targetSide, targetAssignment);
+
+    viewportAssignments.delete(sourceSide);
+    targetViewport.replaceChildren();
+    sourceViewport.replaceChildren();
+    targetViewport.append(...sourceNodes);
+
+    targetViewport.dataset.fileName = sourceName;
+    delete sourceViewport.dataset.fileName;
+
+    if (sourceAssignment) {
+      sourceAssignment.viewportType = targetSide;
+      viewportAssignments.set(targetSide, sourceAssignment);
+    }
+
+    ensureViewportObserver(sourceSide, sourceViewport);
+    ensureViewportObserver(targetSide, targetViewport);
+    return true;
   }
 };
 
