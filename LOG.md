@@ -20,6 +20,7 @@ This is the **single authoritative log** for Lux Omni project decisions, approve
 
 - **Status:** Created by owner instruction.
 - **Purpose:** Centralize project decisions, implementation records, commit references, verification, and rollback instructions in this one Markdown file.
+- **Log creation commit:** [\`c72cebd5932bed77f08ef7b67a82b3041dfcd640\`](https://github.com/LuxrajKayal/Luxy/commit/c72cebd5932bed77f08ef7b67a82b3041dfcd640) — creates this file; this follow-up record points back to it.
 - **Application code changed:** No.
 - **Initial repository baseline before this log was added:** `1e4c96cdfee79ef31b2e580667077b84352b39da`
 - **Baseline commit:** [Minimize viewports and support safe drag-and-drop](https://github.com/LuxrajKayal/Luxy/commit/1e4c96cdfee79ef31b2e580667077b84352b39da)
