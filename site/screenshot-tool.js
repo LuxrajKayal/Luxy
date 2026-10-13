@@ -112,6 +112,7 @@ async function startSelection(button) {
   message("In the browser capture picker, choose the Lux Omni tab.");
   try {
     snapshot = await captureTabFrame();
+    notice.hidden = true;
     startPoint = null;
     box.hidden = true;
     selectionHelp.textContent = "Drag to select an area of this viewport · Esc to cancel";
