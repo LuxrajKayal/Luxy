@@ -127,7 +127,13 @@ async function readErrorResponse(response) {
 }
 
 function expireLocalSessionOnUnauthorized(status) {
-  if (status === 401) clearSession();
+  if (status !== 401) return;
+
+  // The shared access token is invalid, but do not erase another tab's
+  // in-progress state-specific PKCE verifier.
+  const storage = getStorage();
+  storage.removeItem(DROPBOX_CONFIG.storageKeys.accessToken);
+  storage.removeItem(DROPBOX_CONFIG.storageKeys.expiresAt);
 }
 
 async function requestJson(endpoint, args = {}) {
