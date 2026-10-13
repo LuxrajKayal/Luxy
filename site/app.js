@@ -579,7 +579,7 @@ function closeViewportReplaceDialog() {
   pendingViewportDrop = null;
 }
 
-function executePendingViewportDrop() {
+async function executePendingViewportDrop() {
   const pending = pendingViewportDrop;
   if (!pending) return;
 
@@ -595,7 +595,7 @@ function executePendingViewportDrop() {
 
   let moved = false;
   try {
-    moved = moveContents(sourceSide, targetSide) === true;
+    moved = await moveContents(sourceSide, targetSide) === true;
   } catch (error) {
     console.error("Could not move the minimized viewport:", error);
   }
