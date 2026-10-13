@@ -27,9 +27,7 @@
     }
   </script>
   <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./screenshot-tool.css">
   <script type="module" src="./app.js"></script>
-  <script type="module" src="./screenshot-tool.js"></script>
 </head>
 <body data-focus-mode="false">
   <script>
@@ -123,12 +121,6 @@
               <path d="m9.6 12.7 6.3-3.7-6.3-3.7v7.4Z" fill="#ffffff"></path>
             </svg>
           </button>
-          <button id="viewport-screenshot-full" class="viewport-screenshot-button" type="button" aria-label="Capture visible viewport with Lux Omni Screenshot Tool (full screen)" title="Screenshot">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M8 4H6a2 2 0 0 0-2 2v2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
-              <rect x="8.5" y="8.5" width="7" height="7" rx="1" stroke-dasharray="2 2"/>
-            </svg>
-          </button>
           <button id="viewport-minimize-full" class="viewport-minimize-button" type="button" aria-label="Minimize full-screen viewport" title="Minimize viewport">−</button>
           <button id="viewport-close-full" class="viewport-close-button" type="button" data-viewport-close="full" aria-label="Close full-screen viewport" title="Close viewport">×</button>
         </div>
@@ -139,12 +131,6 @@
               <path d="m9.6 12.7 6.3-3.7-6.3-3.7v7.4Z" fill="#ffffff"></path>
             </svg>
           </button>
-          <button id="viewport-screenshot-left" class="viewport-screenshot-button" type="button" aria-label="Capture visible viewport with Lux Omni Screenshot Tool (left)" title="Screenshot">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M8 4H6a2 2 0 0 0-2 2v2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
-              <rect x="8.5" y="8.5" width="7" height="7" rx="1" stroke-dasharray="2 2"/>
-            </svg>
-          </button>
           <button id="viewport-minimize-left" class="viewport-minimize-button" type="button" aria-label="Minimize left viewport" title="Minimize left viewport">−</button>
           <button id="viewport-close-left" class="viewport-close-button" type="button" data-viewport-close="left" aria-label="Close left viewport" title="Close left viewport">×</button>
         </div>
@@ -153,12 +139,6 @@
             <svg viewBox="0 0 24 18" aria-hidden="true">
               <path d="M23.5 2.8a3 3 0 0 0-2.1-2.1C19.5.2 12 .2 12 .2S4.5.2 2.6.7A3 3 0 0 0 .5 2.8 31 31 0 0 0 0 9s0 3.7.5 6.2a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 9s0-3.7-.5-6.2Z" fill="#ff0033"></path>
               <path d="m9.6 12.7 6.3-3.7-6.3-3.7v7.4Z" fill="#ffffff"></path>
-            </svg>
-          </button>
-          <button id="viewport-screenshot-right" class="viewport-screenshot-button" type="button" aria-label="Capture visible viewport with Lux Omni Screenshot Tool (right)" title="Screenshot">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M8 4H6a2 2 0 0 0-2 2v2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
-              <rect x="8.5" y="8.5" width="7" height="7" rx="1" stroke-dasharray="2 2"/>
             </svg>
           </button>
           <button id="viewport-minimize-right" class="viewport-minimize-button" type="button" aria-label="Minimize right viewport" title="Minimize right viewport">−</button>
@@ -219,62 +199,6 @@
       </main>
     </div>
   </div>
-
-  <div id="lux-screenshot-selection" hidden tabindex="-1" aria-label="Select an area of the visible browser viewport">
-    <div id="lux-screenshot-selection-box" hidden></div>
-    <div id="lux-screenshot-selection-help">Drag to select an area of this viewport · Esc to cancel</div>
-  </div>
-
-  <div id="lux-screenshot-modal" class="lux-screenshot-modal" role="dialog" aria-modal="true" aria-labelledby="lux-screenshot-title" hidden>
-    <div class="lux-screenshot-backdrop" aria-hidden="true"></div>
-    <section id="lux-screenshot-dialog" class="lux-screenshot-dialog">
-      <header class="lux-screenshot-header">
-        <img class="lux-screenshot-brand-icon" src="./icons/lux-pdf-viewer-icon.svg" alt="">
-        <h2 id="lux-screenshot-title" class="lux-screenshot-title">Lux Omni Screenshot Tool</h2>
-        <button id="lux-screenshot-discard" class="lux-screenshot-discard" type="button" aria-label="Discard screenshot and close" title="Discard screenshot and close">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18"></path></svg>
-        </button>
-      </header>
-      <div class="lux-screenshot-toolbar" role="toolbar" aria-label="Screenshot annotation tools">
-        <button type="button" data-lux-screenshot-tool="pen" class="is-active" aria-pressed="true" title="Pen">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.5-1 11-11a2.1 2.1 0 0 0-3-3l-11 11L4 20Z"/><path d="m14.8 6.2 3 3M4 20l5-1.5"/></svg><span>Pen</span>
-        </button>
-        <button type="button" data-lux-screenshot-tool="brush" aria-pressed="false" title="Brush">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 4 6 6M12.5 5.5l6 6M4 20c4 0 4-2 5-5l10-10a2 2 0 0 0-3-3L6 12c-3 1-4 4-2 8Z"/></svg><span>Brush</span>
-        </button>
-        <button type="button" data-lux-screenshot-tool="eraser" aria-pressed="false" title="Eraser">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 21-5-5a2 2 0 0 1 0-3l9-9a2 2 0 0 1 3 0l7 7a2 2 0 0 1 0 3l-7 7H7Z"/><path d="m8 6 10 10M14 21h8"/></svg><span>Eraser</span>
-        </button>
-        <button type="button" data-lux-screenshot-tool="text" aria-pressed="false" title="Insert text">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6V4h16v2M12 4v16M8 20h8"/></svg><span>Text</span>
-        </button>
-        <span class="lux-screenshot-divider" aria-hidden="true"></span>
-        <div class="lux-screenshot-colors" role="group" aria-label="Annotation color">
-          <button type="button" class="lux-screenshot-color is-active" data-lux-screenshot-color="#dc2626" aria-label="Red" aria-pressed="true" title="Red" style="background:#dc2626"></button>
-          <button type="button" class="lux-screenshot-color" data-lux-screenshot-color="#f59e0b" aria-label="Orange" aria-pressed="false" title="Orange" style="background:#f59e0b"></button>
-          <button type="button" class="lux-screenshot-color" data-lux-screenshot-color="#16a34a" aria-label="Green" aria-pressed="false" title="Green" style="background:#16a34a"></button>
-          <button type="button" class="lux-screenshot-color" data-lux-screenshot-color="#2563eb" aria-label="Blue" aria-pressed="false" title="Blue" style="background:#2563eb"></button>
-          <button type="button" class="lux-screenshot-color" data-lux-screenshot-color="#7c3aed" aria-label="Purple" aria-pressed="false" title="Purple" style="background:#7c3aed"></button>
-          <button type="button" class="lux-screenshot-color" data-lux-screenshot-color="#111827" aria-label="Black" aria-pressed="false" title="Black" style="background:#111827"></button>
-        </div>
-        <span class="lux-screenshot-divider" aria-hidden="true"></span>
-        <button id="lux-screenshot-zoom-out" type="button" title="Zoom out" aria-label="Zoom out"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M7.5 10.5h6"/></svg><span>−</span></button>
-        <span id="lux-screenshot-zoom-label" aria-live="polite">100%</span>
-        <button id="lux-screenshot-zoom-in" type="button" title="Zoom in" aria-label="Zoom in"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5M7.5 10.5h6M10.5 7.5v6"/></svg><span>+</span></button>
-        <button id="lux-screenshot-copy" class="lux-screenshot-copy" type="button" title="Copy annotated screenshot to clipboard">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h3"/></svg><span>Copy to Clipboard</span>
-        </button>
-      </div>
-      <div id="lux-screenshot-workarea" class="lux-screenshot-workarea">
-        <div id="lux-screenshot-canvas-stage">
-          <canvas id="lux-screenshot-image" aria-label="Captured screenshot"></canvas>
-          <canvas id="lux-screenshot-annotations" aria-label="Draw annotations or click to insert text"></canvas>
-        </div>
-      </div>
-      <div id="lux-screenshot-status" class="lux-screenshot-status" role="status" aria-live="polite"></div>
-    </section>
-  </div>
-  <div id="lux-screenshot-notice" role="status" aria-live="polite" hidden></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/dropbox.js/10.33.0/Dropbox-sdk.min.js"></script>
 <div id="dropbox-modal" class="dropbox-modal" role="dialog" aria-modal="true" aria-labelledby="dropbox-modal-title" aria-describedby="dropbox-modal-status" hidden>
