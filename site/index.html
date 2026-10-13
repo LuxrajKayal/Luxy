@@ -162,7 +162,7 @@
                 <path d="M9 4.5V3.8A1.8 1.8 0 0 1 10.8 2h2.4A1.8 1.8 0 0 1 15 3.8v.7M9 10h6M9 14h6M9 18h4"></path>
               </svg>
             </a>
-            <button id="sidebar-youtube-button" class="toolbar-button toolbar-icon-button youtube-sidebar-button" type="button" aria-label="Load a YouTube video" title="YouTube">
+            <button id="sidebar-youtube-button" class="toolbar-button toolbar-icon-button youtube-sidebar-button" type="button" aria-label="Load a YouTube video" title="YouTube" aria-controls="youtube-tile" aria-haspopup="dialog" aria-expanded="false">
               <svg class="youtube-sidebar-icon" viewBox="0 0 24 18" aria-hidden="true">
                 <path d="M23.5 2.8a3 3 0 0 0-2.1-2.1C19.5.2 12 .2 12 .2S4.5.2 2.6.7A3 3 0 0 0 .5 2.8 31 31 0 0 0 0 9s0 3.7.5 6.2a3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 9s0-3.7-.5-6.2Z" fill="#ff0033"></path>
                 <path d="m9.6 12.7 6.3-3.7-6.3-3.7v7.4Z" fill="#ffffff"></path>
@@ -190,6 +190,28 @@
       </main>
     </div>
   </div>
+
+  <section id="youtube-tile" class="youtube-tile" hidden role="dialog" aria-labelledby="youtube-tile-title" aria-describedby="youtube-tile-help" aria-modal="false">
+    <h2 id="youtube-tile-title">Load YouTube video</h2>
+    <p id="youtube-tile-help" class="youtube-tile-help">Paste a video link, then choose where it should open.</p>
+    <label class="youtube-tile-label" for="youtube-video-url">YouTube link</label>
+    <input id="youtube-video-url" class="youtube-tile-input" type="url" inputmode="url" autocomplete="url" placeholder="https://youtu.be/…" spellcheck="false">
+    <p id="youtube-tile-feedback" class="youtube-tile-feedback" role="status" aria-live="polite" hidden></p>
+    <div class="youtube-tile-targets" role="group" aria-label="Video destination">
+      <button class="youtube-target-button" type="button" data-youtube-target="left" aria-label="Open video in Left viewport">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M12 4v16"></path><path d="M8 8v8"></path></svg>
+        <span>Left</span>
+      </button>
+      <button class="youtube-target-button" type="button" data-youtube-target="right" aria-label="Open video in Right viewport">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M12 4v16"></path><path d="M16 8v8"></path></svg>
+        <span>Right</span>
+      </button>
+      <button class="youtube-target-button" type="button" data-youtube-target="full" aria-label="Open video in Full Screen viewport">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H4v5M16 3h4v5M20 16v5h-4M8 21H4v-5"></path></svg>
+        <span>Full Screen</span>
+      </button>
+    </div>
+  </section>
 
   <div id="lux-snip-capture-panel" class="lux-snip-capture-panel" hidden role="region" aria-label="Lux Omni Snipping Tool capture options">
     <p class="lux-snip-panel-title">Lux Omni Snipping Tool</p>

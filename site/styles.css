@@ -370,6 +370,125 @@ body[data-focus-mode="true"] .workspace-shell {
   height: 15px;
 }
 
+.youtube-tile {
+  position: fixed;
+  z-index: 30;
+  width: min(340px, calc(100vw - 88px));
+  padding: 16px;
+  border: 1px solid var(--control-border);
+  border-radius: 14px;
+  color: var(--ink);
+  background: var(--panel);
+  box-shadow: 0 14px 42px rgb(15 23 42 / 22%);
+}
+
+.youtube-tile h2 {
+  margin: 0;
+  color: var(--brand-name);
+  font-size: 16px;
+  font-weight: 720;
+  line-height: 1.35;
+}
+
+.youtube-tile-help {
+  margin: 6px 0 14px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.youtube-tile-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--control-text);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.youtube-tile-input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--control-border);
+  border-radius: 8px;
+  color: var(--control-text);
+  background: var(--control-bg);
+  font: inherit;
+  font-size: 12px;
+}
+
+.youtube-tile-input:focus-visible {
+  outline: 3px solid var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.youtube-tile-feedback {
+  margin: 8px 0 0;
+  color: #dc2626;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+:root[data-theme="dark"] .youtube-tile-feedback {
+  color: #fca5a5;
+}
+
+.youtube-tile-targets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 14px;
+}
+
+.youtube-target-button {
+  display: flex;
+  min-width: 0;
+  min-height: 62px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 3px;
+  border: 1px solid var(--control-border);
+  border-radius: 9px;
+  color: var(--control-text);
+  background: var(--control-bg);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.2;
+  text-align: center;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.youtube-target-button:hover {
+  border-color: var(--control-hover-border);
+  background: var(--control-hover-bg);
+}
+
+.youtube-target-button:focus-visible {
+  outline: 3px solid var(--focus-outline);
+  outline-offset: 2px;
+}
+
+.youtube-target-button svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.youtube-target-button[data-youtube-target="full"] svg {
+  width: 19px;
+  height: 19px;
+}
+
 .viewport-toolbar-section--full {
   grid-column: 1 / -1;
 }

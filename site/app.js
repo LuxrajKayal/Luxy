@@ -27,6 +27,10 @@ const viewportMinimizeFullButton = document.querySelector("#viewport-minimize-fu
 const viewportMinimizeLeftButton = document.querySelector("#viewport-minimize-left");
 const viewportMinimizeRightButton = document.querySelector("#viewport-minimize-right");
 const sidebarYoutubeButton = document.querySelector("#sidebar-youtube-button");
+const youtubeTile = document.querySelector("#youtube-tile");
+const youtubeVideoUrl = document.querySelector("#youtube-video-url");
+const youtubeTileFeedback = document.querySelector("#youtube-tile-feedback");
+const youtubeTargetButtons = document.querySelectorAll("[data-youtube-target]");
 
 const THEME_STORAGE_KEY = "lux-pdf-viewer-theme";
 const FOCUS_MODE_STORAGE_KEY = "lux-pdf-viewer-focus-mode";
@@ -489,34 +493,80 @@ document.querySelector("#viewport-close-full")?.addEventListener("click", closeF
 document.querySelector("#viewport-close-left")?.addEventListener("click", () => closeSplitViewport("left"));
 document.querySelector("#viewport-close-right")?.addEventListener("click", () => closeSplitViewport("right"));
 
-const YOUTUBE_URL_REGEX = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i;
+function extractYoutubeVideoId(value) {
+  const rawValue = value.trim();
+  if (!rawValue) return null;
 
-function loadYoutubeVideoIntoViewport(requestedSide) {
-  // The shared Full Screen toolbar also represents whichever split pane is
-  // currently expanded alone.
-  const side = activeViewportMode === "solo" && soloSplitSide
-    ? soloSplitSide
-    : requestedSide;
-  const viewport = getViewportElement(side);
-  if (!viewport) return;
+  let url;
+  try {
+    url = new URL(/^[a-z][a-z\d+.-]*:\/\//i.test(rawValue) ? rawValue : "https://" + rawValue);
+  } catch {
+    return null;
+  }
 
-  const userInput = window.prompt("Paste a YouTube video link:", "");
-  if (userInput === null) return;
+  const hostname = url.hostname.toLowerCase().replace(/^(?:www\.|m\.)/, "");
+  let videoId = "";
 
-  const match = userInput.match(YOUTUBE_URL_REGEX);
-  viewport.replaceChildren();
+  if (hostname === "youtu.be") {
+    videoId = url.pathname.split("/").filter(Boolean)[0] || "";
+  } else if (hostname === "youtube.com") {
+    if (url.pathname === "/watch") {
+      videoId = url.searchParams.get("v") || "";
+    } else {
+      const pathMatch = url.pathname.match(/^\/(?:embed|shorts|live|v)\/([^/]+)/i);
+      videoId = pathMatch?.[1] || "";
+    }
+  }
 
-  if (!match || !match[1]) {
-    delete viewport.dataset.fileName;
-    const errorMessage = document.createElement("p");
-    errorMessage.className = "viewport-youtube-error";
-    errorMessage.textContent = "Invalid link! Please paste a valid YouTube video link.";
-    viewport.append(errorMessage);
+  return /^[A-Za-z0-9_-]{11}$/.test(videoId) ? videoId : null;
+}
+
+function positionYoutubeTile() {
+  if (!youtubeTile || youtubeTile.hidden || !sidebarYoutubeButton) return;
+
+  const buttonRect = sidebarYoutubeButton.getBoundingClientRect();
+  const tileRect = youtubeTile.getBoundingClientRect();
+  const edge = 10;
+  const preferredLeft = buttonRect.right + edge;
+  const left = preferredLeft + tileRect.width <= window.innerWidth - edge
+    ? preferredLeft
+    : Math.max(edge, buttonRect.left - tileRect.width - edge);
+  const maxTop = Math.max(edge, window.innerHeight - tileRect.height - edge);
+  const preferredTop = buttonRect.top + buttonRect.height / 2 - tileRect.height / 2;
+  const top = Math.max(edge, Math.min(preferredTop, maxTop));
+
+  youtubeTile.style.left = left + "px";
+  youtubeTile.style.top = top + "px";
+}
+
+function closeYoutubeTile({ restoreFocus = false } = {}) {
+  if (!youtubeTile || youtubeTile.hidden) return;
+  youtubeTile.hidden = true;
+  sidebarYoutubeButton?.setAttribute("aria-expanded", "false");
+  if (restoreFocus) sidebarYoutubeButton?.focus();
+}
+
+function openYoutubeTile() {
+  if (!youtubeTile || !youtubeVideoUrl || !sidebarYoutubeButton) return;
+  if (!youtubeTile.hidden) {
+    closeYoutubeTile();
     return;
   }
 
-  const videoId = match[1];
-  const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+  youtubeTileFeedback.hidden = true;
+  youtubeTileFeedback.textContent = "";
+  youtubeVideoUrl.value = "";
+  youtubeTile.hidden = false;
+  sidebarYoutubeButton.setAttribute("aria-expanded", "true");
+  positionYoutubeTile();
+  youtubeVideoUrl.focus();
+}
+
+function loadYoutubeVideoIntoViewport(requestedSide, videoId) {
+  const viewport = getViewportElement(requestedSide);
+  if (!viewport || !videoId) return false;
+
+  const embedUrl = "https://www.youtube.com/embed/" + videoId;
   const content = document.createElement("div");
   content.className = "viewport-youtube-content";
 
@@ -528,42 +578,61 @@ function loadYoutubeVideoIntoViewport(requestedSide) {
   frame.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share");
   frame.setAttribute("allowfullscreen", "");
   content.append(frame);
-  viewport.dataset.fileName = `YouTube video ${videoId}`;
-  viewport.append(content);
+
+  viewport.replaceChildren(content);
+  viewport.dataset.fileName = "YouTube video " + videoId;
   viewport.scrollTop = 0;
+  return true;
 }
 
-sidebarYoutubeButton?.addEventListener("click", () => {
-  if (activeViewportMode === "split") {
-    const selectedSide = window.prompt(
-      "Which viewport should receive the YouTube video? Enter left or right:",
-      "left"
-    );
-    if (selectedSide === null) return;
-
-    const side = selectedSide.trim().toLowerCase();
-    if (side !== "left" && side !== "right") {
-      window.alert("Please enter left or right.");
+youtubeTargetButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const videoId = extractYoutubeVideoId(youtubeVideoUrl?.value || "");
+    if (!videoId) {
+      youtubeTileFeedback.textContent = "Enter a valid YouTube video link to continue.";
+      youtubeTileFeedback.hidden = false;
+      youtubeVideoUrl?.focus();
+      positionYoutubeTile();
       return;
     }
 
-    loadYoutubeVideoIntoViewport(side);
-    return;
-  }
+    const target = button.dataset.youtubeTarget;
+    if (target === "full") {
+      setViewportMode("full");
+    } else if (target === "left" || target === "right") {
+      setViewportMode("split");
+    } else {
+      return;
+    }
 
-  if (activeViewportMode === "solo" && soloSplitSide) {
-    loadYoutubeVideoIntoViewport(soloSplitSide);
-    return;
-  }
+    if (!loadYoutubeVideoIntoViewport(target, videoId)) {
+      youtubeTileFeedback.textContent = "That viewport is not available. Please choose a destination again.";
+      youtubeTileFeedback.hidden = false;
+      positionYoutubeTile();
+      return;
+    }
 
-  if (activeViewportMode === "full") {
-    loadYoutubeVideoIntoViewport("full");
-    return;
-  }
-
-  setViewportMode("full");
-  loadYoutubeVideoIntoViewport("full");
+    closeYoutubeTile();
+  });
 });
+
+sidebarYoutubeButton?.addEventListener("click", openYoutubeTile);
+
+document.addEventListener("pointerdown", (event) => {
+  if (youtubeTile?.hidden) return;
+  if (youtubeTile?.contains(event.target) || sidebarYoutubeButton?.contains(event.target)) return;
+  closeYoutubeTile();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && youtubeTile && !youtubeTile.hidden) {
+    event.preventDefault();
+    closeYoutubeTile({ restoreFocus: true });
+  }
+});
+
+window.addEventListener("resize", positionYoutubeTile);
+window.addEventListener("scroll", positionYoutubeTile, true);
 
 // Resize the two split viewports by dragging the narrow vertical divider.
 function setSplitViewportRatio(ratio) {
