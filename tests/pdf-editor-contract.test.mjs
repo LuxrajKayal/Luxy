@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 
 const read = (path) => readFileSync(new URL("../" + path, import.meta.url), "utf8");
+const app = read("site/app.js");
 const engine = read("site/pdf-engine.js");
 const bridge = read("site/dropbox-viewport-bridge.js");
 const syncUi = read("site/dropbox-ui.js");
