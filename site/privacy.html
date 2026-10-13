@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Privacy policy for Lux Omni and its optional Dropbox integration.">
+  <meta name="description" content="Privacy policy for Lux Omni.">
   <title>Privacy Policy — Lux Omni</title>
   <style>
     :root{color-scheme:light dark;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1d2636;background:#f6f8fb}
@@ -19,21 +19,15 @@
     <h1>Privacy Policy</h1>
     <p>Last updated: 13 October 2026</p>
   </header>
-  <p>Lux Omni (“Luxy”) is a browser-based project maintained by Luxraj Kayal (Subrata Kayal). It includes a workspace for supported files and an optional Dropbox connection. In the current build, PDF editing and export are not connected; a source PDF should not be overwritten unless an edited PDF export is supplied and you explicitly choose Sync. This policy explains how the website handles information when you use it.</p>
+  <p>Lux Omni (“Luxy”) is a browser-based project maintained by Luxraj Kayal (Subrata Kayal). It includes a browser-based workspace and supporting tools. Cloud-storage integrations are not currently enabled. This policy explains how the website handles information when you use it.</p>
 
-  <section>
-    <h2>Information used by the Dropbox integration</h2>
-    <p>If you choose to connect Dropbox, Luxy requests permission to read file metadata, download file contents, and upload file contents. It uses these permissions to list supported files and download a file you select. For PDFs, an upload back to the selected file’s original Dropbox path is only intended when an edited PDF export is available and you explicitly press Sync. PDF editing and export are not connected in the current build, so Sync cannot replace the source with edited PDF content until an exported PDF is supplied.</p>
-    <p>Luxy may process the selected file’s name and Dropbox path, plus the PDF contents you choose to open. Dropbox provides authentication and the storage APIs; your Dropbox account and files remain subject to Dropbox’s own terms and privacy policy.</p>
-  </section>
+
 
   <section>
     <h2>Where information is processed and stored</h2>
     <ul>
       <li>Luxy is a static website hosted through GitHub Pages. The current application does not send PDF contents to a Luxy-operated application server or store them in a Luxy-operated database.</li>
-      <li>The Dropbox access token is held in this browser tab’s <code>sessionStorage</code> for the active session, rather than <code>localStorage</code>. Browser session restoration can vary; do not use the app on a device you do not trust.</li>
-      <li>Selected PDFs are downloaded to the browser for viewing. The selected Dropbox path is kept in memory for the active page session.</li>
-      <li>If a future or connected editor supplies an exported PDF and you use Sync, that exported PDF is sent to Dropbox using overwrite mode and may replace the original file. The current build does not connect PDF editing/export. Keep a backup whenever the original must be preserved.</li>
+      <li>Lux Omni Clipboard history is stored locally in this browser using IndexedDB. You can clear this history from the clipboard page or clear this website's browser data.</li>
     </ul>
   </section>
 
@@ -45,12 +39,12 @@
 
   <section>
     <h2>Third-party services</h2>
-    <p>Luxy uses Dropbox for OAuth authorization and file API requests, cdnjs to load the Dropbox JavaScript SDK, and GitHub Pages to host the website. Those services may process standard connection or operational data under their own policies. Luxy does not currently include its own analytics service or user-account system.</p>
+    <p>Luxy is hosted on GitHub Pages. If you use the YouTube workspace tool, content is provided by YouTube and is subject to its applicable terms and privacy policy.</p>
   </section>
 
   <section>
     <h2>Your choices and security</h2>
-    <p>Connecting Dropbox is optional. You can decline authorization. To revoke ongoing access, review and disconnect Luxy from your Dropbox account’s connected-app settings. Closing the browser tab usually ends the tab’s session storage, but revoking access in Dropbox is the clearest way to remove the app’s authorization. Never share your access token or use Sync unless you intend to replace the selected Dropbox file.</p>
+    <p>Use the website only in browsers and on devices you trust. Clear this website's browser data to remove locally stored records. Avoid placing private documents or other sensitive information in content you do not intend to store in this browser.</p>
   </section>
 
   <section>
