@@ -24,14 +24,39 @@ export class DropboxApiError extends Error {
   }
 }
 
+let legacyStorageMigrationAttempted = false;
+
 function getStorage() {
+  let storage;
   try {
-    return window.localStorage;
+    storage = window.localStorage;
   } catch (_) {
     throw new DropboxApiError(
       "Browser local storage is unavailable. Enable site storage and try again."
     );
   }
+
+  // One-time migration: preserve credentials from the earlier tab-scoped
+  // build so an existing user does not need to sign in again after deployment.
+  if (!legacyStorageMigrationAttempted) {
+    legacyStorageMigrationAttempted = true;
+    try {
+      const legacyStorage = window.sessionStorage;
+      for (const key of Object.values(DROPBOX_CONFIG.storageKeys)) {
+        const legacyValue = legacyStorage.getItem(key);
+        if (legacyValue === null) continue;
+
+        if (storage.getItem(key) === null) {
+          storage.setItem(key, legacyValue);
+        }
+        legacyStorage.removeItem(key);
+      }
+    } catch (_) {
+      // Migration is best-effort. localStorage remains the only active store.
+    }
+  }
+
+  return storage;
 }
 
 function getCrypto() {
@@ -243,9 +268,15 @@ export async function handleOAuthCallback() {
   const storage = getStorage();
   // Each tab's callback retrieves only the verifier associated with its own
   // returned state, even if another tab starts a separate authorization flow.
-  const verifier = returnedState
+  const verifierForState = returnedState
     ? storage.getItem(PENDING_VERIFIER_PREFIX + returnedState)
     : null;
+  // Support one OAuth redirect that was already in progress during deployment
+  // of the state-specific PKCE storage update.
+  const legacyState = storage.getItem(DROPBOX_CONFIG.storageKeys.pendingState);
+  const legacyVerifier = storage.getItem(DROPBOX_CONFIG.storageKeys.pendingVerifier);
+  const verifier = verifierForState ||
+    (returnedState && returnedState === legacyState ? legacyVerifier : null);
 
   removeOAuthParametersFromAddressBar();
 
