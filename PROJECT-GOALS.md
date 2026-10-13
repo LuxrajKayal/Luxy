@@ -65,7 +65,7 @@ The visual design details (exact header, placement, dimensions, colors, icons, t
 
 - Original Lux Omni source code, project documentation, and original assets are attributed to the project owner where created by or rightsfully owned by the owner.
 - Only describe a third-party library as used by the application when it is intentionally loaded or integrated into the current build.
-- The current application loads the Dropbox JavaScript SDK. Its version and MIT licence notice are recorded in the root `THIRD_PARTY_NOTICES.md`.
+- No third-party authentication or cloud-storage SDK is currently loaded by the active website.
 - Do not add another third-party library, framework, CDN, external service, authentication provider, or build dependency without first explaining its purpose, boundaries, licence, alternatives, and limitations, then receiving the owner's approval.
 - Keep first-party work separate from third-party material. Preserve required third-party copyright and licence notices for software intentionally used or distributed.
 - Do not claim ownership of third-party code or misrepresent what is actually integrated and tested.
@@ -97,7 +97,7 @@ Do not claim that files, commits, tests, deployments, permissions or features ex
 - Opening the Markdown editor displays PDF and Markdown panels side by side by default; users can resize them, and each panel has its own controls.
 - Both iframe embedding and Web Component integration are intended future features, not initial tasks.
 - Chrome extension adaptation is a later product goal, not the current focus.
-- The Dropbox JavaScript SDK is loaded by the current application; its details are recorded in `THIRD_PARTY_NOTICES.md`.
+- No third-party authentication or cloud-storage SDK is currently loaded by the active website.
 - Interface design and product wording are controlled by the owner.
 - No code or assets from prior repositories may be copied into this project.
 
