@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Lux Omni Clipboard is a plain-text workspace created by Luxraj Kayal (Subrata Kayal).">
+  <meta name="description" content="Lux Omni Clipboard for text, screenshots, and a local history of the ten most recent copy actions.">
   <link rel="icon" type="image/svg+xml" href="./icons/lux-pdf-viewer-icon.svg">
   <title>Lux Omni Clipboard</title>
   <style>
@@ -20,8 +20,10 @@
       --panel: #ffffff;
       --workspace: #f6f8fb;
       --accent: #4263eb;
+      --accent-soft: #eef2ff;
       --control-bg: #ffffff;
       --control-border: #dce2ec;
+      --danger: #b42318;
     }
 
     :root[data-theme="dark"] {
@@ -32,14 +34,17 @@
       --panel: #181e29;
       --workspace: #10151e;
       --accent: #a5b4fc;
+      --accent-soft: #232c49;
       --control-bg: #1d2533;
       --control-border: #3a4557;
+      --danger: #ff9c95;
     }
 
     * { box-sizing: border-box; }
     html, body { min-width: 320px; min-height: 100%; margin: 0; }
     body { min-height: 100vh; display: flex; flex-direction: column; color: var(--ink); background: var(--workspace); }
-    button, a, textarea { font: inherit; }
+    button, a, textarea, input { font: inherit; }
+    button { color: inherit; }
     .topbar {
       min-height: 72px; display: flex; align-items: center; justify-content: space-between;
       gap: 16px; padding: 12px clamp(16px, 4vw, 40px); border-bottom: 1px solid var(--line);
@@ -51,46 +56,118 @@
     .brand-name { display: block; color: var(--ink); font-size: 17px; font-weight: 760; letter-spacing: -.03em; }
     .brand-subtitle { display: block; margin-top: 3px; color: var(--muted); font-size: 11px; }
     .file-type { padding: 6px 9px; border: 1px solid var(--line); border-radius: 7px; color: var(--muted); font: 700 11px/1 ui-monospace, SFMono-Regular, Consolas, monospace; }
-    main { width: min(100% - 32px, 980px); flex: 1; margin: 0 auto; padding: clamp(24px, 5vh, 48px) 0; }
-    .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
-    h1 { margin: 0; color: var(--ink); font-size: clamp(25px, 4vw, 34px); letter-spacing: -.045em; }
-    .subtitle { margin: 7px 0 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
-    .editor-card { overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); box-shadow: 0 10px 32px rgb(15 23 42 / 5%); }
-    .editor-toolbar { min-height: 54px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
-    .editor-label { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .app-shell { width: min(100% - 32px, 1120px); flex: 1; margin: 0 auto; padding: clamp(22px, 4vh, 40px) 0; display: grid; grid-template-columns: 248px minmax(0, 1fr); align-items: start; gap: 22px; }
+    .menu, .panel { border: 1px solid var(--line); border-radius: 14px; background: var(--panel); box-shadow: 0 10px 32px rgb(15 23 42 / 4%); }
+    .menu { padding: 12px; position: sticky; top: 16px; }
+    .menu-heading { margin: 7px 9px 12px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .12em; }
+    .menu-items { display: grid; gap: 5px; }
+    .menu-item {
+      display: flex; width: 100%; align-items: center; gap: 11px; padding: 11px 10px;
+      border: 1px solid transparent; border-radius: 9px; background: transparent; text-align: left;
+      cursor: pointer; transition: background-color 140ms ease, border-color 140ms ease;
+    }
+    .menu-item:hover { background: var(--workspace); }
+    .menu-item[aria-pressed="true"] { color: var(--accent); border-color: var(--line); background: var(--accent-soft); }
+    .menu-icon { display: grid; width: 36px; height: 36px; flex: 0 0 36px; place-items: center; border: 1px solid var(--line); border-radius: 9px; background: var(--panel); }
+    .menu-icon svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .menu-text { display: block; min-width: 0; }
+    .menu-text strong { display: block; font-size: 12px; font-weight: 750; }
+    .menu-text small { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.35; }
+    .menu-rule { margin: 14px 7px 8px; padding-top: 13px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; line-height: 1.6; }
+    .workspace { min-width: 0; }
+    .page-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin: 1px 0 17px; }
+    h1 { margin: 0; color: var(--ink); font-size: clamp(24px, 3.5vw, 32px); letter-spacing: -.045em; }
+    h2 { margin: 0; color: var(--ink); font-size: 15px; letter-spacing: -.015em; }
+    .subtitle { margin: 7px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .panel { padding: clamp(15px, 2.5vw, 23px); }
+    .panel[hidden] { display: none !important; }
+    .panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 17px; }
+    .panel-description { margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .editor-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-bottom: 0; border-radius: 9px 9px 0 0; background: var(--workspace); }
+    .editor-label { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; font-weight: 750; }
     .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #16a34a; }
     .actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 7px; }
     .action {
-      min-height: 34px; padding: 7px 11px; border: 1px solid var(--control-border); border-radius: 7px;
-      color: var(--ink); background: var(--control-bg); cursor: pointer; font-size: 12px; font-weight: 650;
+      min-height: 35px; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 7px 11px; border: 1px solid var(--control-border); border-radius: 7px;
+      color: var(--ink); background: var(--control-bg); cursor: pointer; font-size: 11px; font-weight: 700;
       transition: border-color 140ms ease, background-color 140ms ease;
     }
-    .action:hover { border-color: var(--accent); }
+    .action:hover:not(:disabled) { border-color: var(--accent); }
     .action-primary { border-color: var(--accent); color: #ffffff; background: #4263eb; }
-    .action-primary:hover { border-color: #2f4fd0; background: #2f4fd0; }
+    .action-primary:hover:not(:disabled) { border-color: #2f4fd0; background: #2f4fd0; }
+    .action-danger { color: var(--danger); }
+    .action:disabled { cursor: not-allowed; opacity: .45; }
     textarea {
-      display: block; width: 100%; min-height: min(58vh, 620px); resize: vertical; padding: 22px;
-      border: 0; outline: 0; color: var(--ink); background: var(--panel);
-      font: 14px/1.8 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+      display: block; width: 100%; min-height: min(55vh, 560px); resize: vertical; padding: 20px;
+      border: 1px solid var(--line); border-radius: 0 0 9px 9px; outline: 0;
+      color: var(--ink); background: var(--panel);
+      font: 13px/1.8 ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
       tab-size: 2; white-space: pre-wrap; overflow-wrap: anywhere;
     }
     textarea::placeholder { color: var(--muted); opacity: .8; }
-    .editor-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
-    #status { min-height: 1em; text-align: right; }
+    .panel-footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-top: 10px; color: var(--muted); font-size: 10px; }
+    .screenshot-dropzone {
+      min-height: 330px; display: flex; align-items: center; justify-content: center; flex-direction: column;
+      gap: 10px; padding: 20px; border: 1px dashed var(--control-border); border-radius: 10px;
+      background: var(--workspace); text-align: center; cursor: pointer; outline: 0;
+    }
+    .screenshot-dropzone:focus-visible, .screenshot-dropzone.is-dragging { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .empty-art { display: grid; width: 58px; height: 58px; place-items: center; border: 1px solid var(--line); border-radius: 16px; color: var(--accent); background: var(--panel); }
+    .empty-art svg { width: 29px; height: 29px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+    .dropzone-title { color: var(--ink); font-size: 13px; font-weight: 750; }
+    .dropzone-description { max-width: 360px; color: var(--muted); font-size: 11px; line-height: 1.65; }
+    .screenshot-preview { display: block; max-width: 100%; max-height: 58vh; object-fit: contain; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); }
+    .screenshot-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 13px; }
+    .history-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+    .history-count { color: var(--muted); font-size: 11px; }
+    .history-list { display: grid; gap: 9px; }
+    .history-entry { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+    .history-thumb { display: block; width: 44px; height: 44px; object-fit: cover; border: 1px solid var(--line); border-radius: 7px; background: var(--workspace); }
+    .history-type-icon { display: grid; width: 44px; height: 44px; place-items: center; border: 1px solid var(--line); border-radius: 7px; color: var(--muted); background: var(--workspace); }
+    .history-type-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+    .history-details { min-width: 0; }
+    .history-entry-title { display: block; color: var(--ink); font-size: 11px; font-weight: 750; }
+    .history-time { display: block; margin-top: 4px; color: var(--muted); font-size: 10px; }
+    .history-snippet { display: block; margin-top: 5px; overflow: hidden; color: var(--muted); font-size: 11px; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
+    .history-entry .action { white-space: nowrap; }
+    .history-empty { padding: 38px 18px; border: 1px dashed var(--control-border); border-radius: 10px; color: var(--muted); font-size: 12px; line-height: 1.7; text-align: center; }
+    .history-empty strong { display: block; margin-bottom: 5px; color: var(--ink); font-size: 13px; }
+    .status-message { min-height: 22px; margin: 13px 2px 0; color: var(--muted); font-size: 11px; line-height: 1.6; }
     .copyright { padding: 18px 16px 22px; border-top: 1px solid var(--line); color: var(--muted); background: var(--panel); font-size: 11px; text-align: center; }
     .copyright strong { color: var(--ink); font-weight: 650; }
-    button:focus-visible, a:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    @media (max-width: 560px) {
-      .topbar { min-height: 64px; padding: 10px 14px; }
+    button:focus-visible, a:focus-visible, textarea:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    @media (max-width: 760px) {
+      .app-shell { width: min(100% - 20px, 680px); grid-template-columns: 1fr; gap: 14px; padding-top: 18px; }
+      .menu { position: static; padding: 10px; }
+      .menu-heading { margin: 3px 7px 9px; }
+      .menu-items { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+      .menu-item { align-items: center; flex-direction: column; justify-content: flex-start; gap: 7px; min-height: 94px; padding: 9px 5px; text-align: center; }
+      .menu-text small { display: none; }
+      .menu-text strong { font-size: 10px; }
+      .menu-icon { width: 31px; height: 31px; flex-basis: 31px; }
+      .menu-icon svg { width: 17px; height: 17px; }
+      .menu-rule { margin: 7px 4px 0; padding-top: 9px; font-size: 9px; }
+      .history-entry { grid-template-columns: 38px minmax(0, 1fr) auto; gap: 9px; padding: 9px; }
+      .history-thumb, .history-type-icon { width: 38px; height: 38px; }
+      .history-entry .action { padding: 6px 8px; }
+    }
+    @media (max-width: 460px) {
+      .topbar { min-height: 64px; padding: 10px 13px; }
       .brand img { width: 32px; height: 32px; }
       .brand-name { font-size: 15px; }
-      main { width: min(100% - 20px, 980px); padding-top: 24px; }
-      .page-heading { align-items: flex-start; flex-direction: column; gap: 8px; }
+      .brand-subtitle { font-size: 10px; }
+      .app-shell { padding-top: 12px; }
+      .panel { padding: 13px; }
+      .page-heading { margin-bottom: 12px; }
+      .panel-header { flex-direction: column; gap: 7px; }
       .editor-toolbar { align-items: flex-start; flex-direction: column; }
       .actions { width: 100%; justify-content: flex-start; }
-      textarea { min-height: 55vh; padding: 15px; font-size: 13px; }
-      .editor-footer { align-items: flex-start; flex-direction: column; gap: 5px; }
-      #status { text-align: left; }
+      textarea { min-height: 48vh; padding: 14px; font-size: 12px; }
+      .screenshot-dropzone { min-height: 250px; padding: 14px; }
+      .history-entry { grid-template-columns: 34px minmax(0, 1fr); }
+      .history-thumb, .history-type-icon { width: 34px; height: 34px; }
+      .history-entry .action { grid-column: 2; justify-self: start; }
     }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
   </style>
@@ -108,96 +185,636 @@
       <img src="./icons/lux-pdf-viewer-icon.svg" alt="" width="38" height="38">
       <span class="brand-copy">
         <span class="brand-name">Lux Omni Clipboard</span>
-        <span class="brand-subtitle">A simple plain-text workspace</span>
+        <span class="brand-subtitle">Text, screenshots, and recent copies</span>
       </span>
     </a>
-    <span class="file-type">.TXT</span>
+    <span class="file-type">LOCAL CLIPBOARD</span>
   </header>
 
-  <main>
-    <div class="page-heading">
-      <div>
-        <h1>Lux Omni Clipboard</h1>
-        <p class="subtitle">Type or paste plain text here. Copy it for later use or download it as a text file.</p>
+  <main class="app-shell">
+    <nav class="menu" aria-label="Clipboard menu">
+      <p class="menu-heading">CLIPBOARD MENU</p>
+      <div class="menu-items">
+        <button class="menu-item" type="button" data-view="text" aria-pressed="true">
+          <span class="menu-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"></path></svg>
+          </span>
+          <span class="menu-text"><strong>Text Clipboard</strong><small>Edit, copy, or download text</small></span>
+        </button>
+        <button class="menu-item" type="button" data-view="screenshot" aria-pressed="false">
+          <span class="menu-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"></rect><circle cx="8.5" cy="10" r="1.5"></circle><path d="m5 18 5-5 3 3 3-4 3 6"></path></svg>
+          </span>
+          <span class="menu-text"><strong>Screenshot Clipboard</strong><small>Paste, preview, and copy an image</small></span>
+        </button>
+        <button class="menu-item" type="button" data-view="history" aria-pressed="false">
+          <span class="menu-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"></path><path d="M3 3v5h5M12 7v5l3 2"></path></svg>
+          </span>
+          <span class="menu-text"><strong>Clipboard History</strong><small>Review the ten latest copy actions</small></span>
+        </button>
       </div>
-    </div>
+      <p class="menu-rule">History stays in this browser. The newest copied item appears first. Only copy actions made in this clipboard are recorded.</p>
+    </nav>
 
-    <section class="editor-card" aria-label="Clipboard text editor">
-      <div class="editor-toolbar">
-        <span class="editor-label"><span class="status-dot" aria-hidden="true"></span>Plain text</span>
-        <div class="actions">
-          <button id="copy-text" class="action" type="button">Copy text</button>
-          <button id="clear-text" class="action" type="button">Clear</button>
-          <button id="download-text" class="action action-primary" type="button">Download .txt</button>
+    <div class="workspace">
+      <div class="page-heading">
+        <div>
+          <h1 id="page-title">Text Clipboard</h1>
+          <p id="page-subtitle" class="subtitle">Edit plain text, copy it to your system clipboard, or download it as a text file.</p>
         </div>
       </div>
-      <textarea id="clipboard-text" spellcheck="false" aria-label="Clipboard text" placeholder="Paste or type your text here…"></textarea>
-      <div class="editor-footer">
-        <span id="character-count">0 characters</span>
-        <span id="status" role="status" aria-live="polite"></span>
-      </div>
-    </section>
+
+      <section class="panel" data-panel="text" aria-labelledby="text-panel-title">
+        <div class="panel-header">
+          <div>
+            <h2 id="text-panel-title">Plain text</h2>
+            <p class="panel-description">Your text stays here until you clear it or leave the page. Copy creates an entry in the local history.</p>
+          </div>
+        </div>
+        <div class="editor-toolbar">
+          <span class="editor-label"><span class="status-dot" aria-hidden="true"></span>Editable text</span>
+          <div class="actions">
+            <button id="copy-text" class="action action-primary" type="button">Copy text</button>
+            <button id="clear-text" class="action" type="button">Clear text</button>
+            <button id="download-text" class="action" type="button">Download .txt</button>
+          </div>
+        </div>
+        <textarea id="clipboard-text" spellcheck="false" aria-label="Text clipboard editor" placeholder="Type or paste text here…"></textarea>
+        <div class="panel-footer">
+          <span id="character-count">0 characters</span>
+          <span>Text is logged only when you copy it using Copy text.</span>
+        </div>
+      </section>
+
+      <section class="panel" data-panel="screenshot" aria-labelledby="screenshot-panel-title" hidden>
+        <div class="panel-header">
+          <div>
+            <h2 id="screenshot-panel-title">Screenshot clipboard</h2>
+            <p class="panel-description">Paste a screenshot with Ctrl+V / ⌘V, choose an image file, or try Paste from system clipboard.</p>
+          </div>
+        </div>
+        <div id="screenshot-dropzone" class="screenshot-dropzone" tabindex="0" role="region" aria-label="Screenshot paste and preview area">
+          <div id="screenshot-empty" class="empty-art" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"></rect><circle cx="8.5" cy="10" r="1.5"></circle><path d="m5 18 5-5 3 3 3-4 3 6"></path></svg>
+          </div>
+          <strong id="screenshot-empty-title" class="dropzone-title">Paste a screenshot here</strong>
+          <span id="screenshot-empty-description" class="dropzone-description">Click this area and paste an image, or use the buttons below to select an image file or read an image from your system clipboard.</span>
+          <img id="screenshot-preview" class="screenshot-preview" alt="Screenshot preview" hidden>
+        </div>
+        <input id="screenshot-file" type="file" accept="image/*" hidden>
+        <div class="screenshot-actions">
+          <button id="paste-image" class="action" type="button">Paste from system clipboard</button>
+          <button id="choose-image" class="action" type="button">Choose image</button>
+          <button id="copy-image" class="action action-primary" type="button" disabled>Copy screenshot</button>
+          <button id="clear-image" class="action action-danger" type="button" disabled>Clear image</button>
+        </div>
+        <div class="panel-footer">
+          <span id="screenshot-details">No screenshot selected</span>
+          <span>Images are added to history when you copy them.</span>
+        </div>
+      </section>
+
+      <section class="panel" data-panel="history" aria-labelledby="history-panel-title" hidden>
+        <div class="panel-header">
+          <div>
+            <h2 id="history-panel-title">Clipboard history</h2>
+            <p class="panel-description">The most recent copy is first. Older entries are removed automatically when the list exceeds ten.</p>
+          </div>
+        </div>
+        <div class="history-toolbar">
+          <span id="history-count" class="history-count">0 of 10 entries</span>
+          <button id="clear-history" class="action action-danger" type="button">Clear history</button>
+        </div>
+        <div id="history-empty" class="history-empty">
+          <strong>No copied items yet</strong>
+          Copy text or a screenshot from this page and it will appear here. You can import a saved entry back into the text or screenshot clipboard.
+        </div>
+        <div id="history-list" class="history-list" aria-live="polite"></div>
+      </section>
+
+      <p id="status" class="status-message" role="status" aria-live="polite"></p>
+    </div>
   </main>
 
   <footer class="copyright">
-    © 2026 <strong>Luxraj (Subrata) Kayal</strong>. All rights reserved.
+    © 2026 <strong>Luxraj Kayal (Subrata Kayal)</strong>. All rights reserved.
   </footer>
 
   <script>
-    const textArea = document.querySelector("#clipboard-text");
+    "use strict";
+
+    const HISTORY_DATABASE = "lux-omni-clipboard-history";
+    const HISTORY_STORE = "entries";
+    const HISTORY_LIMIT = 10;
+
+    const menuButtons = Array.from(document.querySelectorAll("[data-view]"));
+    const panels = Array.from(document.querySelectorAll("[data-panel]"));
+    const pageTitle = document.querySelector("#page-title");
+    const pageSubtitle = document.querySelector("#page-subtitle");
     const status = document.querySelector("#status");
+    const textArea = document.querySelector("#clipboard-text");
     const characterCount = document.querySelector("#character-count");
+    const screenshotDropzone = document.querySelector("#screenshot-dropzone");
+    const screenshotFileInput = document.querySelector("#screenshot-file");
+    const screenshotPreview = document.querySelector("#screenshot-preview");
+    const screenshotEmpty = document.querySelector("#screenshot-empty");
+    const screenshotEmptyTitle = document.querySelector("#screenshot-empty-title");
+    const screenshotEmptyDescription = document.querySelector("#screenshot-empty-description");
+    const screenshotDetails = document.querySelector("#screenshot-details");
+    const copyImageButton = document.querySelector("#copy-image");
+    const clearImageButton = document.querySelector("#clear-image");
+    const historyCount = document.querySelector("#history-count");
+    const historyEmpty = document.querySelector("#history-empty");
+    const historyList = document.querySelector("#history-list");
+    const clearHistoryButton = document.querySelector("#clear-history");
+
+    const viewDetails = {
+      text: {
+        title: "Text Clipboard",
+        subtitle: "Edit plain text, copy it to your system clipboard, or download it as a text file."
+      },
+      screenshot: {
+        title: "Screenshot Clipboard",
+        subtitle: "Paste or choose a screenshot, preview it, and copy the image."
+      },
+      history: {
+        title: "Clipboard History",
+        subtitle: "Review and import your ten most recent text and screenshot copy actions."
+      }
+    };
+
+    let activeView = "text";
+    let screenshotBlob = null;
+    let screenshotObjectUrl = null;
+    let databasePromise = null;
+    let historyQueue = Promise.resolve();
+    let entrySequence = 0;
+    let historyPreviewUrls = [];
+
+    function setStatus(message) {
+      status.textContent = message || "";
+    }
+
+    function setView(viewName) {
+      if (!viewDetails[viewName]) return;
+      activeView = viewName;
+      menuButtons.forEach(function (button) {
+        button.setAttribute("aria-pressed", String(button.dataset.view === viewName));
+      });
+      panels.forEach(function (panel) {
+        panel.hidden = panel.dataset.panel !== viewName;
+      });
+      pageTitle.textContent = viewDetails[viewName].title;
+      pageSubtitle.textContent = viewDetails[viewName].subtitle;
+      setStatus("");
+      if (viewName === "history") renderHistory();
+      if (viewName === "text") textArea.focus({ preventScroll: true });
+      if (viewName === "screenshot") screenshotDropzone.focus({ preventScroll: true });
+    }
+
+    menuButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        setView(button.dataset.view);
+      });
+    });
 
     function updateCharacterCount() {
       const count = textArea.value.length;
       characterCount.textContent = count + (count === 1 ? " character" : " characters");
     }
 
-    function setStatus(message) {
-      status.textContent = message;
-    }
-
     textArea.addEventListener("input", updateCharacterCount);
 
-    document.querySelector("#copy-text").addEventListener("click", async () => {
+    function openHistoryDatabase() {
+      if (!("indexedDB" in window)) {
+        return Promise.reject(new Error("This browser does not support local clipboard history storage."));
+      }
+      if (databasePromise) return databasePromise;
+      databasePromise = new Promise(function (resolve, reject) {
+        const request = window.indexedDB.open(HISTORY_DATABASE, 1);
+        request.onupgradeneeded = function () {
+          const database = request.result;
+          if (!database.objectStoreNames.contains(HISTORY_STORE)) {
+            database.createObjectStore(HISTORY_STORE, { keyPath: "id" });
+          }
+        };
+        request.onsuccess = function () {
+          const database = request.result;
+          database.onversionchange = function () { database.close(); };
+          resolve(database);
+        };
+        request.onerror = function () {
+          reject(request.error || new Error("Could not open local clipboard history."));
+        };
+        request.onblocked = function () {
+          reject(new Error("Clipboard history is busy in another tab. Close other clipboard tabs and try again."));
+        };
+      });
+      return databasePromise;
+    }
+
+    function sortHistory(entries) {
+      return entries.sort(function (a, b) {
+        return (b.createdAt - a.createdAt) || String(b.id).localeCompare(String(a.id));
+      });
+    }
+
+    async function readHistory() {
+      const database = await openHistoryDatabase();
+      return new Promise(function (resolve, reject) {
+        const transaction = database.transaction(HISTORY_STORE, "readonly");
+        const request = transaction.objectStore(HISTORY_STORE).getAll();
+        request.onsuccess = function () {
+          resolve(sortHistory(request.result || []).slice(0, HISTORY_LIMIT));
+        };
+        request.onerror = function () {
+          reject(request.error || new Error("Could not read clipboard history."));
+        };
+        transaction.onerror = function () {
+          reject(transaction.error || new Error("Could not read clipboard history."));
+        };
+      });
+    }
+
+    async function replaceHistory(entries) {
+      const database = await openHistoryDatabase();
+      return new Promise(function (resolve, reject) {
+        const transaction = database.transaction(HISTORY_STORE, "readwrite");
+        const store = transaction.objectStore(HISTORY_STORE);
+        store.clear();
+        entries.forEach(function (entry) { store.put(entry); });
+        transaction.oncomplete = function () { resolve(); };
+        transaction.onerror = function () {
+          reject(transaction.error || new Error("Could not save clipboard history."));
+        };
+        transaction.onabort = function () {
+          reject(transaction.error || new Error("Clipboard history update was cancelled."));
+        };
+      });
+    }
+
+    function enqueueHistoryMutation(mutation) {
+      const task = historyQueue.then(mutation);
+      historyQueue = task.catch(function () {});
+      return task;
+    }
+
+    function makeEntryId() {
+      entrySequence += 1;
+      return String(Date.now()).padStart(13, "0") + "-" +
+        String(entrySequence).padStart(6, "0") + "-" +
+        Math.random().toString(36).slice(2, 8);
+    }
+
+    async function recordHistory(entry) {
+      return enqueueHistoryMutation(async function () {
+        const current = await readHistory();
+        const next = sortHistory([entry].concat(current.filter(function (item) {
+          return item.id !== entry.id;
+        }))).slice(0, HISTORY_LIMIT);
+        await replaceHistory(next);
+        await renderHistory();
+      }).then(function () {
+        return true;
+      }).catch(function () {
+        return false;
+      });
+    }
+
+    function revokeHistoryPreviewUrls() {
+      historyPreviewUrls.forEach(function (url) { URL.revokeObjectURL(url); });
+      historyPreviewUrls = [];
+    }
+
+    function createTextIcon() {
+      const wrapper = document.createElement("span");
+      wrapper.className = "history-type-icon";
+      wrapper.setAttribute("aria-hidden", "true");
+      wrapper.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"></path></svg>';
+      return wrapper;
+    }
+
+    function createImageIcon() {
+      const wrapper = document.createElement("span");
+      wrapper.className = "history-type-icon";
+      wrapper.setAttribute("aria-hidden", "true");
+      wrapper.innerHTML = '<svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="15" rx="2"></rect><circle cx="8.5" cy="10" r="1.5"></circle><path d="m5 18 5-5 3 3 3-4 3 6"></path></svg>';
+      return wrapper;
+    }
+
+    function createHistoryEntry(entry) {
+      const row = document.createElement("article");
+      row.className = "history-entry";
+
+      if (entry.type === "image" && entry.blob instanceof Blob) {
+        const image = document.createElement("img");
+        image.className = "history-thumb";
+        image.alt = "Saved screenshot thumbnail";
+        const url = URL.createObjectURL(entry.blob);
+        historyPreviewUrls.push(url);
+        image.src = url;
+        row.appendChild(image);
+      } else {
+        row.appendChild(createTextIcon());
+      }
+
+      const details = document.createElement("div");
+      details.className = "history-details";
+      const title = document.createElement("strong");
+      title.className = "history-entry-title";
+      title.textContent = entry.type === "image" ? "Screenshot" : "Text";
+      const time = document.createElement("span");
+      time.className = "history-time";
+      time.textContent = new Date(entry.createdAt).toLocaleString();
+      const snippet = document.createElement("span");
+      snippet.className = "history-snippet";
+      if (entry.type === "image") {
+        snippet.textContent = entry.blob ? (entry.blob.type || "Image") + " · " + Math.round(entry.blob.size / 1024) + " KB" : "Image data unavailable";
+      } else {
+        snippet.textContent = String(entry.text || "").replace(/\s+/g, " ") || "(Empty text)";
+      }
+      details.appendChild(title);
+      details.appendChild(time);
+      details.appendChild(snippet);
+      row.appendChild(details);
+
+      const importButton = document.createElement("button");
+      importButton.className = "action";
+      importButton.type = "button";
+      importButton.textContent = "Import";
+      importButton.addEventListener("click", function () {
+        if (entry.type === "image" && entry.blob instanceof Blob) {
+          displayScreenshot(entry.blob, "Imported screenshot from history");
+          setView("screenshot");
+          setStatus("Screenshot imported. Use Copy screenshot to copy and log it again.");
+          return;
+        }
+        textArea.value = String(entry.text || "");
+        updateCharacterCount();
+        setView("text");
+        setStatus("Text imported. Use Copy text to copy and log it again.");
+      });
+      row.appendChild(importButton);
+      return row;
+    }
+
+    async function renderHistory() {
+      revokeHistoryPreviewUrls();
+      historyList.replaceChildren();
+      try {
+        const entries = await readHistory();
+        historyCount.textContent = entries.length + " of " + HISTORY_LIMIT + " entries";
+        historyEmpty.hidden = entries.length > 0;
+        entries.forEach(function (entry) {
+          historyList.appendChild(createHistoryEntry(entry));
+        });
+      } catch (error) {
+        historyCount.textContent = "History unavailable";
+        historyEmpty.hidden = false;
+        historyEmpty.replaceChildren();
+        const heading = document.createElement("strong");
+        heading.textContent = "Could not load local history";
+        const explanation = document.createElement("span");
+        explanation.textContent = error && error.message ? error.message : "This browser could not access local history storage.";
+        historyEmpty.appendChild(heading);
+        historyEmpty.appendChild(explanation);
+        clearHistoryButton.disabled = true;
+      }
+    }
+
+    function createHistoryRecord(type, data) {
+      const base = { id: makeEntryId(), type: type, createdAt: Date.now() };
+      if (type === "text") base.text = data;
+      if (type === "image") base.blob = data;
+      return base;
+    }
+
+    document.querySelector("#copy-text").addEventListener("click", async function () {
       if (!textArea.value) {
         setStatus("Nothing to copy yet.");
         return;
       }
+      let copied = false;
       try {
-        await navigator.clipboard.writeText(textArea.value);
-        setStatus("Text copied.");
-      } catch {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(textArea.value);
+          copied = true;
+        }
+      } catch {}
+      if (!copied) {
         textArea.focus();
         textArea.select();
-        const copied = document.execCommand("copy");
-        setStatus(copied ? "Text copied." : "Select the text and copy it manually.");
+        try { copied = document.execCommand("copy"); } catch {}
       }
+      if (!copied) {
+        setStatus("The browser could not copy this text. Check clipboard permissions and try again.");
+        return;
+      }
+      const stored = await recordHistory(createHistoryRecord("text", textArea.value));
+      setStatus(stored ? "Text copied and added to local history." : "Text copied, but local history could not be saved in this browser.");
     });
 
-    document.querySelector("#clear-text").addEventListener("click", () => {
+    document.querySelector("#clear-text").addEventListener("click", function () {
       if (!textArea.value) {
-        setStatus("Clipboard is already empty.");
+        setStatus("Text clipboard is already empty.");
         return;
       }
       textArea.value = "";
       updateCharacterCount();
-      setStatus("Text cleared.");
+      setStatus("Text cleared. Existing history entries are unchanged.");
       textArea.focus();
     });
 
-    document.querySelector("#download-text").addEventListener("click", () => {
+    document.querySelector("#download-text").addEventListener("click", function () {
       const blob = new Blob([textArea.value], { type: "text/plain;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const downloadLink = document.createElement("a");
       downloadLink.href = url;
       downloadLink.download = "clipboard.txt";
-      document.body.append(downloadLink);
+      document.body.appendChild(downloadLink);
       downloadLink.click();
       downloadLink.remove();
       URL.revokeObjectURL(url);
       setStatus("Downloaded clipboard.txt.");
     });
+
+    function displayScreenshot(blob, message) {
+      if (!(blob instanceof Blob) || !blob.type.startsWith("image/")) {
+        setStatus("That item is not a supported image.");
+        return;
+      }
+      screenshotBlob = blob;
+      if (screenshotObjectUrl) URL.revokeObjectURL(screenshotObjectUrl);
+      screenshotObjectUrl = URL.createObjectURL(blob);
+      screenshotPreview.src = screenshotObjectUrl;
+      screenshotPreview.hidden = false;
+      screenshotEmpty.hidden = true;
+      screenshotEmptyTitle.hidden = true;
+      screenshotEmptyDescription.hidden = true;
+      copyImageButton.disabled = false;
+      clearImageButton.disabled = false;
+      screenshotDetails.textContent = (blob.type || "Image") + " · " + Math.max(1, Math.round(blob.size / 1024)) + " KB";
+      if (message) setStatus(message);
+    }
+
+    function clearScreenshot() {
+      screenshotBlob = null;
+      screenshotPreview.removeAttribute("src");
+      screenshotPreview.hidden = true;
+      screenshotEmpty.hidden = false;
+      screenshotEmptyTitle.hidden = false;
+      screenshotEmptyDescription.hidden = false;
+      copyImageButton.disabled = true;
+      clearImageButton.disabled = true;
+      screenshotDetails.textContent = "No screenshot selected";
+      if (screenshotObjectUrl) {
+        URL.revokeObjectURL(screenshotObjectUrl);
+        screenshotObjectUrl = null;
+      }
+    }
+
+    document.querySelector("#choose-image").addEventListener("click", function () {
+      screenshotFileInput.click();
+    });
+
+    screenshotFileInput.addEventListener("change", function () {
+      const file = screenshotFileInput.files && screenshotFileInput.files[0];
+      if (file) displayScreenshot(file, "Image ready. Use Copy screenshot to copy and save it in history.");
+      screenshotFileInput.value = "";
+    });
+
+    document.querySelector("#paste-image").addEventListener("click", async function () {
+      if (!navigator.clipboard || typeof navigator.clipboard.read !== "function") {
+        setStatus("Reading images from the system clipboard is not supported here. Paste with Ctrl+V / ⌘V or choose an image file.");
+        return;
+      }
+      try {
+        const clipboardItems = await navigator.clipboard.read();
+        for (const item of clipboardItems) {
+          const imageType = item.types.find(function (type) { return type.startsWith("image/"); });
+          if (!imageType) continue;
+          const blob = await item.getType(imageType);
+          displayScreenshot(blob, "Screenshot pasted from the system clipboard. Use Copy screenshot to log it.");
+          return;
+        }
+        setStatus("No image was found in the system clipboard. Copy a screenshot first.");
+      } catch {
+        setStatus("The browser denied access to the clipboard. Paste with Ctrl+V / ⌘V or choose an image file.");
+      }
+    });
+
+    function handleImagePaste(event) {
+      if (activeView !== "screenshot") return;
+      const data = event.clipboardData;
+      if (!data || !data.items) return;
+      const items = Array.from(data.items);
+      const imageItem = items.find(function (item) {
+        return item.kind === "file" && item.type.startsWith("image/");
+      });
+      if (!imageItem) return;
+      const imageFile = imageItem.getAsFile();
+      if (!imageFile) return;
+      event.preventDefault();
+      displayScreenshot(imageFile, "Screenshot pasted. Use Copy screenshot to copy and log it.");
+    }
+
+    document.addEventListener("paste", handleImagePaste);
+    screenshotDropzone.addEventListener("paste", handleImagePaste);
+    screenshotDropzone.addEventListener("dragover", function (event) {
+      event.preventDefault();
+      screenshotDropzone.classList.add("is-dragging");
+    });
+    screenshotDropzone.addEventListener("dragleave", function () {
+      screenshotDropzone.classList.remove("is-dragging");
+    });
+    screenshotDropzone.addEventListener("drop", function (event) {
+      event.preventDefault();
+      screenshotDropzone.classList.remove("is-dragging");
+      const files = Array.from((event.dataTransfer && event.dataTransfer.files) || []);
+      const image = files.find(function (file) { return file.type.startsWith("image/"); });
+      if (image) displayScreenshot(image, "Image added. Use Copy screenshot to copy and log it.");
+      else setStatus("Drop an image file to preview it.");
+    });
+
+    screenshotDropzone.addEventListener("click", function (event) {
+      if (event.target === screenshotPreview || event.target.closest("button")) return;
+      screenshotDropzone.focus();
+    });
+
+    async function convertToPng(blob) {
+      if (blob.type === "image/png") return blob;
+      let bitmap;
+      try {
+        bitmap = await createImageBitmap(blob);
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        canvas.getContext("2d").drawImage(bitmap, 0, 0);
+        const png = await new Promise(function (resolve) {
+          canvas.toBlob(resolve, "image/png");
+        });
+        if (!png) throw new Error("The image could not be prepared for copying.");
+        if (typeof bitmap.close === "function") bitmap.close();
+        return png;
+      } catch (error) {
+        if (bitmap && typeof bitmap.close === "function") bitmap.close();
+        throw error;
+      }
+    }
+
+    copyImageButton.addEventListener("click", async function () {
+      if (!screenshotBlob) {
+        setStatus("Choose or paste a screenshot first.");
+        return;
+      }
+      if (!navigator.clipboard || typeof navigator.clipboard.write !== "function" || typeof ClipboardItem === "undefined") {
+        setStatus("Image copying is not supported by this browser. You can still preview and import screenshots.");
+        return;
+      }
+      copyImageButton.disabled = true;
+      try {
+        const pngBlob = await convertToPng(screenshotBlob);
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": pngBlob })]);
+        const stored = await recordHistory(createHistoryRecord("image", screenshotBlob));
+        setStatus(stored ? "Screenshot copied and added to local history." : "Screenshot copied, but local history could not be saved in this browser.");
+      } catch (error) {
+        setStatus(error && error.message && error.message.indexOf("prepare") !== -1
+          ? error.message
+          : "Could not copy the screenshot. Check clipboard permissions and try again.");
+      } finally {
+        copyImageButton.disabled = !screenshotBlob;
+      }
+    });
+
+    clearImageButton.addEventListener("click", function () {
+      clearScreenshot();
+      setStatus("Screenshot cleared. Existing history entries are unchanged.");
+    });
+
+    clearHistoryButton.addEventListener("click", async function () {
+      if (clearHistoryButton.disabled) return;
+      const entries = await readHistory().catch(function () { return []; });
+      if (!entries.length) {
+        setStatus("Clipboard history is already empty.");
+        return;
+      }
+      if (!window.confirm("Clear all ten-entry clipboard history stored in this browser? This will not clear your current text or screenshot.")) return;
+      clearHistoryButton.disabled = true;
+      try {
+        await enqueueHistoryMutation(function () { return replaceHistory([]); });
+        await renderHistory();
+        setStatus("Local clipboard history cleared.");
+      } catch {
+        setStatus("Could not clear clipboard history in this browser.");
+      } finally {
+        clearHistoryButton.disabled = false;
+      }
+    });
+
+    updateCharacterCount();
+    clearScreenshot();
+    renderHistory();
   </script>
 </body>
 </html>
