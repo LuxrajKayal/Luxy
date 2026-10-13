@@ -87,8 +87,8 @@
 }
 #lux-snip-freeform-path { pointer-events:none; }
 .lux-snip-editor-modal {
-  position:fixed; inset:0; z-index:7000; display:flex; justify-content:center; align-items:center;
-  padding:18px;
+  position:fixed; inset:0; z-index:7000; display:flex; justify-content:center; align-items:stretch;
+  padding:0;
 }
 .lux-snip-editor-backdrop {
   position:absolute; inset:0; background:rgb(15 23 42 / 38%);
@@ -96,12 +96,12 @@
 }
 .lux-snip-editor-dialog {
   position:relative; display:flex; flex-direction:column; overflow:hidden;
-  width:min(1180px,calc(100vw - 36px)); max-height:94vh;
-  border:1px solid rgb(148 163 184 / 40%); border-radius:15px;
+  width:100vw; height:100vh; height:100dvh; min-height:0; max-width:none; max-height:none;
+  border:0; border-radius:0;
   background:var(--panel,#fff); color:var(--ink,#0f172a);
-  box-shadow:0 24px 80px rgb(15 23 42 / 35%);
+  box-shadow:none;
 }
-.lux-snip-editor-header { display:flex; align-items:center; gap:10px; min-height:58px; padding:9px 14px; border-bottom:1px solid var(--line,#e2e8f0); }
+.lux-snip-editor-header { display:flex; align-items:center; gap:10px; min-height:58px; flex:0 0 auto; padding:9px 14px; border-bottom:1px solid var(--line,#e2e8f0); }
 .lux-snip-brand-icon { width:34px; height:34px; flex:0 0 34px; border-radius:9px; }
 .lux-snip-editor-title { margin:0; font:750 17px/1.25 system-ui,sans-serif; letter-spacing:-.02em; }
 #lux-snip-discard {
@@ -110,7 +110,7 @@
 }
 #lux-snip-discard:hover { background:#ffe4e6; }
 #lux-snip-discard svg { width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:2.5; stroke-linecap:round; }
-.lux-snip-editor-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:5px; padding:7px 10px; border-bottom:1px solid var(--line,#e2e8f0); }
+.lux-snip-editor-toolbar { display:flex; flex:0 0 auto; flex-wrap:wrap; align-items:center; gap:5px; padding:7px 10px; border-bottom:1px solid var(--line,#e2e8f0); }
 .lux-snip-editor-toolbar button,
 .lux-snip-editor-toolbar select {
   display:inline-flex; align-items:center; justify-content:center; gap:5px; min-height:36px; padding:6px 8px;
@@ -128,7 +128,7 @@
 #lux-snip-copy { margin-left:auto; border-color:#2563eb; background:#2563eb; color:#fff; }
 #lux-snip-copy:hover { background:#1d4ed8; }
 #lux-snip-save { border-color:var(--control-border,#cbd5e1); background:var(--control-bg,#fff); }
-.lux-snip-workarea { flex:1 1 auto; min-height:160px; max-height:calc(94vh - 155px); overflow:auto; padding:14px; background:var(--panel-muted,#f8fafc); }
+.lux-snip-workarea { flex:1 1 0; min-height:0; max-height:none; overflow:auto; padding:clamp(8px,1.4vw,22px); background:var(--panel-muted,#f8fafc); }
 #lux-snip-stage { position:relative; margin:0 auto; overflow:hidden; background:#fff; box-shadow:0 2px 12px rgb(15 23 42 / 15%); }
 #lux-snip-base,#lux-snip-ink { position:absolute; top:0; left:0; display:block; max-width:none; margin:0; }
 #lux-snip-base { z-index:0; pointer-events:none; }
@@ -141,7 +141,7 @@
   border:1px dashed #2563eb; border-radius:4px; outline:none; background:rgb(255 255 255 / 95%);
   color:#111827; font-family:system-ui,sans-serif; line-height:1.35; box-shadow:0 2px 8px rgb(15 23 42 / 16%);
 }
-#lux-snip-status { min-height:30px; padding:7px 12px; border-top:1px solid var(--line,#e2e8f0); color:var(--muted,#64748b); font:12px/1.4 system-ui,sans-serif; }
+#lux-snip-status { flex:0 0 auto; min-height:30px; padding:7px 12px; border-top:1px solid var(--line,#e2e8f0); color:var(--muted,#64748b); font:12px/1.4 system-ui,sans-serif; }
 #lux-snip-notice {
   position:fixed; z-index:8000; right:16px; bottom:16px; max-width:min(480px,calc(100vw - 32px));
   padding:12px 15px; border:1px solid rgb(148 163 184 / 35%); border-radius:10px;
@@ -151,12 +151,12 @@
 @media(max-width:760px) {
   .lux-snip-capture-panel { flex-wrap:wrap; justify-content:center; top:8px; }
   .lux-snip-panel-title { flex-basis:100%; text-align:center; }
-  .lux-snip-editor-modal { padding:7px; }
-  .lux-snip-editor-dialog { width:calc(100vw - 14px); max-height:97vh; }
+  .lux-snip-editor-modal { padding:0; }
+  .lux-snip-editor-dialog { width:100vw; height:100vh; height:100dvh; max-height:none; border-radius:0; }
   .lux-snip-editor-title { font-size:14px; }
   .lux-snip-editor-toolbar { gap:3px; padding:6px; }
   .lux-snip-editor-toolbar button,.lux-snip-editor-toolbar select { min-height:33px; padding:5px; font-size:10px; }
   #lux-snip-copy { margin-left:0; }
-  .lux-snip-workarea { max-height:calc(97vh - 190px); padding:8px; }
+  .lux-snip-workarea { min-height:0; max-height:none; padding:8px; }
 }
 @media(prefers-reduced-motion:reduce) { #sidebar-screenshot,.lux-snip-capture-panel button { transition:none; } }
