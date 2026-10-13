@@ -34,6 +34,16 @@ test("PDF iframe path is removed while other viewport previews remain independen
   assert.match(bridge, /assignment\?\.editor\?\.dispose/);
 });
 
+test("PDF.js styles are isolated from the Lux Omni application shell", () => {
+  assert.match(engine, /root\.attachShadow\(\{ mode: "open" \}\)/);
+  assert.match(engine, /ensureViewerStylesheet\(shadowRoot\)/);
+  assert.match(engine, /shadowRoot\.append\(link\)/);
+  assert.doesNotMatch(engine, /document\.head\.append\(link\)/);
+  assert.match(engine, /data-lux-pdf-editor-stylesheet/);
+  assert.match(styles, /--page-margin: 1px auto -8px/);
+  assert.match(bridge, /mount\.shadowRoot \|\| mount/);
+});
+
 test("annotation toolbar connects to PDF.js editor modes", () => {
   for (const mode of ["HIGHLIGHT", "INK", "FREETEXT"]) {
     assert.ok(engine.includes("AnnotationEditorType." + mode), "missing editor mode " + mode);
