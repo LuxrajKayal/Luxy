@@ -54,29 +54,12 @@
     </a>
 
     <div class="topbar-actions">
-      <div class="dropbox-account">
-        <button id="dropbox-account-toggle" class="dropbox-topbar-status" type="button" aria-label="Dropbox account: Not connected" aria-controls="dropbox-account-menu" aria-expanded="false" title="Dropbox account">
-          <svg class="dropbox-status-logo" viewBox="0 0 24 24" aria-hidden="true">
+      <button id="dropbox-topbar-button" class="dropbox-topbar-button" type="button" aria-label="Dropbox" title="Dropbox">
+        <svg class="dropbox-topbar-logo" viewBox="0 0 24 24" aria-hidden="true">
             <path d="M7.2 2.8 2.4 5.9l4.8 3 4.8-3-4.8-3Zm9.6 0L12 5.9l4.8 3 4.8-3-4.8-3ZM7.2 9l-4.8 3 4.8 3 4.8-3-4.8-3Zm9.6 0L12 12l4.8 3 4.8-3-4.8-3-4.8 3 4.8 3 4.8-3-4.8-3ZM7.2 15.2l4.8 3 4.8-3-4.8-3-4.8 3Z"/>
           </svg>
-          <span id="dropbox-status-text" class="dropbox-status-text" data-state="not-connected">Not connected</span>
-          <svg class="dropbox-account-chevron" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
-        </button>
-        <section id="dropbox-account-menu" class="dropbox-account-menu" aria-label="Dropbox account options" hidden>
-          <div class="dropbox-account-menu-heading">Dropbox</div>
-          <p id="dropbox-account-menu-description" class="dropbox-account-menu-description">Connect your Dropbox account to browse and open supported files.</p>
-          <button id="dropbox-menu-connect" class="dropbox-menu-button dropbox-menu-button-primary" type="button">Connect Dropbox</button>
-          <button id="dropbox-menu-disconnect" class="dropbox-menu-button dropbox-menu-button-danger" type="button" hidden>Disconnect</button>
-          <div id="dropbox-disconnect-confirmation" class="dropbox-disconnect-confirmation" hidden>
-            <p>Disconnect Dropbox from Lux Omni? You will need to reconnect before opening or syncing files.</p>
-            <div class="dropbox-confirmation-actions">
-              <button id="dropbox-disconnect-cancel" class="dropbox-menu-button" type="button">Cancel</button>
-              <button id="dropbox-disconnect-confirm" class="dropbox-menu-button dropbox-menu-button-danger" type="button">Disconnect</button>
-            </div>
-          </div>
-          <p id="dropbox-account-feedback" class="dropbox-account-feedback" role="status" aria-live="polite" hidden></p>
-        </section>
-      </div>
+        <span class="dropbox-topbar-label">Dropbox</span>
+      </button>
       <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch to dark mode" title="Switch to dark mode" aria-pressed="false">
         <svg class="theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M20.2 15.4A8.4 8.4 0 0 1 8.6 3.8 8.5 8.5 0 1 0 20.2 15.4Z"></path>
@@ -86,7 +69,6 @@
           <path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path>
         </svg>
       </button>
-      <button id="dropbox-sync" class="dropbox-button dropbox-sync-button" type="button" hidden disabled>Sync</button>
       <button id="focus-mode-toggle" class="focus-toggle" type="button" aria-pressed="false" aria-label="Turn on Focus Mode" title="Turn on Focus Mode">
         <svg class="focus-icon-enter" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M21 16v3a2 2 0 0 1-2 2h-3M8 21H5a2 2 0 0 1-2-2v-3"></path>
@@ -169,42 +151,41 @@
       <aside id="sidebar" class="sidebar" aria-label="Sidebar">
         <div class="sidebar-inner">
           <div class="sidebar-cloud-actions">
-            <button id="dropbox-connect" class="dropbox-button dropbox-button-primary dropbox-icon-button" type="button" aria-label="Dropbox" title="Dropbox">
+            <button id="dropbox-sidebar-button" class="toolbar-button toolbar-button-primary toolbar-icon-button" type="button" aria-label="Dropbox" title="Dropbox">
               <svg class="dropbox-logo" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M7.2 2.8 2.4 5.9l4.8 3 4.8-3-4.8-3Zm9.6 0L12 5.9l4.8 3 4.8-3-4.8-3ZM7.2 9l-4.8 3 4.8 3 4.8-3-4.8-3Zm9.6 0L12 12l4.8 3 4.8-3-4.8-3-4.8 3 4.8 3 4.8-3-4.8-3ZM7.2 15.2l4.8 3 4.8-3-4.8-3-4.8 3Z"/>
               </svg>
             </button>
-            <button id="sidebar-screenshot" class="dropbox-button dropbox-icon-button" type="button" aria-label="Open Lux Omni Snipping Tool" title="Lux Omni Snipping Tool">
+            <button id="sidebar-screenshot" class="toolbar-button toolbar-icon-button" type="button" aria-label="Open Lux Omni Snipping Tool" title="Lux Omni Snipping Tool">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M8 4H6a2 2 0 0 0-2 2v2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/>
                 <rect x="8.5" y="8.5" width="7" height="7" rx="1" stroke-dasharray="2 2"/>
               </svg>
             </button>
-            <a id="clipboard-open" class="dropbox-button dropbox-icon-button" href="./clipboard.html" target="_blank" rel="noopener noreferrer" aria-label="Open Lux Omni Clipboard in a new tab" title="Lux Omni Clipboard">
+            <a id="clipboard-open" class="toolbar-button toolbar-icon-button" href="./clipboard.html" target="_blank" rel="noopener noreferrer" aria-label="Open Lux Omni Clipboard in a new tab" title="Lux Omni Clipboard">
               <svg class="clipboard-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="5" y="4" width="14" height="17" rx="2"></rect>
                 <path d="M9 4.5V3.8A1.8 1.8 0 0 1 10.8 2h2.4A1.8 1.8 0 0 1 15 3.8v.7M9 10h6M9 14h6M9 18h4"></path>
               </svg>
             </a>
-            <button id="viewport-fullscreen" class="dropbox-button dropbox-icon-button viewport-mode-button" type="button" aria-label="Open full-screen viewport" title="Full Screen" aria-pressed="false">
+            <button id="viewport-fullscreen" class="toolbar-button toolbar-icon-button viewport-mode-button" type="button" aria-label="Open full-screen viewport" title="Full Screen" aria-pressed="false">
               <svg class="viewport-mode-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M8 3H4v5M16 3h4v5M20 16v5h-4M8 21H4v-5"></path>
               </svg>
             </button>
-            <button id="viewport-split-screen" class="dropbox-button dropbox-icon-button viewport-mode-button" type="button" aria-label="Open split-screen viewports" title="Split Screen" aria-pressed="false">
+            <button id="viewport-split-screen" class="toolbar-button toolbar-icon-button viewport-mode-button" type="button" aria-label="Open split-screen viewports" title="Split Screen" aria-pressed="false">
               <svg class="viewport-mode-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <rect x="3" y="4" width="18" height="16" rx="2"></rect>
                 <path d="M12 4v16"></path>
               </svg>
             </button>
           </div>
-          <p id="dropbox-accessible-status" class="visually-hidden" role="status" aria-live="polite"></p>
         </div>
       </aside>
       <main class="workspace" aria-label="PDF workspace">
         <div class="workspace-empty-state">
-          <h1>Open a PDF from Dropbox</h1>
-          <p>Your selected PDF will appear here. The current workspace has a browser preview placeholder; editing/export will need to be connected before Sync can overwrite a source file.</p>
+          <h1>Workspace</h1>
+          <p>Open a document or tool to begin.</p>
         </div>
       </main>
     </div>
@@ -287,34 +268,6 @@
   </div>
   <div id="lux-snip-notice" role="status" aria-live="polite" hidden></div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/dropbox.js/10.33.0/Dropbox-sdk.min.js"></script>
-<div id="dropbox-modal" class="dropbox-modal" role="dialog" aria-modal="true" aria-labelledby="dropbox-modal-title" aria-describedby="dropbox-modal-status" hidden>
-    <div class="dropbox-modal-backdrop" data-dropbox-modal-close></div>
-    <section class="dropbox-modal-panel" role="document">
-      <header class="dropbox-modal-header">
-        <div>
-          <p class="dropbox-modal-eyebrow">Cloud library</p>
-          <h2 id="dropbox-modal-title">Open from Dropbox</h2>
-        </div>
-        <button id="dropbox-modal-close" class="dropbox-modal-close" type="button" aria-label="Close Dropbox file picker" title="Close">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
-        </button>
-      </header>
-      <p id="dropbox-modal-status" class="dropbox-modal-status" role="status" aria-live="polite">Browse supported files in your Dropbox account.</p>
-      <div id="dropbox-modal-loading" class="dropbox-modal-loading" hidden>
-        <span class="dropbox-spinner" aria-hidden="true"></span>
-        <span id="dropbox-modal-loading-text">Loading supported files from Dropbox…</span>
-      </div>
-      <ul id="dropbox-modal-file-list" class="dropbox-modal-file-list" aria-label="Supported files in Dropbox" aria-multiselectable="false" hidden></ul>
-      <footer class="dropbox-modal-footer">
-        <button id="dropbox-modal-cancel" class="dropbox-button dropbox-modal-action" type="button">Cancel</button>
-        <button id="dropbox-modal-select" class="dropbox-button dropbox-button-primary dropbox-modal-action" type="button" disabled>Select File</button>
-      </footer>
-    </section>
-  </div>
-
-
-  <script src="./dropbox-integration.js"></script>
   <footer class="site-footer"><a href="./privacy.html">Privacy Policy</a></footer>
 </body>
 </html>
