@@ -155,7 +155,7 @@ try {
   await page.evaluate(() => {
     for (const side of ["left", "right"]) {
       const viewport = document.querySelector('#viewport-split-layout [data-viewport-side="' + side + '"]');
-      viewport?.replaceChildren();
+      viewport?.querySelector(":scope > .viewport-scroll-area")?.replaceChildren();
       if (viewport) delete viewport.dataset.fileName;
     }
   });
@@ -202,9 +202,11 @@ try {
   ), true, "the PDF toolbar must live in Lux Omni's toolbar, not inside the PDF viewer");
   assert.equal(await page.locator(".lux-pdf-viewer-container").count(), 0,
     "the PDF viewer must not create a nested scroll container");
-  assert.equal(await page.locator('[data-viewport-side="full"]').evaluate((viewport) =>
-    getComputedStyle(viewport).overflowX === "auto" && getComputedStyle(viewport).overflowY === "scroll"
-  ), true, "the native viewport must own the horizontal and vertical scrollbars");
+  assert.equal(await page.locator('[data-viewport-scroll-area="full"]').evaluate((scrollArea) =>
+    getComputedStyle(scrollArea).position === "absolute" &&
+    getComputedStyle(scrollArea).overflowX === "auto" &&
+    getComputedStyle(scrollArea).overflowY === "scroll"
+  ), true, "the viewport-owned scroll area must own the horizontal and vertical scrollbars");
   await page.locator(".pdfViewer .page canvas").first().waitFor({ state: "visible", timeout: 30000 });
   await page.waitForFunction(() => {
     const host = document.querySelector('[data-viewport-side="full"] .lux-dropbox-preview');
@@ -225,8 +227,8 @@ try {
   assert.match(pageCount || "", /of 1$/, "page count should be correct");
   await page.locator('[data-viewport-tools="full"] [data-pdf-command="zoom-in"]').click();
   await page.waitForFunction(() => {
-    const viewport = document.querySelector('[data-viewport-side="full"]');
-    return viewport && viewport.scrollWidth > viewport.clientWidth;
+    const scrollArea = document.querySelector('[data-viewport-scroll-area="full"]');
+    return scrollArea && scrollArea.scrollWidth > scrollArea.clientWidth;
   }, null, { timeout: 10000 });
   console.log("PASS: PDF zoom expands the outer viewport horizontal scroll range without a nested scrollbar.");
 
