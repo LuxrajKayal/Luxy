@@ -1,3 +1,5 @@
+import { mountPdfEditor } from "./pdf-engine.js";
+
 /*
  * Lux Omni — multipurpose Dropbox viewport bridge.
  * PDF/image files use native browser previews; Markdown and common text files
@@ -95,6 +97,9 @@ function createPreviewBlob(blob, fileName, kind) {
 }
 
 function revokeAssignment(viewportType, assignment) {
+  if (assignment?.editor?.dispose) {
+    void assignment.editor.dispose().catch((error) => console.warn("PDF.js viewport cleanup failed:", error));
+  }
   if (assignment?.objectUrl) URL.revokeObjectURL(assignment.objectUrl);
   if (viewportAssignments.get(viewportType) === assignment) viewportAssignments.delete(viewportType);
 }
@@ -317,28 +322,34 @@ async function renderAssignment(detail) {
 
   const fileName = fileData?.name || "Dropbox file";
   const kind = classifyFile(blob, fileName);
+  const previewBlob = createPreviewBlob(blob, fileName, kind);
   const mount = document.createElement("div");
   mount.className = "lux-dropbox-preview";
   style(mount, { display: "flex", width: "100%", height: "100%", minHeight: "100%", boxSizing: "border-box", justifyContent: "center", alignItems: "center", overflow: "auto", background: "#ffffff" });
 
   let objectUrl = null;
+  let needsPdfMount = false;
 
-  if (kind === "pdf" || kind === "image") {
-    objectUrl = URL.createObjectURL(createPreviewBlob(blob, fileName, kind));
-    if (kind === "pdf") {
-      const frame = document.createElement("iframe");
-      frame.src = objectUrl;
-      frame.title = fileName;
-      frame.setAttribute("aria-label", "PDF preview: " + fileName);
-      style(frame, { display: "block", width: "100%", height: "100%", minHeight: "100%", border: "0", background: "#fff", flex: "1 1 auto" });
-      mount.append(frame);
-    } else {
-      const image = document.createElement("img");
-      image.src = objectUrl;
-      image.alt = fileName;
-      style(image, { display: "block", maxWidth: "100%", maxHeight: "100%", width: "auto", height: "auto", objectFit: "contain" });
-      mount.append(image);
-    }
+  if (kind === "pdf") {
+    objectUrl = URL.createObjectURL(previewBlob);
+    mount.classList.add("lux-dropbox-pdf-preview");
+    mount.style.flexDirection = "column";
+    mount.style.justifyContent = "flex-start";
+    mount.style.alignItems = "stretch";
+    mount.style.overflow = "hidden";
+    const loading = document.createElement("p");
+    loading.className = "lux-pdf-loading";
+    loading.textContent = "Loading Mozilla PDF.js…";
+    style(loading, { margin: "auto", padding: "24px", color: "#475569", textAlign: "center" });
+    mount.append(loading);
+    needsPdfMount = true;
+  } else if (kind === "image") {
+    objectUrl = URL.createObjectURL(previewBlob);
+    const image = document.createElement("img");
+    image.src = objectUrl;
+    image.alt = fileName;
+    style(image, { display: "block", maxWidth: "100%", maxHeight: "100%", width: "auto", height: "auto", objectFit: "contain" });
+    mount.append(image);
   } else if (kind === "markdown" || kind === "text") {
     mount.style.alignItems = "stretch";
     mount.style.justifyContent = "flex-start";
@@ -375,18 +386,47 @@ async function renderAssignment(detail) {
   }
 
   const previous = viewportAssignments.get(viewportType);
-  viewport.replaceChildren();
+  viewport.replaceChildren(mount);
   viewport.dataset.fileName = fileName;
-  viewport.append(mount);
+  const assignment = {
+    blob, editedBlob: null, editor: null, hasPdfEdits: false,
+    objectUrl, mount, fileData, metadata, originalPath, originalRevision, viewportType
+  };
+  viewportAssignments.set(viewportType, assignment);
   if (previous) revokeAssignment(viewportType, previous);
-
-  viewportAssignments.set(viewportType, {
-    blob, editedBlob: null, objectUrl, mount, fileData, metadata,
-    originalPath, originalRevision, viewportType
-  });
   ensureViewportObserver(viewportType, viewport);
-}
 
+  if (needsPdfMount) {
+    try {
+      assignment.editor = await mountPdfEditor({
+        root: mount,
+        blob: previewBlob,
+        fileName,
+        viewportType,
+        onDirty() {
+          assignment.hasPdfEdits = true;
+        },
+        onEdited(editedBlob) {
+          assignment.editedBlob = editedBlob;
+          assignment.hasPdfEdits = true;
+        }
+      });
+    } catch (error) {
+      const errorPanel = document.createElement("div");
+      errorPanel.className = "lux-pdf-load-error";
+      style(errorPanel, { margin: "auto", maxWidth: "520px", padding: "24px", color: "#273449", lineHeight: "1.6" });
+      const heading = document.createElement("h2");
+      heading.textContent = "PDF.js could not open this document";
+      style(heading, { margin: "0 0 8px", fontSize: "1.1rem" });
+      const explanation = document.createElement("p");
+      explanation.textContent = (error?.message || "Unknown loading error") + " Check the connection to the pinned Mozilla PDF.js assets and try opening the PDF again.";
+      const download = makeDownloadLink(objectUrl, fileName);
+      errorPanel.append(heading, explanation, download);
+      mount.replaceChildren(errorPanel);
+      throw error;
+    }
+  }
+}
 window.addEventListener(ASSIGNMENT_EVENT, (event) => {
   const detail = event.detail || {};
   void (async () => {
@@ -409,6 +449,9 @@ window.LuxOmniViewportBridge = {
     if (!VALID_VIEWPORTS.has(viewportType)) throw new TypeError('viewportType must be "left", "right", or "full".');
     const assignment = viewportAssignments.get(viewportType);
     if (!assignment) throw new Error("No file is loaded in the " + viewportType + " viewport.");
+    if (assignment.editor && assignment.hasPdfEdits) {
+      assignment.editedBlob = await assignment.editor.exportEditedBlob();
+    }
     return assignment.editedBlob || assignment.blob;
   },
 
@@ -418,6 +461,7 @@ window.LuxOmniViewportBridge = {
     const assignment = viewportAssignments.get(viewportType);
     if (!assignment) throw new Error("No file is loaded in the " + viewportType + " viewport.");
     assignment.editedBlob = blob;
+    assignment.hasPdfEdits = true;
   },
 
   markSaved(viewportType, blob, result = {}) {
@@ -425,6 +469,8 @@ window.LuxOmniViewportBridge = {
     if (!assignment) return;
     assignment.blob = blob;
     assignment.editedBlob = null;
+    assignment.hasPdfEdits = false;
+    assignment.editor?.markSaved?.();
     assignment.originalRevision = result?.rev || assignment.originalRevision;
     assignment.metadata = { ...(assignment.metadata || {}), ...(result || {}) };
   },
@@ -436,7 +482,7 @@ window.LuxOmniViewportBridge = {
       fileData: assignment.fileData,
       originalPath: assignment.originalPath,
       originalRevision: assignment.originalRevision,
-      hasEditedBlob: Boolean(assignment.editedBlob)
+      hasEditedBlob: Boolean(assignment.editedBlob || assignment.hasPdfEdits)
     };
   }
 };
