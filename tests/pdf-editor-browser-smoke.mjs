@@ -90,7 +90,7 @@ try {
 
   const response = await page.goto(baseUrl, { waitUntil: "load", timeout: 30000 });
   assert.equal(response?.status(), 200, "Lux Omni index should load successfully");
-  await page.waitForFunction(() => typeof window.LuxOmniViewportBridge?.exportEditedBlob === "function", { timeout: 15000 });
+  await page.waitForFunction(() => typeof window.LuxOmniViewportBridge?.exportEditedBlob === "function", null, { timeout: 15000 });
 
   const pdfBytes = makeOnePagePdf();
   const assignment = await page.evaluate(async (numericBytes) => {
@@ -125,7 +125,7 @@ try {
   assert.equal(assignment.success, true, "the viewport bridge should successfully open the PDF: " + (assignment.message || ""));
   await page.locator(".lux-pdf-toolbar").waitFor({ state: "visible", timeout: 45000 });
   await page.locator(".pdfViewer .page canvas").first().waitFor({ state: "visible", timeout: 30000 });
-  await page.waitForFunction(() => document.querySelectorAll(".pdfViewer .page").length === 1, { timeout: 15000 });
+  await page.waitForFunction(() => document.querySelectorAll(".pdfViewer .page").length === 1, null, { timeout: 15000 });
   console.log("PASS: generated PDF rendered through PDF.js inside the Lux Omni viewport.");
 
   const pageCount = await page.locator(".lux-pdf-page-count").textContent();
@@ -151,7 +151,7 @@ try {
   await page.waitForFunction(() => {
     const status = document.querySelector(".lux-pdf-status");
     return status?.dataset.state === "dirty";
-  }, { timeout: 12000 });
+  }, null, { timeout: 12000 });
   console.log("PASS: a free-text annotation can be created and marks the document as changed.");
 
   const exported = await page.evaluate(async () => {
