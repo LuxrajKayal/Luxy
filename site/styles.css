@@ -207,7 +207,6 @@ a {
 .theme-toggle:hover,
 .focus-toggle:hover,
 .focus-toggle[aria-pressed="true"],
-.dropbox-sync-button:hover:not(:disabled),
 .sidebar-toggle:hover {
   border-color: var(--control-hover-border);
   background: var(--control-hover-bg);
@@ -216,7 +215,6 @@ a {
 .theme-toggle:focus-visible,
 .focus-toggle:focus-visible,
 .sidebar-toggle:focus-visible,
-.dropbox-sync-button:focus-visible,
 .brand:focus-visible {
   outline: 3px solid var(--focus-outline);
   outline-offset: 3px;
