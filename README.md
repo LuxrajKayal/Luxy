@@ -4,7 +4,7 @@ Lux Omni is a browser-based workspace created by **Luxraj Kayal (Subrata Kayal)*
 
 ## Current features
 
-- **Dropbox integration:** browser-based PKCE authorization, persistent same-origin token storage, connection status that responds to sign-in changes across tabs, folder/file browsing, local file uploads, and Dropbox file previews in the Full / Left / Right workspaces. Previewing PDFs and images is read-only; real edit-and-save requires an editor to register edited bytes with the viewport bridge. Sync clearly confirms before re-uploading unchanged preview bytes.
+- **Dropbox integration:** browser-based PKCE authorization, persistent same-origin token storage, cross-tab connection status, folder/file browsing, local uploads, and multipurpose Full / Left / Right viewports. PDF and image files use browser previews; Markdown files receive a basic safe Markdown preview; common text, code, JSON, CSV, YAML, XML, and log files open as readable text. Other binary formats offer a download link. These previews are read-only; real edit-and-save requires an editor to register edited bytes with the viewport bridge.
 - **Workspace viewports:** open a full-screen viewport or a resizable split-screen layout; minimize, restore, or close viewports.
 - **YouTube playback:** load a YouTube video into a workspace viewport.
 - **Display controls:** switch between light and dark themes and enable Focus Mode.
@@ -12,7 +12,7 @@ Lux Omni is a browser-based workspace created by **Luxraj Kayal (Subrata Kayal)*
 
 ## Current application status
 
-The current build includes the workspace interface, browser-based tools, Dropbox manager, and a read-only Dropbox preview bridge for PDFs and common image formats. The PDF workspace does not yet include a complete PDF editing, annotation, and export engine. The viewport bridge exposes an integration hook for a future editor to provide an edited Blob. Features should be understood from the current implementation rather than assumed from the product name.
+The current build includes the workspace interface, browser-based tools, Dropbox manager, and a multipurpose Dropbox preview bridge. Markdown rendering is a small first-party preview for common Markdown syntax, not a complete CommonMark implementation. The PDF workspace does not yet include a complete PDF editing, annotation, and export engine. The viewport bridge exposes an integration hook for a future editor to provide an edited Blob. Features should be understood from the current implementation rather than assumed from the product name.
 
 ## Run locally
 

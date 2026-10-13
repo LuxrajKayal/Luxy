@@ -1,30 +1,33 @@
 /*
- * Lux Omni — Dropbox viewport bridge.
- *
- * Renders Dropbox downloads into the existing Full / Left / Right viewports.
- * PDF and image previews are read-only. An actual editor can register the
- * exported document Blob with setEditedBlob() before invoking Sync.
+ * Lux Omni — multipurpose Dropbox viewport bridge.
+ * PDF/image files use native browser previews; Markdown and common text files
+ * are displayed safely as DOM text. Other binary files remain downloadable.
+ * File contents are never injected as raw HTML.
  */
 
 const ASSIGNMENT_EVENT = "lux:dropbox-viewport-assignment-request";
 const RESULT_EVENT = "lux:dropbox-viewport-assignment-result";
 const VALID_VIEWPORTS = new Set(["left", "right", "full"]);
-
+const MAX_TEXT_PREVIEW_BYTES = 2 * 1024 * 1024;
 const viewportAssignments = new Map();
 const viewportObservers = new Map();
 
+const TEXT_EXTENSIONS = new Set([
+  "md", "markdown", "mdown", "mkdn", "mdx", "txt", "text", "log", "csv", "tsv",
+  "json", "jsonc", "xml", "yaml", "yml", "toml", "ini", "conf", "properties",
+  "env", "diff", "patch", "html", "htm", "css", "scss", "less", "js", "mjs",
+  "cjs", "jsx", "ts", "tsx", "py", "pyw", "rb", "php", "java", "kt", "kts",
+  "c", "h", "cc", "cpp", "cxx", "hpp", "hh", "cs", "go", "rs", "swift",
+  "sh", "bash", "zsh", "ps1", "sql", "r", "lua", "pl", "pm", "ex", "exs",
+  "erl", "hrl", "hs", "lhs", "scala", "clj", "cljs", "graphql", "gql",
+  "proto", "rst", "adoc", "asciidoc", "tex", "bib", "ipynb", "org", "make", "mk", "cmake", "dockerfile", "makefile", "gitignore",
+  "gitattributes", "editorconfig"
+]);
+
 function activateViewportLayout(viewportType) {
-  const selector = viewportType === "full"
-    ? "#viewport-fullscreen"
-    : "#viewport-split-screen";
+  const selector = viewportType === "full" ? "#viewport-fullscreen" : "#viewport-split-screen";
   const button = document.querySelector(selector);
-
-  if (!button) {
-    throw new Error("The " + (viewportType === "full" ? "Full" : "Split") +
-      " viewport layout control was not found.");
-  }
-
-  // app.js owns viewport layout state and creates missing panes as needed.
+  if (!button) throw new Error("The requested viewport layout control was not found.");
   button.click();
 }
 
@@ -37,269 +40,398 @@ function getViewportElement(viewportType) {
   return document.querySelector(selectors[viewportType]);
 }
 
+function getExtension(fileName) {
+  const baseName = String(fileName || "").toLowerCase().split(/[\/]/).pop() || "";
+  if (/^\.(gitignore|gitattributes|editorconfig|env)$/.test(baseName)) return baseName.slice(1);
+  if (baseName === "dockerfile" || baseName === "makefile") return baseName;
+  const dotIndex = baseName.lastIndexOf(".");
+  return dotIndex > 0 ? baseName.slice(dotIndex + 1) : "";
+}
+
 function getImageMimeFromName(fileName) {
-  const extension = String(fileName || "").split(".").pop().toLowerCase();
   const types = {
-    png: "image/png",
-    jpg: "image/jpeg",
-    jpeg: "image/jpeg",
-    gif: "image/gif",
-    webp: "image/webp",
-    bmp: "image/bmp",
-    svg: "image/svg+xml",
-    avif: "image/avif"
+    png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif",
+    webp: "image/webp", bmp: "image/bmp", svg: "image/svg+xml", avif: "image/avif",
+    ico: "image/x-icon", tif: "image/tiff", tiff: "image/tiff"
   };
-  return types[extension] || "";
+  return types[getExtension(fileName)] || "";
+}
+
+function isMarkdownFile(fileName) {
+  return ["md", "markdown", "mdown", "mkdn", "mdx"].includes(getExtension(fileName));
+}
+
+function isTextFile(blob, fileName) {
+  const type = String(blob?.type || "").toLowerCase();
+  const baseName = String(fileName || "").toLowerCase().split(/[\\/]/).pop() || "";
+  const wellKnownTextNames = ["readme", "license", "copying", "notice", "copyright", "changelog", "changes", "contributing", "authors", "authors.txt", "makefile", "dockerfile"];
+  if (wellKnownTextNames.includes(baseName)) return true;
+  if (TEXT_EXTENSIONS.has(getExtension(fileName)) || type.startsWith("text/")) return true;
+  return [
+    "application/json", "application/ld+json", "application/xml",
+    "application/javascript", "application/x-javascript", "application/yaml",
+    "application/x-yaml", "application/x-markdown", "text/markdown", "application/toml", "application/sql",
+    "application/x-sh", "application/x-httpd-php"
+  ].includes(type);
 }
 
 function classifyFile(blob, fileName) {
   const type = String(blob?.type || "").toLowerCase();
-  const name = String(fileName || "");
-
-  if (type.includes("application/pdf") || /\.pdf$/i.test(name)) return "pdf";
-  if (type.startsWith("image/") || getImageMimeFromName(name)) return "image";
+  if (type.includes("application/pdf") || /\.pdf$/i.test(fileName || "")) return "pdf";
+  if (type.startsWith("image/") || getImageMimeFromName(fileName)) return "image";
+  if (isTextFile(blob, fileName)) return (isMarkdownFile(fileName) || type.includes("markdown")) ? "markdown" : "text";
   return "download";
 }
 
-function createPreviewBlob(originalBlob, fileName, kind) {
-  if (kind === "pdf" && originalBlob.type.toLowerCase().includes("application/pdf")) {
-    return originalBlob;
+function createPreviewBlob(blob, fileName, kind) {
+  if (kind === "pdf" && !blob.type.toLowerCase().includes("application/pdf")) {
+    return new Blob([blob], { type: "application/pdf" });
   }
-  if (kind === "pdf") {
-    return new Blob([originalBlob], { type: "application/pdf" });
-  }
-
-  if (kind === "image") {
-    if (originalBlob.type.toLowerCase().startsWith("image/")) return originalBlob;
+  if (kind === "image" && !blob.type.toLowerCase().startsWith("image/")) {
     const mime = getImageMimeFromName(fileName);
-    if (mime) return new Blob([originalBlob], { type: mime });
+    if (mime) return new Blob([blob], { type: mime });
   }
-
-  return originalBlob;
+  return blob;
 }
 
 function revokeAssignment(viewportType, assignment) {
   if (assignment?.objectUrl) URL.revokeObjectURL(assignment.objectUrl);
-
-  const current = viewportAssignments.get(viewportType);
-  if (current === assignment) viewportAssignments.delete(viewportType);
+  if (viewportAssignments.get(viewportType) === assignment) viewportAssignments.delete(viewportType);
 }
 
 function ensureViewportObserver(viewportType, viewport) {
   if (viewportObservers.has(viewportType)) return;
-
   const observer = new MutationObserver(() => {
     const current = viewportAssignments.get(viewportType);
     if (current?.mount && !viewport.contains(current.mount)) {
-      // app.js removes viewport contents when the user closes a viewport.
       revokeAssignment(viewportType, current);
-      if (viewport.dataset.fileName === current.fileData?.name) {
-        delete viewport.dataset.fileName;
-      }
+      if (viewport.dataset.fileName === current.fileData?.name) delete viewport.dataset.fileName;
     }
   });
-
   observer.observe(viewport, { childList: true, subtree: true });
   viewportObservers.set(viewportType, observer);
 }
 
-function renderAssignment(detail) {
-  const {
-    blob,
-    fileData,
-    metadata,
-    originalPath,
-    originalRevision,
-    viewportType
-  } = detail || {};
+function style(element, values) {
+  Object.assign(element.style, values);
+  return element;
+}
 
-  if (!VALID_VIEWPORTS.has(viewportType)) {
-    throw new TypeError("Invalid Dropbox viewport target.");
+function createDocumentShell(fileName, mode) {
+  const article = document.createElement("article");
+  article.className = mode === "markdown" ? "lux-dropbox-document lux-dropbox-markdown" : "lux-dropbox-document lux-dropbox-text";
+  style(article, {
+    boxSizing: "border-box", width: "100%", minHeight: "100%", margin: "0 auto",
+    padding: "clamp(16px, 3vw, 32px)", color: "#1f2937", background: "#ffffff",
+    fontFamily: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontSize: "14px", lineHeight: "1.65", overflowWrap: "anywhere"
+  });
+
+  const header = document.createElement("header");
+  style(header, { marginBottom: "1.25rem", paddingBottom: "0.75rem", borderBottom: "1px solid #e5e7eb" });
+  const title = document.createElement("h1");
+  title.textContent = fileName;
+  style(title, { margin: "0", fontSize: "1.15rem", fontWeight: "650", lineHeight: "1.35", overflowWrap: "anywhere" });
+  const label = document.createElement("p");
+  label.textContent = mode === "markdown" ? "Markdown preview · read-only" : "Text preview · read-only";
+  style(label, { margin: "0.35rem 0 0", color: "#6b7280", fontSize: "0.75rem" });
+  header.append(title, label);
+  article.append(header);
+  return article;
+}
+
+// Minimal first-party Markdown inline renderer. It creates DOM elements and text
+// nodes only; file-provided HTML is never parsed or executed.
+function createInlineMarkdown(source) {
+  const fragment = document.createDocumentFragment();
+  const pattern = new RegExp("(\\*\\*[^*]+\\*\\*|__[^_]+__|~~[^~]+~~|\\x60[^\\x60]+\\x60|\\[[^\\]]+\\]\\([^)]+\\)|\\*[^*\\n]+\\*|_[^_\\n]+_)", "g");
+  let cursor = 0;
+  let match;
+  while ((match = pattern.exec(source)) !== null) {
+    if (match.index > cursor) fragment.append(document.createTextNode(source.slice(cursor, match.index)));
+    const token = match[0];
+    let node = null;
+
+    if ((token.startsWith("**") && token.endsWith("**")) || (token.startsWith("__") && token.endsWith("__"))) {
+      node = document.createElement("strong");
+      node.textContent = token.slice(2, -2);
+    } else if (token.startsWith("~~") && token.endsWith("~~")) {
+      node = document.createElement("del");
+      node.textContent = token.slice(2, -2);
+    } else if (token.charCodeAt(0) === 96 && token.charCodeAt(token.length - 1) === 96) {
+      node = document.createElement("code");
+      node.textContent = token.slice(1, -1);
+      style(node, { padding: "0.1em 0.3em", borderRadius: "4px", background: "#f3f4f6", fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace" });
+    } else if ((token.startsWith("*") && token.endsWith("*")) || (token.startsWith("_") && token.endsWith("_"))) {
+      node = document.createElement("em");
+      node.textContent = token.slice(1, -1);
+    } else {
+      const link = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      if (link) {
+        try {
+          const url = new URL(link[2].trim(), window.location.href);
+          if (["https:", "http:", "mailto:"].includes(url.protocol)) {
+            node = document.createElement("a");
+            node.href = url.href;
+            node.textContent = link[1];
+            node.rel = "noopener noreferrer";
+            if (url.protocol !== "mailto:") node.target = "_blank";
+            style(node, { color: "#1d4ed8", textDecoration: "underline" });
+          }
+        } catch (_) { /* Invalid links remain plain text. */ }
+      }
+    }
+
+    fragment.append(node || document.createTextNode(token));
+    cursor = match.index + token.length;
   }
-  if (!(blob instanceof Blob)) {
-    throw new TypeError("The Dropbox viewport assignment must contain a Blob.");
+  if (cursor < source.length) fragment.append(document.createTextNode(source.slice(cursor)));
+  return fragment;
+}
+
+function isMarkdownBlockStart(lines, index) {
+  const line = lines[index] || "";
+  return /^\s{0,3}#{1,6}\s+/.test(line) ||
+    /^\s{0,3}(?:\x60{3}|~~~)/.test(line) ||
+    /^\s{0,3}>\s?/.test(line) ||
+    /^\s{0,3}[-+*]\s+/.test(line) ||
+    /^\s{0,3}\d+[.)]\s+/.test(line) ||
+    /^\s{0,3}(?:---+|\*\*\*+|___+)\s*$/.test(line);
+}
+
+function appendMarkdown(source, target) {
+  const lines = String(source || "").replace(/\r\n?/g, "\n").split("\n");
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index];
+    if (!line.trim()) { index += 1; continue; }
+
+    const fence = line.match(/^\s{0,3}(\x60{3}|~~~)(.*)$/);
+    if (fence) {
+      const fenceToken = fence[1];
+      const codeLines = [];
+      index += 1;
+      while (index < lines.length && !new RegExp("^\\s{0,3}" + fenceToken + "\\s*$").test(lines[index])) {
+        codeLines.push(lines[index]);
+        index += 1;
+      }
+      if (index < lines.length) index += 1;
+      const pre = document.createElement("pre");
+      const code = document.createElement("code");
+      code.textContent = codeLines.join("\n");
+      style(pre, { margin: "0.8rem 0 1rem", padding: "0.9rem", overflow: "auto", border: "1px solid #e5e7eb", borderRadius: "7px", background: "#f8fafc", whiteSpace: "pre", fontSize: "0.88rem" });
+      style(code, { color: "#111827", fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace" });
+      pre.append(code);
+      target.append(pre);
+      continue;
+    }
+
+    const headingMatch = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$/);
+    if (headingMatch) {
+      const level = headingMatch[1].length;
+      const heading = document.createElement("h" + level);
+      heading.append(createInlineMarkdown(headingMatch[2]));
+      style(heading, { margin: "1rem 0 0.55rem", fontSize: ["", "1.8rem", "1.5rem", "1.25rem", "1.1rem", "1rem", "0.95rem"][level], lineHeight: "1.3", fontWeight: level <= 2 ? "700" : "650" });
+      target.append(heading);
+      index += 1;
+      continue;
+    }
+
+    if (/^\s{0,3}(?:---+|\*\*\*+|___+)\s*$/.test(line)) {
+      target.append(style(document.createElement("hr"), { margin: "1.2rem 0", border: "0", borderTop: "1px solid #d1d5db" }));
+      index += 1;
+      continue;
+    }
+
+    if (/^\s{0,3}>\s?/.test(line)) {
+      const quoteLines = [];
+      while (index < lines.length && /^\s{0,3}>\s?/.test(lines[index])) {
+        quoteLines.push(lines[index].replace(/^\s{0,3}>\s?/, ""));
+        index += 1;
+      }
+      const quote = document.createElement("blockquote");
+      const paragraph = document.createElement("p");
+      paragraph.append(createInlineMarkdown(quoteLines.join(" ")));
+      style(quote, { margin: "0.9rem 0", padding: "0.2rem 0 0.2rem 1rem", borderLeft: "3px solid #cbd5e1", color: "#4b5563" });
+      style(paragraph, { margin: "0" });
+      quote.append(paragraph);
+      target.append(quote);
+      continue;
+    }
+
+    const firstUnordered = line.match(/^\s{0,3}[-+*]\s+(.+)$/);
+    const firstOrdered = line.match(/^\s{0,3}\d+[.)]\s+(.+)$/);
+    if (firstUnordered || firstOrdered) {
+      const isOrdered = Boolean(firstOrdered);
+      const list = document.createElement(isOrdered ? "ol" : "ul");
+      style(list, { margin: "0.5rem 0 1rem", paddingLeft: "1.6rem" });
+      while (index < lines.length) {
+        const itemMatch = isOrdered
+          ? lines[index].match(/^\s{0,3}\d+[.)]\s+(.+)$/)
+          : lines[index].match(/^\s{0,3}[-+*]\s+(.+)$/);
+        if (!itemMatch) break;
+        const item = document.createElement("li");
+        item.append(createInlineMarkdown(itemMatch[1]));
+        style(item, { paddingLeft: "0.15rem", margin: "0.2rem 0" });
+        list.append(item);
+        index += 1;
+      }
+      target.append(list);
+      continue;
+    }
+
+    const paragraphLines = [];
+    while (index < lines.length && lines[index].trim() && !isMarkdownBlockStart(lines, index)) {
+      paragraphLines.push(lines[index]);
+      index += 1;
+    }
+    if (!paragraphLines.length) {
+      paragraphLines.push(lines[index]);
+      index += 1;
+    }
+    const paragraph = document.createElement("p");
+    paragraph.append(createInlineMarkdown(paragraphLines.join(" ")));
+    style(paragraph, { margin: "0.65rem 0 1rem" });
+    target.append(paragraph);
   }
+}
+
+function makeDownloadLink(objectUrl, fileName) {
+  const link = document.createElement("a");
+  link.href = objectUrl;
+  link.download = fileName;
+  link.textContent = "Download " + fileName;
+  style(link, { color: "#1d4ed8", textDecoration: "underline", overflowWrap: "anywhere" });
+  return link;
+}
+
+async function renderAssignment(detail) {
+  const { blob, fileData, metadata, originalPath, originalRevision, viewportType } = detail || {};
+  if (!VALID_VIEWPORTS.has(viewportType)) throw new TypeError("Invalid Dropbox viewport target.");
+  if (!(blob instanceof Blob)) throw new TypeError("The Dropbox viewport assignment must contain a Blob.");
 
   activateViewportLayout(viewportType);
-
   const viewport = getViewportElement(viewportType);
-  if (!viewport) {
-    throw new Error("The " + viewportType + " viewport container was not found.");
-  }
+  if (!viewport) throw new Error("The " + viewportType + " viewport container was not found.");
 
   const fileName = fileData?.name || "Dropbox file";
   const kind = classifyFile(blob, fileName);
-  const previewBlob = createPreviewBlob(blob, fileName, kind);
-  const objectUrl = URL.createObjectURL(previewBlob);
   const mount = document.createElement("div");
-
   mount.className = "lux-dropbox-preview";
-  Object.assign(mount.style, {
-    display: "flex",
-    width: "100%",
-    height: "100%",
-    minHeight: "100%",
-    boxSizing: "border-box",
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "auto",
-    background: "#ffffff"
-  });
+  style(mount, { display: "flex", width: "100%", height: "100%", minHeight: "100%", boxSizing: "border-box", justifyContent: "center", alignItems: "center", overflow: "auto", background: "#ffffff" });
 
-  if (kind === "pdf") {
-    const frame = document.createElement("iframe");
-    frame.src = objectUrl;
-    frame.title = fileName;
-    frame.setAttribute("aria-label", "PDF preview: " + fileName);
-    Object.assign(frame.style, {
-      display: "block",
-      width: "100%",
-      height: "100%",
-      minHeight: "100%",
-      border: "0",
-      background: "#ffffff",
-      flex: "1 1 auto"
-    });
-    mount.append(frame);
-  } else if (kind === "image") {
-    const image = document.createElement("img");
-    image.src = objectUrl;
-    image.alt = fileName;
-    Object.assign(image.style, {
-      display: "block",
-      maxWidth: "100%",
-      maxHeight: "100%",
-      width: "auto",
-      height: "auto",
-      objectFit: "contain"
-    });
-    mount.append(image);
+  let objectUrl = null;
+
+  if (kind === "pdf" || kind === "image") {
+    objectUrl = URL.createObjectURL(createPreviewBlob(blob, fileName, kind));
+    if (kind === "pdf") {
+      const frame = document.createElement("iframe");
+      frame.src = objectUrl;
+      frame.title = fileName;
+      frame.setAttribute("aria-label", "PDF preview: " + fileName);
+      style(frame, { display: "block", width: "100%", height: "100%", minHeight: "100%", border: "0", background: "#fff", flex: "1 1 auto" });
+      mount.append(frame);
+    } else {
+      const image = document.createElement("img");
+      image.src = objectUrl;
+      image.alt = fileName;
+      style(image, { display: "block", maxWidth: "100%", maxHeight: "100%", width: "auto", height: "auto", objectFit: "contain" });
+      mount.append(image);
+    }
+  } else if (kind === "markdown" || kind === "text") {
+    mount.style.alignItems = "stretch";
+    mount.style.justifyContent = "flex-start";
+    const article = createDocumentShell(fileName, kind === "markdown" ? "markdown" : "text");
+
+    if (blob.size > MAX_TEXT_PREVIEW_BYTES) {
+      objectUrl = URL.createObjectURL(blob);
+      const note = document.createElement("p");
+      note.textContent = "This file is larger than the 2 MB in-view text preview limit. Download it to read it without freezing the workspace.";
+      article.append(note, makeDownloadLink(objectUrl, fileName));
+    } else {
+      const text = await blob.text();
+      if (kind === "markdown") {
+        appendMarkdown(text, article);
+      } else {
+        const pre = document.createElement("pre");
+        pre.textContent = text;
+        style(pre, { margin: "0", padding: "0.9rem", overflow: "auto", border: "1px solid #e5e7eb", borderRadius: "7px", background: "#f8fafc", color: "#111827", whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace", fontSize: "0.88rem", lineHeight: "1.6" });
+        article.append(pre);
+      }
+    }
+    mount.append(article);
   } else {
+    objectUrl = URL.createObjectURL(blob);
     mount.style.flexDirection = "column";
     mount.style.alignItems = "flex-start";
     mount.style.justifyContent = "flex-start";
     mount.style.gap = "0.75rem";
     mount.style.padding = "1rem";
-
     const note = document.createElement("p");
-    note.textContent = "Preview is not available for this file type. You can download the file below.";
-    note.style.margin = "0";
-    note.style.color = "#374151";
-
-    const download = document.createElement("a");
-    download.href = objectUrl;
-    download.download = fileName;
-    download.textContent = "Download " + fileName;
-    download.style.color = "#1d4ed8";
-    download.style.overflowWrap = "anywhere";
-
-    mount.append(note, download);
+    note.textContent = "This file type does not have an in-view preview yet. You can still download it.";
+    style(note, { margin: "0", color: "#374151" });
+    mount.append(note, makeDownloadLink(objectUrl, fileName));
   }
 
-  // Remove previous DOM first, then release its object URL.
   const previous = viewportAssignments.get(viewportType);
   viewport.replaceChildren();
-  if (previous) revokeAssignment(viewportType, previous);
-
   viewport.dataset.fileName = fileName;
   viewport.append(mount);
+  if (previous) revokeAssignment(viewportType, previous);
 
   viewportAssignments.set(viewportType, {
-    blob,               // original bytes downloaded from Dropbox
-    editedBlob: null,   // set by a real editor when edited bytes become available
-    objectUrl,
-    mount,
-    fileData,
-    metadata,
-    originalPath,
-    originalRevision,
-    viewportType
+    blob, editedBlob: null, objectUrl, mount, fileData, metadata,
+    originalPath, originalRevision, viewportType
   });
-
   ensureViewportObserver(viewportType, viewport);
 }
 
 window.addEventListener(ASSIGNMENT_EVENT, (event) => {
   const detail = event.detail || {};
-  try {
-    renderAssignment(detail);
-    window.dispatchEvent(new CustomEvent(RESULT_EVENT, {
-      detail: {
-        requestId: detail.requestId,
-        success: true,
-        viewportType: detail.viewportType,
-        fileName: detail.fileData?.name || "Dropbox file"
-      }
-    }));
-  } catch (error) {
-    console.error("Dropbox viewport rendering failed:", error);
-    window.dispatchEvent(new CustomEvent(RESULT_EVENT, {
-      detail: {
-        requestId: detail.requestId,
-        success: false,
-        viewportType: detail.viewportType,
-        message: error?.message || "The viewport could not render this file."
-      }
-    }));
-  }
+  void (async () => {
+    try {
+      await renderAssignment(detail);
+      window.dispatchEvent(new CustomEvent(RESULT_EVENT, {
+        detail: { requestId: detail.requestId, success: true, viewportType: detail.viewportType, fileName: detail.fileData?.name || "Dropbox file" }
+      }));
+    } catch (error) {
+      console.error("Dropbox viewport rendering failed:", error);
+      window.dispatchEvent(new CustomEvent(RESULT_EVENT, {
+        detail: { requestId: detail.requestId, success: false, viewportType: detail.viewportType, message: error?.message || "The viewport could not render this file." }
+      }));
+    }
+  })();
 });
 
 window.LuxOmniViewportBridge = {
-  /*
-   * Mock exporter: returns edited bytes when an editor has registered them,
-   * otherwise returns the original download. The UI asks for confirmation
-   * before uploading that unchanged original Blob.
-   */
   async exportEditedBlob(viewportType) {
-    if (!VALID_VIEWPORTS.has(viewportType)) {
-      throw new TypeError('viewportType must be "left", "right", or "full".');
-    }
-
+    if (!VALID_VIEWPORTS.has(viewportType)) throw new TypeError('viewportType must be "left", "right", or "full".');
     const assignment = viewportAssignments.get(viewportType);
-    if (!assignment) {
-      throw new Error("No Dropbox file is loaded in the " + viewportType + " viewport.");
-    }
-
+    if (!assignment) throw new Error("No file is loaded in the " + viewportType + " viewport.");
     return assignment.editedBlob || assignment.blob;
   },
 
-  /*
-   * Integration hook for a real editor. Call setEditedBlob(side, blob) when
-   * edited document bytes are available, rather than trying to scrape an iframe.
-   */
   setEditedBlob(viewportType, blob) {
-    if (!VALID_VIEWPORTS.has(viewportType)) {
-      throw new TypeError('viewportType must be "left", "right", or "full".');
-    }
-    if (!(blob instanceof Blob)) {
-      throw new TypeError("The edited document must be provided as a Blob.");
-    }
-
+    if (!VALID_VIEWPORTS.has(viewportType)) throw new TypeError('viewportType must be "left", "right", or "full".');
+    if (!(blob instanceof Blob)) throw new TypeError("The edited document must be provided as a Blob.");
     const assignment = viewportAssignments.get(viewportType);
-    if (!assignment) {
-      throw new Error("No Dropbox file is loaded in the " + viewportType + " viewport.");
-    }
-
+    if (!assignment) throw new Error("No file is loaded in the " + viewportType + " viewport.");
     assignment.editedBlob = blob;
   },
 
   markSaved(viewportType, blob, result = {}) {
     const assignment = viewportAssignments.get(viewportType);
     if (!assignment) return;
-
     assignment.blob = blob;
     assignment.editedBlob = null;
     assignment.originalRevision = result?.rev || assignment.originalRevision;
-    assignment.metadata = {
-      ...(assignment.metadata || {}),
-      ...(result || {})
-    };
+    assignment.metadata = { ...(assignment.metadata || {}), ...(result || {}) };
   },
 
   getViewportAssignment(viewportType) {
     const assignment = viewportAssignments.get(viewportType);
     if (!assignment) return null;
-
     return {
       fileData: assignment.fileData,
       originalPath: assignment.originalPath,
@@ -310,9 +442,7 @@ window.LuxOmniViewportBridge = {
 };
 
 window.addEventListener("pagehide", () => {
-  for (const [viewportType, assignment] of viewportAssignments) {
-    revokeAssignment(viewportType, assignment);
-  }
+  for (const [viewportType, assignment] of viewportAssignments) revokeAssignment(viewportType, assignment);
   for (const observer of viewportObservers.values()) observer.disconnect();
   viewportObservers.clear();
 });

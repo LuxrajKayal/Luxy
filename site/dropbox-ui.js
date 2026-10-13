@@ -445,28 +445,35 @@ export async function loadFileIntoViewport(fileData, viewportType) {
       viewportType
     };
 
-    // The bridge dispatches a synchronous result event after mounting the file.
-    let renderResult = null;
-    const resultListener = (event) => {
-      if (event.detail?.requestId === assignmentId) {
-        renderResult = event.detail;
-      }
-    };
+    // Text and Markdown files are read asynchronously by the bridge. Wait for
+    // its explicit render result instead of assuming dispatch means success.
+    const renderResult = await new Promise((resolve, reject) => {
+      let timeoutId;
 
-    window.addEventListener("lux:dropbox-viewport-assignment-result", resultListener);
-    try {
+      const cleanup = () => {
+        window.clearTimeout(timeoutId);
+        window.removeEventListener("lux:dropbox-viewport-assignment-result", resultListener);
+      };
+
+      const resultListener = (event) => {
+        if (event.detail?.requestId !== assignmentId) return;
+        cleanup();
+        resolve(event.detail);
+      };
+
+      window.addEventListener("lux:dropbox-viewport-assignment-result", resultListener);
+      timeoutId = window.setTimeout(() => {
+        cleanup();
+        reject(new Error(
+          "The viewport bridge did not respond. Check that dropbox-viewport-bridge.js is loaded."
+        ));
+      }, 15000);
+
       window.dispatchEvent(new CustomEvent("lux:dropbox-viewport-assignment-request", {
         detail: assignment
       }));
-    } finally {
-      window.removeEventListener("lux:dropbox-viewport-assignment-result", resultListener);
-    }
+    });
 
-    if (!renderResult) {
-      throw new Error(
-        "The viewport bridge did not respond. Check that dropbox-viewport-bridge.js is loaded."
-      );
-    }
     if (!renderResult.success) {
       throw new Error(renderResult.message || "The viewport could not render this file.");
     }
