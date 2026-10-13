@@ -70,3 +70,15 @@ Copy this template for each new change, then fill it with confirmed details afte
 - **Log-update commit:** <full SHA and GitHub URL if useful and available>
 - **Rollback:** <exact safe revert/restore steps>
 - **Notes / follow-up:** <remaining risks or owner's next decision>
+
+
+## LOG-002 — Gradual migration to the Smart Viewport Toolbar (planning decision)
+
+- **Status:** Agreed approach; feature-by-feature implementation not yet approved.
+- **Owner's decision:** Keep the existing PDF toolbar while introducing a new Smart Toolbar in the outer Viewport Toolbar. Migrate one feature at a time: add one feature to the Smart Toolbar, connect it to the same active document/viewer, verify its behavior, and only then remove that same feature from the old PDF toolbar.
+- **Core principle:** Both toolbars temporarily coexist. They must not create separate document state or separate annotation systems. Equivalent controls must act on the same viewer and keep their state consistent while they coexist.
+- **Per-feature workflow:** (1) owner describes the first feature; (2) inspect relevant implementation and dependencies; (3) propose the exact change and tests; (4) ask for approval; (5) implement only after explicit approval; (6) test the new control and existing behavior; (7) remove only the corresponding old control after the new control is verified; (8) inspect the diff; (9) record the actual implementation commit and results in this file.
+- **Non-goals for the initial step:** Do not remove the existing toolbar as a whole, do not migrate multiple features in one implementation, do not rebuild the annotation engine, and do not alter Dropbox/viewport behavior unrelated to the approved feature.
+- **Document-type behavior:** The new toolbar should eventually show relevant tools for the document assigned to each viewport. PDF, image, and Markdown tool sets are separate future feature work; do not presume their controls or invent designs before the owner specifies them.
+- **Scope of this entry:** Planning decision only. No application code changed and no toolbar feature implemented.
+- **Next action:** Wait for the owner to specify the first toolbar feature. Analyze it and present a narrow implementation plan; ask for approval before editing application code.
