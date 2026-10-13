@@ -27,9 +27,13 @@ Then open [http://localhost:8000/](http://localhost:8000/).
 
 ## Project files
 
-- `site/index.html` — main Lux Omni interface.
+- `site/index.html` — main Lux Omni interface and script registration.
 - `site/app.js` — interface interactions, themes, Focus Mode, and viewport behavior.
 - `site/styles.css` — main interface styling.
+- `site/dropbox-config.js` — public Dropbox app configuration and OAuth scopes.
+- `site/dropbox-api.js` — PKCE authorization, token storage, and Dropbox API calls.
+- `site/dropbox-ui.js` — Dropbox file-manager UI, upload actions, viewport routing, and Sync.
+- `site/dropbox-viewport-bridge.js` — PDF/image previews and the editor-export integration hook.
 - `site/clipboard.html` — standalone Lux Omni Clipboard page.
 - `site/privacy.html` — privacy policy for the current website.
 - `PROJECT-GOALS.md` — product requirements and development decisions.
