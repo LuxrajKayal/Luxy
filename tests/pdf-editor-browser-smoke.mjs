@@ -235,11 +235,15 @@ try {
   assert.equal(await penButton.getAttribute("aria-pressed"), "true", "pen tool should activate");
   console.log("PASS: highlight and pen toolbar commands activate without runtime errors.");
 
-  await page.locator('[data-pdf-command="text"]').click();
+  await page.locator('[data-viewport-tools="full"] [data-pdf-command="text"]').click();
   const pdfPage = page.locator(".pdfViewer .page").first();
   const bounds = await pdfPage.boundingBox();
   assert.ok(bounds && bounds.width > 100 && bounds.height > 100, "PDF page should have a measurable rendered size");
-  await page.mouse.click(bounds.x + Math.min(150, bounds.width * 0.3), bounds.y + Math.min(180, bounds.height * 0.3));
+  // Locator clicks scroll the target into view before dispatching pointer events.
+  // That is important now that the viewport-owned scroller can clip large pages.
+  await pdfPage.click({
+    position: { x: Math.min(150, bounds.width * 0.3), y: Math.min(180, bounds.height * 0.3) }
+  });
   const editorTextBox = page.locator('.annotationEditorLayer [contenteditable="true"]').last();
   await editorTextBox.waitFor({ state: "visible", timeout: 12000 });
   await editorTextBox.fill("Lux Omni annotation smoke test");
