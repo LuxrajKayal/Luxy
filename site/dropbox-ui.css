@@ -170,11 +170,17 @@ body.dropbox-ui-open { overflow: hidden; }
   .dropbox-ui-viewport-actions button { flex: 1 1 150px; }
 }
 @media (max-width: 560px) {
-  .topbar-actions { gap: 4px; }
-  .dropbox-topbar-button { max-width: 115px; gap: 4px; padding: 0 4px; }
-  .dropbox-topbar-label { max-width: 92px; font-size: 10px; }
-  .dropbox-ui-action { width: 38px; min-width: 38px; padding: 0; }
-  .dropbox-ui-action svg { width: 16px; height: 16px; }
+  .topbar { gap: 6px; padding-right: 8px; padding-left: 8px; }
+  .brand { flex: 1 1 80px; min-width: 0; gap: 5px; }
+  .brand-mark { width: 32px; height: 32px; flex-basis: 32px; }
+  .brand-slogan { display: none; }
+  .topbar-actions { gap: 3px; }
+  .dropbox-topbar-button { max-width: 105px; min-width: 0; gap: 4px; padding: 0 3px; }
+  .dropbox-topbar-logo { width: 16px; height: 16px; flex-basis: 16px; }
+  .dropbox-topbar-label { max-width: 82px; font-size: 10px; }
+  .dropbox-ui-action { width: 34px; min-width: 34px; flex: 0 0 34px; padding: 0; }
+  .theme-toggle, .focus-toggle { width: 34px; min-width: 34px; flex: 0 0 34px; }
+  .dropbox-ui-action svg { width: 15px; height: 15px; }
   .dropbox-ui-action-label { display: none; }
   .dropbox-ui-dialog { min-height: min(330px, 78vh); max-height: 90vh; border-radius: 14px; }
   .dropbox-ui-header { align-items: flex-start; padding: 16px; gap: 10px; }
