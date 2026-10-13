@@ -244,6 +244,29 @@ try {
   await pdfPage.click({
     position: { x: Math.min(150, bounds.width * 0.3), y: Math.min(180, bounds.height * 0.3) }
   });
+  const annotationDebug = await page.evaluate(() => {
+    const host = document.querySelector('[data-viewport-side="full"] .lux-dropbox-preview');
+    const shadow = host?.shadowRoot;
+    const scrollArea = document.querySelector('[data-viewport-scroll-area="full"]');
+    const page = shadow?.querySelector(".pdfViewer .page");
+    const layer = shadow?.querySelector(".annotationEditorLayer");
+    const editor = shadow?.querySelector('.annotationEditorLayer [contenteditable="true"]');
+    const rect = (node) => {
+      const box = node?.getBoundingClientRect();
+      return box ? { x: box.x, y: box.y, width: box.width, height: box.height } : null;
+    };
+    return {
+      textToolPressed: document.querySelector('[data-viewport-tools="full"] [data-pdf-command="text"]')?.getAttribute("aria-pressed"),
+      toolbarStatus: document.querySelector('[data-viewport-tools="full"] .lux-pdf-status')?.textContent,
+      scroll: scrollArea ? { top: scrollArea.scrollTop, left: scrollArea.scrollLeft, width: scrollArea.clientWidth, height: scrollArea.clientHeight, scrollWidth: scrollArea.scrollWidth, scrollHeight: scrollArea.scrollHeight } : null,
+      page: rect(page),
+      layer: rect(layer),
+      layerPointerEvents: layer ? getComputedStyle(layer).pointerEvents : null,
+      editor: rect(editor),
+      editorVisibility: editor ? { display: getComputedStyle(editor).display, visibility: getComputedStyle(editor).visibility, opacity: getComputedStyle(editor).opacity } : null
+    };
+  });
+  console.log("DEBUG free-text activation: " + JSON.stringify(annotationDebug));
   const editorTextBox = page.locator('.annotationEditorLayer [contenteditable="true"]').last();
   await editorTextBox.waitFor({ state: "visible", timeout: 12000 });
   await editorTextBox.fill("Lux Omni annotation smoke test");
