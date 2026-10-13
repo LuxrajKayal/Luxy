@@ -4,6 +4,7 @@ Lux Omni is a browser-based workspace created by **Luxraj Kayal (Subrata Kayal)*
 
 ## Current features
 
+- **Dropbox integration (frontend foundation):** browser-based PKCE authorization, connection status, folder/file browsing, local file upload to Dropbox, and file-to-viewport routing events. Actual viewport rendering still needs to be connected to the existing viewport UI, and Sync requires a viewport export adapter.
 - **Workspace viewports:** open a full-screen viewport or a resizable split-screen layout; minimize, restore, or close viewports.
 - **YouTube playback:** load a YouTube video into a workspace viewport.
 - **Display controls:** switch between light and dark themes and enable Focus Mode.
@@ -11,7 +12,7 @@ Lux Omni is a browser-based workspace created by **Luxraj Kayal (Subrata Kayal)*
 
 ## Current application status
 
-The current build includes the workspace interface and browser-based tools. The PDF workspace still uses a browser preview placeholder; a complete PDF editing, annotation, and export engine is not connected. Features should be understood from the current implementation rather than assumed from the product name.
+The current build includes the workspace interface, browser-based tools, and Dropbox manager UI. The PDF workspace still uses a browser preview placeholder; a complete PDF editing, annotation, and export engine is not connected. Features should be understood from the current implementation rather than assumed from the product name.
 
 ## Run locally
 
