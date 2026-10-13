@@ -225,12 +225,7 @@ try {
 
   const pageCount = await page.locator('[data-viewport-tools="full"] .lux-pdf-page-count').textContent();
   assert.match(pageCount || "", /of 1$/, "page count should be correct");
-  await page.locator('[data-viewport-tools="full"] [data-pdf-command="zoom-in"]').click();
-  await page.waitForFunction(() => {
-    const scrollArea = document.querySelector('[data-viewport-scroll-area="full"]');
-    return scrollArea && scrollArea.scrollWidth > scrollArea.clientWidth;
-  }, null, { timeout: 10000 });
-  console.log("PASS: PDF zoom expands the outer viewport horizontal scroll range without a nested scrollbar.");
+
 
   const highlightButton = page.locator('[data-pdf-command="highlight"]');
   await highlightButton.click();
@@ -269,6 +264,13 @@ try {
   assert.equal(exported.mime, "application/pdf", "edited export should keep the PDF MIME type");
   assert.equal(exported.header, "%PDF-", "edited export should contain PDF bytes");
   assert.ok(exported.size > 100, "edited PDF export should not be empty");
+
+  await page.locator('[data-viewport-tools="full"] [data-pdf-command="zoom-in"]').click();
+  await page.waitForFunction(() => {
+    const scrollArea = document.querySelector('[data-viewport-scroll-area="full"]');
+    return scrollArea && scrollArea.scrollWidth > scrollArea.clientWidth;
+  }, null, { timeout: 10000 });
+  console.log("PASS: PDF zoom expands the outer viewport horizontal scroll range without a nested scrollbar.");
   console.log("PASS: viewport bridge exports serialized PDF bytes after annotation.");
 
   const [download] = await Promise.all([
