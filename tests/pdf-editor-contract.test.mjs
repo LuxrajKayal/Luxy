@@ -94,3 +94,27 @@ test("minimized viewports can be dragged between sides without losing the active
   assert.match(appStyles, /\.viewport\.is-drop-target/);
   assert.match(appStyles, /\.viewport-replace-confirm/);
 });
+
+
+test("PDF commands are portaled to per-viewport hosts and scrolling belongs to the viewport", () => {
+  assert.match(index, /data-viewport-tools="full"/);
+  assert.match(index, /data-viewport-tools="left"/);
+  assert.match(index, /data-viewport-tools="right"/);
+  assert.match(engine, /toolbarContainer\.replaceChildren\(toolbar\)/);
+  assert.match(engine, /scrollContainer: externalScrollContainer/);
+  assert.match(bridge, /scrollContainer: viewport/);
+  assert.match(bridge, /toolbarContainer: getViewportToolbarElement\(viewportType\)/);
+  assert.match(appStyles, /\.viewport-document-tools \.lux-pdf-toolbar/);
+  assert.match(appStyles, /overflow-x: auto;\s*overflow-y: scroll;/);
+  assert.match(engine, /getViewState\(\)/);
+  assert.match(bridge, /sourceAssignment\.editedBlob = await sourceAssignment\.editor\.exportEditedBlob\(\)/);
+  assert.match(bridge, /viewState: pdfViewState/);
+});
+
+test("minimized documents remain compact without altering the protected sidebar", () => {
+  assert.match(appStyles, /\.viewport-minimized-dock[\s\S]*?overflow-x: auto/);
+  assert.match(appStyles, /\.viewport-minimized-items[\s\S]*?flex-wrap: nowrap/);
+  assert.match(index, /<aside id="sidebar" class="sidebar" aria-label="Sidebar">/);
+  assert.match(appStyles, /\.sidebar \{/);
+  assert.match(appStyles, /--sidebar-width: 68px/);
+});
