@@ -953,3 +953,4 @@
 
   initialize();
 })();
+// Restored to the pre-connection-status-change implementation (baseline cc4a9bf).
