@@ -94,14 +94,16 @@ function normalizePdfName(name) {
   return /\.pdf$/i.test(cleaned) ? cleaned : cleaned + ".pdf";
 }
 
-export async function mountPdfEditor({ root, blob, fileName, viewportType, onDirty, onEdited }) {
+export async function mountPdfEditor({ root, blob, fileName, viewportType, onDirty, onEdited, toolbarContainer = null, scrollContainer: externalScrollContainer = null, initiallyDirty = false, viewState = null }) {
   if (!(blob instanceof Blob)) throw new TypeError("PDF.js needs a PDF Blob.");
 
   root.classList.add("lux-pdf-editor-root");
   root.style.alignItems = "stretch";
   root.style.justifyContent = "flex-start";
   root.style.flexDirection = "column";
-  root.style.overflow = "hidden";
+  root.style.height = "auto";
+  root.style.minHeight = "100%";
+  root.style.overflow = "visible";
   root.style.background = "#e9edf3";
 
   // PDF.js ships generic selectors such as ".sidebar". Keep all viewer CSS and
@@ -190,14 +192,25 @@ export async function mountPdfEditor({ root, blob, fileName, viewportType, onDir
   toolbar.append(toolGroup, pageGroup, zoomGroup, searchGroup, saveGroup, status);
 
   const viewerFrame = createElement("div", "lux-pdf-viewer-frame");
-  const scrollContainer = createElement("div", "lux-pdf-viewer-container");
-  scrollContainer.tabIndex = 0;
-  scrollContainer.setAttribute("aria-label", "PDF pages");
   const pages = createElement("div", "pdfViewer");
-  scrollContainer.append(pages);
-  viewerFrame.append(scrollContainer);
-  shell.append(toolbar, viewerFrame);
+  const scrollContainer = externalScrollContainer || createElement("div", "lux-pdf-viewer-container");
+  if (externalScrollContainer) {
+    // Use the actual Lux Omni viewport as PDF.js's scroll container. Viewer
+    // styles stay isolated in this Shadow DOM; only tool controls are portaled.
+    viewerFrame.append(pages);
+  } else {
+    scrollContainer.tabIndex = 0;
+    scrollContainer.setAttribute("aria-label", "PDF pages");
+    scrollContainer.append(pages);
+    viewerFrame.append(scrollContainer);
+  }
+  shell.append(viewerFrame);
   shadowRoot.append(shell);
+  if (toolbarContainer) {
+    toolbarContainer.replaceChildren(toolbar);
+  } else {
+    shell.prepend(toolbar);
+  }
 
   const eventBus = new pdfjsViewer.EventBus();
   const linkService = new pdfjsViewer.PDFLinkService({ eventBus });
@@ -246,6 +259,7 @@ export async function mountPdfEditor({ root, blob, fileName, viewportType, onDir
   function setHandMode(active) {
     handMode = active;
     scrollContainer.classList.toggle("is-hand-tool", active);
+    shell.classList.toggle("is-hand-tool", active);
     const button = toolButtons.get("hand");
     button.classList.toggle("is-active", active);
     button.setAttribute("aria-pressed", String(active));
@@ -398,7 +412,11 @@ export async function mountPdfEditor({ root, blob, fileName, viewportType, onDir
   eventBus.on("scalechanging", renderScaleState);
 
   scrollContainer.addEventListener("pointerdown", (event) => {
-    if (!handMode || event.button !== 0 || event.target.closest("a, input, button, textarea, select")) return;
+    const eventPath = event.composedPath?.() || [event.target];
+    const startedOnControl = eventPath.some((node) =>
+      node instanceof Element && node.matches("a, input, button, textarea, select")
+    );
+    if (!handMode || event.button !== 0 || startedOnControl) return;
     event.preventDefault();
     dragging = { pointerId: event.pointerId, x: event.clientX, y: event.clientY, left: scrollContainer.scrollLeft, top: scrollContainer.scrollTop };
     scrollContainer.setPointerCapture(event.pointerId);
@@ -416,6 +434,52 @@ export async function mountPdfEditor({ root, blob, fileName, viewportType, onDir
   }
   scrollContainer.addEventListener("pointerup", endPan);
   scrollContainer.addEventListener("pointercancel", endPan);
+
+  function getViewState() {
+    let activeTool = "select";
+    for (const [name, button] of toolButtons) {
+      if (button.getAttribute("aria-pressed") === "true") {
+        activeTool = name;
+        break;
+      }
+    }
+    return {
+      pageNumber: pdfViewer.currentPageNumber || 1,
+      scaleValue: pdfViewer.currentScaleValue || "page-width",
+      rotation: pdfViewer.pagesRotation || 0,
+      scrollTop: scrollContainer.scrollTop || 0,
+      scrollLeft: scrollContainer.scrollLeft || 0,
+      activeTool,
+      searchQuery: searchInput.value || ""
+    };
+  }
+
+  function restoreViewState(state) {
+    if (!state || !pdfDocument) return;
+    if (Number.isFinite(state.rotation)) pdfViewer.pagesRotation = state.rotation;
+    if (state.scaleValue) pdfViewer.currentScaleValue = String(state.scaleValue);
+    if (Number.isFinite(state.pageNumber)) {
+      pdfViewer.currentPageNumber = Math.max(1, Math.min(pdfViewer.pagesCount || 1, state.pageNumber));
+    }
+    searchInput.value = state.searchQuery || "";
+    const toolModes = {
+      select: ["NONE", "select"],
+      highlight: ["HIGHLIGHT", "highlight"],
+      pen: ["INK", "pen"],
+      text: ["FREETEXT", "text"],
+      stamp: ["STAMP", "stamp"],
+      signature: ["SIGNATURE", "signature"]
+    };
+    if (state.activeTool === "hand") {
+      setHandMode(true);
+    } else if (toolModes[state.activeTool]) {
+      setEditorMode(...toolModes[state.activeTool]);
+    }
+    window.requestAnimationFrame(() => {
+      scrollContainer.scrollTop = Math.max(0, Number(state.scrollTop) || 0);
+      scrollContainer.scrollLeft = Math.max(0, Number(state.scrollLeft) || 0);
+    });
+  }
 
   const pagesReady = new Promise((resolve) => {
     eventBus.on("pagesinit", () => {
@@ -452,6 +516,11 @@ export async function mountPdfEditor({ root, blob, fileName, viewportType, onDir
     ]);
     setStatus("Ready · " + pdfViewer.pagesCount + (pdfViewer.pagesCount === 1 ? " page" : " pages"), "ready");
     setEditorMode("NONE", "select");
+    if (viewState) restoreViewState(viewState);
+    if (initiallyDirty) {
+      dirty = true;
+      setStatus("Unsaved changes", "dirty");
+    }
   } catch (error) {
     setStatus("Could not open PDF: " + (error?.message || "unknown error"), "error");
     try { pdfViewer.setDocument(null); } catch (_) {}
@@ -463,6 +532,7 @@ export async function mountPdfEditor({ root, blob, fileName, viewportType, onDir
   return {
     get isDirty() { return dirty; },
     async exportEditedBlob() { return exportEditedBlob(); },
+    getViewState() { return getViewState(); },
     markSaved() {
       dirty = false;
       setStatus("Saved to Dropbox", "saved");
@@ -470,6 +540,7 @@ export async function mountPdfEditor({ root, blob, fileName, viewportType, onDir
     async dispose() {
       if (disposed) return;
       disposed = true;
+      toolbar.remove();
       try { pdfViewer.setDocument(null); } catch (_) {}
       try { linkService.setDocument(null, null); } catch (_) {}
       try { await loadingTask?.destroy(); } catch (_) {}
