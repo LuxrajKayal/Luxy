@@ -377,7 +377,7 @@ async function renderAssignment(detail) {
       } else {
         const pre = document.createElement("pre");
         pre.textContent = text;
-        style(pre, { margin: "0", padding: "0.9rem", overflow: "auto", border: "1px solid #e5e7eb", borderRadius: "7px", background: "#f8fafc", color: "#111827", whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace", fontSize: "0.88rem", lineHeight: "1.6" });
+        style(pre, { margin: "0", padding: "0.9rem", overflow: "visible", border: "1px solid #e5e7eb", borderRadius: "7px", background: "#f8fafc", color: "#111827", whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace", fontSize: "0.88rem", lineHeight: "1.6" });
         article.append(pre);
       }
     }
