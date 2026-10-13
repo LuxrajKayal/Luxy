@@ -4,9 +4,8 @@
  * This module bridges the Dropbox API utilities to the website's topbar,
  * sidebar, file-manager modal, upload control, and viewport-routing buttons.
  *
- * Viewport rendering is intentionally left as an integration seam. The file
- * is downloaded and emitted as a custom event; connect the actual viewport
- * renderer in response to "lux:dropbox-viewport-assignment-request".
+ * Downloaded files are routed to the registered viewport bridge, which
+ * reports rendering success or failure before the UI reports completion.
  */
 
 import {
@@ -51,6 +50,7 @@ const state = {
   latestRoutedViewport: null,
   previousFocus: null,
   browseRequestId: 0,
+  assignmentRequestId: 0,
   isDisconnecting: false,
   isSyncing: false,
   toastTimer: null
@@ -403,8 +403,8 @@ async function handleUploadChange() {
 }
 
 /**
- * Download the selected file and emit a routing event for the existing viewport
- * UI. Actual DOM injection stays deliberately unimplemented here.
+ * Download a Dropbox file, route it to the requested viewport, and wait for
+ * the viewport bridge to confirm whether rendering actually succeeded.
  */
 export async function loadFileIntoViewport(fileData, viewportType) {
   const allowedViewports = new Set(["left", "right", "full"]);
@@ -417,40 +417,74 @@ export async function loadFileIntoViewport(fileData, viewportType) {
 
   setManagerStatus("Downloading " + (fileData.name || "file") + "…");
   try {
-    const identifier = fileData.id
-      ? "id:" + fileData.id
+    // Dropbox may already return fileData.id with the "id:" prefix.
+    const fileId = typeof fileData.id === "string" ? fileData.id.trim() : "";
+    const identifier = fileId
+      ? (fileId.startsWith("id:") ? fileId : "id:" + fileId)
       : (fileData.path_lower || fileData.path_display);
+
+    if (!identifier) {
+      throw new Error("The selected Dropbox entry has no usable file ID or path.");
+    }
+
     const downloaded = await downloadFile(identifier);
     const originalPath = fileData.path_display || fileData.path_lower;
+    if (!originalPath) {
+      throw new Error("Dropbox did not provide a source path for this file.");
+    }
+
+    const originalRevision = downloaded.metadata?.rev || fileData.rev || null;
+    const assignmentId = ++state.assignmentRequestId;
+    const assignment = {
+      requestId: assignmentId,
+      fileData,
+      blob: downloaded.blob,
+      metadata: downloaded.metadata,
+      originalPath,
+      originalRevision,
+      viewportType
+    };
+
+    // The bridge dispatches a synchronous result event after mounting the file.
+    let renderResult = null;
+    const resultListener = (event) => {
+      if (event.detail?.requestId === assignmentId) {
+        renderResult = event.detail;
+      }
+    };
+
+    window.addEventListener("lux:dropbox-viewport-assignment-result", resultListener);
+    try {
+      window.dispatchEvent(new CustomEvent("lux:dropbox-viewport-assignment-request", {
+        detail: assignment
+      }));
+    } finally {
+      window.removeEventListener("lux:dropbox-viewport-assignment-result", resultListener);
+    }
+
+    if (!renderResult) {
+      throw new Error(
+        "The viewport bridge did not respond. Check that dropbox-viewport-bridge.js is loaded."
+      );
+    }
+    if (!renderResult.success) {
+      throw new Error(renderResult.message || "The viewport could not render this file.");
+    }
+
     const source = {
       fileData,
       originalPath,
-      originalRevision: downloaded.metadata?.rev || fileData.rev || null,
+      originalRevision,
+      originalBlob: downloaded.blob,
       viewportType
     };
     state.activeSources.set(viewportType, source);
     state.latestRoutedViewport = viewportType;
 
-    const assignment = {
-      fileData,
-      blob: downloaded.blob,
-      metadata: downloaded.metadata,
-      originalPath,
-      originalRevision: source.originalRevision,
-      viewportType
-    };
-
-    // TODO: connect the actual viewport renderer here. The event is the bridge
-    // contract: listen for "lux:dropbox-viewport-assignment-request" and mount
-    // assignment.blob into assignment.viewportType using your existing viewport UI.
-    window.dispatchEvent(new CustomEvent("lux:dropbox-viewport-assignment-request", {
-      detail: assignment
-    }));
-
     setManagerStatus(
-      "Downloaded " + (fileData.name || "file") + " for the " +
-      (viewportType === "full" ? "full" : viewportType) +
-      " viewport. Viewport rendering is the remaining integration step.",
+      "Opened " + (fileData.name || "file") + " in the " +
+      (viewportType === "full" ? "Full" : viewportType === "left" ? "Left" : "Right") +
+      " viewport.",
       "success"
     );
     return assignment;
@@ -473,17 +507,9 @@ export async function handleSync() {
     return;
   }
 
-  // Viewport export is intentionally an adapter point. Once the editor exposes
-  // an export function, it should return the edited document as a Blob:
-  // const editedBlob = await window.LuxOmniViewportBridge.exportEditedBlob(viewportType);
-  // Then pass the Blob and original source metadata to saveEditedFile().
   const viewportBridge = window.LuxOmniViewportBridge;
   if (typeof viewportBridge?.exportEditedBlob !== "function") {
-    setToast(
-      "Sync is connected to the button, but viewport export is not wired yet. " +
-      "Expose LuxOmniViewportBridge.exportEditedBlob(viewportType) to enable saving.",
-      "info"
-    );
+    setToast("The viewport export bridge is not available. No file was uploaded.", "error");
     return;
   }
 
@@ -492,12 +518,32 @@ export async function handleSync() {
     els.syncButton.disabled = true;
     els.syncButton.setAttribute("aria-busy", "true");
   }
-  setToast("Preparing viewport edits for Dropbox…", "info");
+  setToast("Preparing viewport content for Dropbox…", "info");
 
   try {
     const editedBlob = await viewportBridge.exportEditedBlob(viewportType, source.fileData);
     if (!(editedBlob instanceof Blob)) {
       throw new TypeError("The viewport export adapter must return a Blob.");
+    }
+
+    const isOriginalBlob = editedBlob === source.originalBlob;
+    if (isOriginalBlob) {
+      const confirmed = window.confirm(
+        "This viewport currently contains a read-only preview and cannot export PDF edits. " +
+        "Continuing will upload the original, unchanged file bytes to test the Dropbox upload API; " +
+        "it will not save edits made inside the browser preview. Continue?"
+      );
+      if (!confirmed) {
+        setToast("Sync cancelled. The read-only preview did not export edits.", "info");
+        return;
+      }
+    }
+
+    // Prevent an unguarded overwrite if Dropbox did not supply a source revision.
+    if (!source.originalRevision) {
+      throw new Error(
+        "Dropbox did not return a file revision. Reload the file before syncing so concurrent edits can be protected."
+      );
     }
 
     const result = await saveEditedFile({
@@ -508,7 +554,17 @@ export async function handleSync() {
 
     source.originalRevision = result?.rev || source.originalRevision;
     source.fileData = { ...source.fileData, rev: source.originalRevision };
-    setToast("Saved " + (source.fileData.name || "file") + " to Dropbox.", "success");
+    source.originalBlob = editedBlob;
+    viewportBridge.markSaved?.(viewportType, editedBlob, result);
+
+    if (isOriginalBlob) {
+      setToast(
+        "Dropbox upload test completed. The original file bytes were uploaded unchanged; viewport edits were not saved.",
+        "info"
+      );
+    } else {
+      setToast("Saved edited " + (source.fileData.name || "file") + " to Dropbox.", "success");
+    }
   } catch (error) {
     setToast("Could not sync edits: " + errorText(error), "error");
   } finally {
@@ -582,6 +638,13 @@ function wireEvents() {
     }
   });
 }
+
+// Keep connected status synchronized when another tab authorizes or disconnects.
+window.addEventListener("storage", (event) => {
+  if (event.key === "lux-omni-dropbox-access-token" || event.key === null) {
+    void refreshConnectionStatus();
+  }
+});
 
 wireEvents();
 updateTopbarStatus(false);

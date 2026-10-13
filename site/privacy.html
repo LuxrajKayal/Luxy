@@ -27,7 +27,7 @@
     <h2>Where information is processed and stored</h2>
     <ul>
       <li>Luxy is a static website hosted through GitHub Pages. The current application does not send document contents to a Luxy-operated application server or store them in a Luxy-operated database.</li>
-      <li>When you connect Dropbox, its short-lived access token is held in this browser tab's <code>sessionStorage</code>. The integration requests Dropbox API access to list folders, download files you select, and upload files you explicitly choose.</li>
+      <li>When you connect Dropbox, its short-lived access token and OAuth flow values are held in this browser's <code>localStorage</code> for this site origin, so the connection can be recognized across tabs while the token remains valid. The integration requests Dropbox API access to list folders, download files you select, and upload files you explicitly choose. These browser-stored values are not sent to a Lux Omni-operated server.</li>
       <li>Lux Omni Clipboard history is stored locally in this browser using IndexedDB. You can clear this history from the clipboard page or clear this website's browser data.</li>
     </ul>
   </section>
@@ -45,7 +45,7 @@
 
   <section>
     <h2>Your choices and security</h2>
-    <p>Use the website only in browsers and on devices you trust. Disconnect Dropbox in Lux Omni to clear the local session and request token revocation from Dropbox; you can also remove Lux Omni from your Dropbox connected-app settings. Uploads occur only when you explicitly choose a file and start the upload. The Sync control currently needs a viewport-export adapter before it can write editor changes back to Dropbox. Clear this website's browser data to remove locally stored records.</p>
+    <p>Use the website only in browsers and on devices you trust. Browser localStorage is readable by JavaScript running on this site, so keep your browser and device secure. Disconnect Dropbox in Lux Omni to clear stored credentials and request token revocation from Dropbox; you can also remove Lux Omni from your Dropbox connected-app settings. The Dropbox viewport bridge currently previews PDFs and common images read-only. It cannot extract edits made inside the browser's built-in PDF viewer. Sync therefore asks for confirmation before uploading the original bytes unchanged as an API test; real edited-file saving requires an editor to provide the edited document Blob. Clear this website's browser data to remove locally stored records.</p>
   </section>
 
   <section>
