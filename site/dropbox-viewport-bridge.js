@@ -42,6 +42,10 @@ function getViewportElement(viewportType) {
   return document.querySelector(selectors[viewportType]);
 }
 
+function getViewportToolbarElement(viewportType) {
+  return document.querySelector('[data-viewport-tools="' + viewportType + '"]');
+}
+
 function getExtension(fileName) {
   const baseName = String(fileName || "").toLowerCase().split(/[\/]/).pop() || "";
   if (/^\.(gitignore|gitattributes|editorconfig|env)$/.test(baseName)) return baseName.slice(1);
@@ -225,7 +229,7 @@ function appendMarkdown(source, target) {
       const pre = document.createElement("pre");
       const code = document.createElement("code");
       code.textContent = codeLines.join("\n");
-      style(pre, { margin: "0.8rem 0 1rem", padding: "0.9rem", overflow: "auto", border: "1px solid #e5e7eb", borderRadius: "7px", background: "#f8fafc", whiteSpace: "pre", fontSize: "0.88rem" });
+      style(pre, { margin: "0.8rem 0 1rem", padding: "0.9rem", overflow: "visible", border: "1px solid #e5e7eb", borderRadius: "7px", background: "#f8fafc", whiteSpace: "pre", fontSize: "0.88rem" });
       style(code, { color: "#111827", fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace" });
       pre.append(code);
       target.append(pre);
@@ -325,7 +329,7 @@ async function renderAssignment(detail) {
   const previewBlob = createPreviewBlob(blob, fileName, kind);
   const mount = document.createElement("div");
   mount.className = "lux-dropbox-preview";
-  style(mount, { display: "flex", width: "100%", height: "100%", minHeight: "100%", boxSizing: "border-box", justifyContent: "center", alignItems: "center", overflow: "auto", background: "#ffffff" });
+  style(mount, { display: "flex", width: "100%", height: "auto", minHeight: "100%", boxSizing: "border-box", justifyContent: "center", alignItems: "center", overflow: "visible", background: "#ffffff" });
 
   let objectUrl = null;
   let needsPdfMount = false;
@@ -336,7 +340,6 @@ async function renderAssignment(detail) {
     mount.style.flexDirection = "column";
     mount.style.justifyContent = "flex-start";
     mount.style.alignItems = "stretch";
-    mount.style.overflow = "hidden";
     const loading = document.createElement("p");
     loading.className = "lux-pdf-loading";
     loading.textContent = "Loading Mozilla PDF.js…";
@@ -386,10 +389,12 @@ async function renderAssignment(detail) {
   }
 
   const previous = viewportAssignments.get(viewportType);
+  viewport.scrollTop = 0;
+  viewport.scrollLeft = 0;
   viewport.replaceChildren(mount);
   viewport.dataset.fileName = fileName;
   const assignment = {
-    blob, editedBlob: null, editor: null, hasPdfEdits: false,
+    blob, editedBlob: null, editor: null, hasPdfEdits: false, kind,
     objectUrl, mount, fileData, metadata, originalPath, originalRevision, viewportType
   };
   viewportAssignments.set(viewportType, assignment);
@@ -403,6 +408,8 @@ async function renderAssignment(detail) {
         blob: previewBlob,
         fileName,
         viewportType,
+        scrollContainer: viewport,
+        toolbarContainer: getViewportToolbarElement(viewportType),
         onDirty() {
           assignment.hasPdfEdits = true;
         },
@@ -494,7 +501,7 @@ window.LuxOmniViewportBridge = {
     };
   },
 
-  moveViewportContents(sourceSide, targetSide) {
+  async moveViewportContents(sourceSide, targetSide) {
     if (!VALID_VIEWPORTS.has(sourceSide) || !VALID_VIEWPORTS.has(targetSide) || sourceSide === targetSide) {
       return false;
     }
@@ -509,24 +516,42 @@ window.LuxOmniViewportBridge = {
     const sourceNodes = Array.from(sourceViewport.childNodes);
     if (!sourceName && sourceNodes.length === 0 && !sourceAssignment) return false;
 
-    // Stop the old observers before moving nodes so the source observer cannot
-    // mistake a deliberate move for document removal and dispose the editor.
+    // PDF.js is attached to a concrete viewport scroll element. Capture the
+    // live state and serialize pending edits before reattaching it to a new
+    // viewport so the destination owns the native vertical/horizontal bars.
+    let pdfViewState = null;
+    if (sourceAssignment?.editor) {
+      pdfViewState = sourceAssignment.editor.getViewState?.() || null;
+      if (sourceAssignment.hasPdfEdits || sourceAssignment.editor.isDirty) {
+        sourceAssignment.editedBlob = await sourceAssignment.editor.exportEditedBlob();
+        sourceAssignment.hasPdfEdits = true;
+      }
+      await sourceAssignment.editor.dispose();
+      sourceAssignment.editor = null;
+    }
+
+    // Disconnect observers before the deliberate DOM move; otherwise the old
+    // viewport could interpret the reparenting as a closed document.
     for (const side of [sourceSide, targetSide]) {
       viewportObservers.get(side)?.disconnect();
       viewportObservers.delete(side);
     }
 
-    // The app only calls this method after showing a replace warning when the
-    // destination is occupied. Dispose any previous target editor and URL now.
+    // The UI only calls this after the occupied-destination confirmation.
     if (targetAssignment) revokeAssignment(targetSide, targetAssignment);
 
+    const preservedScrollTop = pdfViewState?.scrollTop ?? sourceViewport.scrollTop;
+    const preservedScrollLeft = pdfViewState?.scrollLeft ?? sourceViewport.scrollLeft;
     viewportAssignments.delete(sourceSide);
     targetViewport.replaceChildren();
     sourceViewport.replaceChildren();
     targetViewport.append(...sourceNodes);
-
     targetViewport.dataset.fileName = sourceName;
     delete sourceViewport.dataset.fileName;
+    sourceViewport.scrollTop = 0;
+    sourceViewport.scrollLeft = 0;
+    targetViewport.scrollTop = 0;
+    targetViewport.scrollLeft = 0;
 
     if (sourceAssignment) {
       sourceAssignment.viewportType = targetSide;
@@ -535,9 +560,58 @@ window.LuxOmniViewportBridge = {
 
     ensureViewportObserver(sourceSide, sourceViewport);
     ensureViewportObserver(targetSide, targetViewport);
+
+    if (sourceAssignment?.kind === "pdf") {
+      try {
+        const pdfEditor = await mountPdfEditor({
+          root: sourceAssignment.mount,
+          blob: sourceAssignment.editedBlob || sourceAssignment.blob,
+          fileName: sourceAssignment.fileData?.name || sourceName,
+          viewportType: targetSide,
+          scrollContainer: targetViewport,
+          toolbarContainer: getViewportToolbarElement(targetSide),
+          initiallyDirty: Boolean(sourceAssignment.hasPdfEdits),
+          viewState: pdfViewState,
+          onDirty() {
+            sourceAssignment.hasPdfEdits = true;
+          },
+          onEdited(editedBlob) {
+            sourceAssignment.editedBlob = editedBlob;
+            sourceAssignment.hasPdfEdits = true;
+          }
+        });
+        if (viewportAssignments.get(targetSide) === sourceAssignment &&
+            targetViewport.contains(sourceAssignment.mount)) {
+          sourceAssignment.editor = pdfEditor;
+          targetViewport.scrollTop = Math.max(0, Number(preservedScrollTop) || 0);
+          targetViewport.scrollLeft = Math.max(0, Number(preservedScrollLeft) || 0);
+        } else {
+          await pdfEditor.dispose();
+          sourceAssignment.editor = null;
+        }
+      } catch (error) {
+        // Keep the assignment recoverable even if a transient CDN/runtime issue
+        // prevents the editor from reopening after the move.
+        console.error("PDF editor could not reattach to the destination viewport:", error);
+        sourceAssignment.editor = null;
+        const errorPanel = document.createElement("div");
+        errorPanel.className = "lux-pdf-load-error";
+        style(errorPanel, { margin: "auto", maxWidth: "520px", padding: "24px", color: "#273449", lineHeight: "1.6" });
+        const heading = document.createElement("h2");
+        heading.textContent = "PDF moved, but the editor could not restart";
+        style(heading, { margin: "0 0 8px", fontSize: "1.1rem" });
+        const explanation = document.createElement("p");
+        explanation.textContent = (error?.message || "Unknown loading error") + " The document remains assigned to this viewport. Check the PDF.js connection and reload it to continue editing.";
+        style(explanation, { margin: "0 0 12px" });
+        const fallbackBlob = sourceAssignment.editedBlob || sourceAssignment.blob;
+        const fallbackUrl = URL.createObjectURL(fallbackBlob);
+        const download = makeDownloadLink(fallbackUrl, sourceName || "document.pdf");
+        errorPanel.append(heading, explanation, download);
+        (sourceAssignment.mount.shadowRoot || sourceAssignment.mount).replaceChildren(errorPanel);
+      }
+    }
     return true;
-  }
-};
+  }};
 
 window.addEventListener("pagehide", () => {
   for (const [viewportType, assignment] of viewportAssignments) revokeAssignment(viewportType, assignment);
