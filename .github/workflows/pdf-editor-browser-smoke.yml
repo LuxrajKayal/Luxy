@@ -1,0 +1,29 @@
+name: PDF editor browser smoke test
+
+on:
+  pull_request:
+    paths:
+      - "site/**"
+      - "tests/**"
+      - ".github/workflows/pdf-editor-browser-smoke.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    name: Render, annotate, and export a sample PDF
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock playwright
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run real-browser PDF.js smoke test
+        run: node tests/pdf-editor-browser-smoke.mjs
