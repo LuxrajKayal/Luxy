@@ -13,14 +13,14 @@ const viewportAssignments = new Map();
 const viewportObservers = new Map();
 
 const TEXT_EXTENSIONS = new Set([
-  "md", "markdown", "mdown", "mkdn", "txt", "text", "log", "csv", "tsv",
+  "md", "markdown", "mdown", "mkdn", "mdx", "txt", "text", "log", "csv", "tsv",
   "json", "jsonc", "xml", "yaml", "yml", "toml", "ini", "conf", "properties",
   "env", "diff", "patch", "html", "htm", "css", "scss", "less", "js", "mjs",
   "cjs", "jsx", "ts", "tsx", "py", "pyw", "rb", "php", "java", "kt", "kts",
   "c", "h", "cc", "cpp", "cxx", "hpp", "hh", "cs", "go", "rs", "swift",
   "sh", "bash", "zsh", "ps1", "sql", "r", "lua", "pl", "pm", "ex", "exs",
   "erl", "hrl", "hs", "lhs", "scala", "clj", "cljs", "graphql", "gql",
-  "proto", "make", "mk", "cmake", "dockerfile", "makefile", "gitignore",
+  "proto", "rst", "adoc", "asciidoc", "tex", "bib", "ipynb", "org", "make", "mk", "cmake", "dockerfile", "makefile", "gitignore",
   "gitattributes", "editorconfig"
 ]);
 
@@ -58,16 +58,19 @@ function getImageMimeFromName(fileName) {
 }
 
 function isMarkdownFile(fileName) {
-  return ["md", "markdown", "mdown", "mkdn"].includes(getExtension(fileName));
+  return ["md", "markdown", "mdown", "mkdn", "mdx"].includes(getExtension(fileName));
 }
 
 function isTextFile(blob, fileName) {
   const type = String(blob?.type || "").toLowerCase();
+  const baseName = String(fileName || "").toLowerCase().split(/[\\/]/).pop() || "";
+  const wellKnownTextNames = ["readme", "license", "copying", "notice", "copyright", "changelog", "changes", "contributing", "authors", "authors.txt", "makefile", "dockerfile"];
+  if (wellKnownTextNames.includes(baseName)) return true;
   if (TEXT_EXTENSIONS.has(getExtension(fileName)) || type.startsWith("text/")) return true;
   return [
     "application/json", "application/ld+json", "application/xml",
     "application/javascript", "application/x-javascript", "application/yaml",
-    "application/x-yaml", "application/toml", "application/sql",
+    "application/x-yaml", "application/x-markdown", "text/markdown", "application/toml", "application/sql",
     "application/x-sh", "application/x-httpd-php"
   ].includes(type);
 }
@@ -76,7 +79,7 @@ function classifyFile(blob, fileName) {
   const type = String(blob?.type || "").toLowerCase();
   if (type.includes("application/pdf") || /\.pdf$/i.test(fileName || "")) return "pdf";
   if (type.startsWith("image/") || getImageMimeFromName(fileName)) return "image";
-  if (isTextFile(blob, fileName)) return isMarkdownFile(fileName) ? "markdown" : "text";
+  if (isTextFile(blob, fileName)) return (isMarkdownFile(fileName) || type.includes("markdown")) ? "markdown" : "text";
   return "download";
 }
 
