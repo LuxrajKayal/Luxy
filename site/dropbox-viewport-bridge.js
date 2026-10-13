@@ -41,7 +41,7 @@ function getViewportElement(viewportType) {
 }
 
 function getExtension(fileName) {
-  const baseName = String(fileName || "").toLowerCase().split(/[\\/]/).pop() || "";
+  const baseName = String(fileName || "").toLowerCase().split(/[\/]/).pop() || "";
   if (/^\.(gitignore|gitattributes|editorconfig|env)$/.test(baseName)) return baseName.slice(1);
   if (baseName === "dockerfile" || baseName === "makefile") return baseName;
   const dotIndex = baseName.lastIndexOf(".");
@@ -141,7 +141,7 @@ function createDocumentShell(fileName, mode) {
 // nodes only; file-provided HTML is never parsed or executed.
 function createInlineMarkdown(source) {
   const fragment = document.createDocumentFragment();
-  const pattern = new RegExp("(\\\\*\\\\*[^*]+\\\\*\\\\*|__[^_]+__|~~[^~]+~~|\\\\x60[^\\\\x60]+\\\\x60|\\\\[[^\\\\]]+\\\\]\\\\([^)]+\\\\)|\\\\*[^*\\\\n]+\\\\*|_[^_\\\\n]+_)");
+  const pattern = new RegExp("(\\*\\*[^*]+\\*\\*|__[^_]+__|~~[^~]+~~|\\x60[^\\x60]+\\x60|\\[[^\\]]+\\]\\([^)]+\\)|\\*[^*\\n]+\\*|_[^_\\n]+_)");
   let cursor = 0;
   let match;
   while ((match = pattern.exec(source)) !== null) {
@@ -163,7 +163,7 @@ function createInlineMarkdown(source) {
       node = document.createElement("em");
       node.textContent = token.slice(1, -1);
     } else {
-      const link = token.match(/^\\[([^\\]]+)\\]\\(([^)]+)\\)$/);
+      const link = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
       if (link) {
         try {
           const url = new URL(link[2].trim(), window.location.href);
@@ -188,35 +188,35 @@ function createInlineMarkdown(source) {
 
 function isMarkdownBlockStart(lines, index) {
   const line = lines[index] || "";
-  return /^\\s{0,3}#{1,6}\\s+/.test(line) ||
-    /^\\s{0,3}(?:\\x60{3}|~~~)/.test(line) ||
-    /^\\s{0,3}>\\s?/.test(line) ||
-    /^\\s{0,3}[-+*]\\s+/.test(line) ||
-    /^\\s{0,3}\\d+[.)]\\s+/.test(line) ||
-    /^\\s{0,3}(?:---+|\\*\\*\\*+|___+)\\s*$/.test(line);
+  return /^\s{0,3}#{1,6}\s+/.test(line) ||
+    /^\s{0,3}(?:\x60{3}|~~~)/.test(line) ||
+    /^\s{0,3}>\s?/.test(line) ||
+    /^\s{0,3}[-+*]\s+/.test(line) ||
+    /^\s{0,3}\d+[.)]\s+/.test(line) ||
+    /^\s{0,3}(?:---+|\*\*\*+|___+)\s*$/.test(line);
 }
 
 function appendMarkdown(source, target) {
-  const lines = String(source || "").replace(/\\r\\n?/g, "\\n").split("\\n");
+  const lines = String(source || "").replace(/\r\n?/g, "\n").split("\n");
   let index = 0;
 
   while (index < lines.length) {
     const line = lines[index];
     if (!line.trim()) { index += 1; continue; }
 
-    const fence = line.match(/^\\s{0,3}(\\x60{3}|~~~)(.*)$/);
+    const fence = line.match(/^\s{0,3}(\x60{3}|~~~)(.*)$/);
     if (fence) {
       const fenceToken = fence[1];
       const codeLines = [];
       index += 1;
-      while (index < lines.length && !new RegExp("^\\\\s{0,3}" + fenceToken + "\\\\s*$").test(lines[index])) {
+      while (index < lines.length && !new RegExp("^\\s{0,3}" + fenceToken + "\\s*$").test(lines[index])) {
         codeLines.push(lines[index]);
         index += 1;
       }
       if (index < lines.length) index += 1;
       const pre = document.createElement("pre");
       const code = document.createElement("code");
-      code.textContent = codeLines.join("\\n");
+      code.textContent = codeLines.join("\n");
       style(pre, { margin: "0.8rem 0 1rem", padding: "0.9rem", overflow: "auto", border: "1px solid #e5e7eb", borderRadius: "7px", background: "#f8fafc", whiteSpace: "pre", fontSize: "0.88rem" });
       style(code, { color: "#111827", fontFamily: "ui-monospace, SFMono-Regular, Consolas, monospace" });
       pre.append(code);
@@ -224,7 +224,7 @@ function appendMarkdown(source, target) {
       continue;
     }
 
-    const headingMatch = line.match(/^\\s{0,3}(#{1,6})\\s+(.+?)\\s*#*\\s*$/);
+    const headingMatch = line.match(/^\s{0,3}(#{1,6})\s+(.+?)\s*#*\s*$/);
     if (headingMatch) {
       const level = headingMatch[1].length;
       const heading = document.createElement("h" + level);
@@ -235,16 +235,16 @@ function appendMarkdown(source, target) {
       continue;
     }
 
-    if (/^\\s{0,3}(?:---+|\\*\\*\\*+|___+)\\s*$/.test(line)) {
+    if (/^\s{0,3}(?:---+|\*\*\*+|___+)\s*$/.test(line)) {
       target.append(style(document.createElement("hr"), { margin: "1.2rem 0", border: "0", borderTop: "1px solid #d1d5db" }));
       index += 1;
       continue;
     }
 
-    if (/^\\s{0,3}>\\s?/.test(line)) {
+    if (/^\s{0,3}>\s?/.test(line)) {
       const quoteLines = [];
-      while (index < lines.length && /^\\s{0,3}>\\s?/.test(lines[index])) {
-        quoteLines.push(lines[index].replace(/^\\s{0,3}>\\s?/, ""));
+      while (index < lines.length && /^\s{0,3}>\s?/.test(lines[index])) {
+        quoteLines.push(lines[index].replace(/^\s{0,3}>\s?/, ""));
         index += 1;
       }
       const quote = document.createElement("blockquote");
@@ -257,16 +257,16 @@ function appendMarkdown(source, target) {
       continue;
     }
 
-    const firstUnordered = line.match(/^\\s{0,3}[-+*]\\s+(.+)$/);
-    const firstOrdered = line.match(/^\\s{0,3}\\d+[.)]\\s+(.+)$/);
+    const firstUnordered = line.match(/^\s{0,3}[-+*]\s+(.+)$/);
+    const firstOrdered = line.match(/^\s{0,3}\d+[.)]\s+(.+)$/);
     if (firstUnordered || firstOrdered) {
       const isOrdered = Boolean(firstOrdered);
       const list = document.createElement(isOrdered ? "ol" : "ul");
       style(list, { margin: "0.5rem 0 1rem", paddingLeft: "1.6rem" });
       while (index < lines.length) {
         const itemMatch = isOrdered
-          ? lines[index].match(/^\\s{0,3}\\d+[.)]\\s+(.+)$/)
-          : lines[index].match(/^\\s{0,3}[-+*]\\s+(.+)$/);
+          ? lines[index].match(/^\s{0,3}\d+[.)]\s+(.+)$/)
+          : lines[index].match(/^\s{0,3}[-+*]\s+(.+)$/);
         if (!itemMatch) break;
         const item = document.createElement("li");
         item.append(createInlineMarkdown(itemMatch[1]));
